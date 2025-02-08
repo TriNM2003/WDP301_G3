@@ -6,6 +6,7 @@ import ErrorPage from './pages/Error/ErrorPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import UserProfile from './pages/Users/UserProfile';
+import ViewProfile from './components/Users/ViewProfile';
 
 function App() {
   return (
@@ -15,7 +16,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<Register />} />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile" element={<UserProfile />} >
+          <Route path="profile-info" element={<ViewProfile />} />
+        </Route>
         <Route path="/edit-profile" element={<Register />} />
         <Route path="/change-password" element={<Register />} />
 
