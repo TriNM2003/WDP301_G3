@@ -1,10 +1,26 @@
-import React from "react";
-import { Layout, Form, Input, Button, Typography, Divider, Modal, Row, Col, Space } from "antd";
-import { GoogleOutlined, EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import {grey} from "@ant-design/colors"
+import React, { useState } from "react";
+import { Layout, Form, Input, Button, Typography, Divider, Modal, Row, Col, message } from "antd";
+import { GoogleOutlined, EyeInvisibleOutlined, EyeTwoTone, LoadingOutlined } from "@ant-design/icons";
+import { blue, gray } from "@ant-design/colors";
+
 const { Title, Text, Link } = Typography;
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  // Xử lý khi nhấn nút Log in
+  const handleLogin = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      messageApi.open({
+        type: "success",
+        content: "Login successful!",
+      });
+    }, 2000);
+  };
+
   return (
     <Layout
       style={{
@@ -17,10 +33,11 @@ const Login = () => {
         backgroundPosition: "center",
       }}
     >
+      {contextHolder} {/* Hiển thị thông báo */}
       <Modal
         open={true}
         footer={null}
-        closable={true}
+        closable={false}
         width={900}
         centered
         style={{
@@ -30,23 +47,20 @@ const Login = () => {
         }}
       >
         <div style={{ padding: "30px" }}>
-          <Row gutter={10} align={"middle"}>
-            <Col span={24} style={{textAlign: 'center', display: 'inline'}}>
+          <Row gutter={10} align="middle">
+            <Col span={24} style={{ textAlign: "center", display: "inline" }}>
               <img
                 src="/images/logo-placeholder-image.png"
                 alt="SkrumIO Logo"
-                style={{ width: 70}}
+                style={{ width: 70 }}
               />
-              <Title>
-                SkrumIO
-              </Title>
+              <Title>SkrumIO</Title>
             </Col>
           </Row>
 
           <Row gutter={24} align="middle">
             {/* Cột bên trái (Google Login) */}
             <Col span={11} style={{ textAlign: "center" }}>
-
               <Divider>Or</Divider>
 
               {/* Nút Google Custom */}
@@ -69,12 +83,6 @@ const Login = () => {
               >
                 Continue with Google
               </Button>
-
-              <Text style={{ display: "block", marginTop: "10px" }}>
-                By signing up, you agree to the{" "}
-                <Link href="#">Terms of Service</Link> and acknowledge you’ve
-                read our <Link href="#">Privacy Policy</Link>.
-              </Text>
             </Col>
 
             {/* Cột phân chia */}
@@ -90,14 +98,12 @@ const Login = () => {
 
               <Form layout="vertical">
                 <Form.Item label="Username">
-                  <Input 
-                  // placeholder="Enter your username" 
-                  />
+                  <Input placeholder="Enter your username" />
                 </Form.Item>
 
                 <Form.Item label="Password">
                   <Input.Password
-                    // placeholder="Enter your password"
+                    placeholder="Enter your password"
                     iconRender={(visible) =>
                       visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                     }
@@ -108,35 +114,26 @@ const Login = () => {
                   Forgot your password?
                 </Link>
 
+                {/* Nút Log in với hiệu ứng loading */}
                 <Button
                   type="primary"
                   block
                   style={{
-                    backgroundColor: "#ccc",
+                    backgroundColor: loading ? blue[4] : blue[6],
+                    color: gray[13],
                     border: "none",
-                    cursor: "not-allowed",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                  disabled
+                  onClick={handleLogin}
+                  disabled={loading}
                 >
-                  Log in
+                  {loading ? <LoadingOutlined spin /> : "Log in"}
                 </Button>
               </Form>
             </Col>
           </Row>
-
-          {/* Footer */}
-          <Divider />
-          <div style={{ textAlign: "center"}}>
-            <Text type="secondary">
-              <Space size="middle">
-                <Link href="#">About</Link>
-                <Link href="#">Help Center</Link>
-                <Link href="#">Terms of Service</Link>
-                <Link href="#">Privacy Policy</Link>
-                <Link href="#">Cookie Policy</Link>
-              </Space>
-            </Text>
-          </div>
         </div>
       </Modal>
     </Layout>
