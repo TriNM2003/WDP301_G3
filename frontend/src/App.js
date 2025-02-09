@@ -7,10 +7,14 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import UserProfile from './pages/Users/UserProfile';
 
+import ChangePassword from './components/Users/ChangePassword';
+
+
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 
 import ViewProfile from './components/Users/ViewProfile';
+
 
 function App() {
   return (
@@ -22,13 +26,15 @@ function App() {
         <Route path="/forgot-password" element={<Register />} />
         <Route path="/profile" element={<UserProfile />} >
 
+
           <Route path="profile-info" element={<ViewProfile />} />
           <Route path="manage-profile" element={<ManageProfile />} >
+            <Route path="change-password" element={<ChangePassword />} />
             <Route path="edit-profile" element={<EditProfile/>} />
           </Route>
         </Route>
 
-        <Route path="/change-password" element={<Register />} />
+
 
         <Route path='*' element={<ErrorPage />} />
       </Routes>

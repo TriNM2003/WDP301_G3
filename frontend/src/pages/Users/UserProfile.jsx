@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, Avatar, Button, Row, Col } from 'antd';
 import { MailOutlined, PhoneOutlined, SolutionOutlined, ClusterOutlined } from '@ant-design/icons';
@@ -21,6 +22,7 @@ const UserProfile = () => {
         </Col>
       </Row>
       <Outlet />
+
 
     </div>
   );
