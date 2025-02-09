@@ -59,38 +59,8 @@ const Login = () => {
           </Row>
 
           <Row gutter={24} align="middle">
-            {/* Cột bên trái (Google Login) */}
-            <Col span={11} style={{ textAlign: "center" }}>
-              <Divider>Or</Divider>
 
-              {/* Nút Google Custom */}
-              <Button
-                style={{
-                  width: "100%",
-                  backgroundColor: "#fff",
-                  color: "#000",
-                  borderRadius: "25px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "16px",
-                  height: "40px",
-                  border: "1px solid #ccc",
-                  boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
-                }}
-                icon={<GoogleOutlined style={{ fontSize: "20px", marginLeft: "10px", color: "#FF0000" }} />}
-                onClick={() => alert("Google Login Clicked")}
-              >
-                Continue with Google
-              </Button>
-            </Col>
-
-            {/* Cột phân chia */}
-            <Col span={2}>
-              <Divider type="vertical" style={{ height: "100%", background: "#ccc", width: "1px" }} />
-            </Col>
-
-            {/* Cột bên phải (Form đăng nhập) */}
+            {/* Cột bên trái (Form đăng nhập) */}
             <Col span={11}>
               <Title level={4} style={{ textAlign: "center" }}>
                 Log in
@@ -133,6 +103,39 @@ const Login = () => {
                 </Button>
               </Form>
             </Col>
+            
+
+            {/* Cột phân chia */}
+            <Col span={2}>
+              <Divider type="vertical" style={{ height: "100%", background: "#ccc", width: "1px" }} />
+            </Col>
+
+            {/* Cột bên phải (Google Login) */}
+            <Col span={11} style={{ textAlign: "center" }}>
+              <Divider>Or</Divider>
+
+              {/* Nút Google Custom */}
+              <Button
+                style={{
+                  width: "100%",
+                  backgroundColor: "#fff",
+                  color: "#000",
+                  borderRadius: "25px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "16px",
+                  height: "40px",
+                  border: "1px solid #ccc",
+                  boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
+                }}
+                icon={<GoogleOutlined style={{ fontSize: "20px", marginLeft: "10px", color: "#FF0000" }} />}
+                onClick={() => alert("Google Login Clicked")}
+              >
+                Continue with Google
+              </Button>
+            </Col>
+
           </Row>
         </div>
       </Modal>
