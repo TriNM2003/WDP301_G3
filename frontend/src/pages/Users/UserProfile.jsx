@@ -21,7 +21,7 @@ const UserProfile = () => {
         </Col>
       </Row>
       <Outlet />
-      
+
     </div>
   );
 };

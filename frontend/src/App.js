@@ -6,6 +6,10 @@ import ErrorPage from './pages/Error/ErrorPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import UserProfile from './pages/Users/UserProfile';
+
+import EditProfile from './components/Users/EditProfile';
+import ManageProfile from './components/Users/ManageProfile';
+
 import ViewProfile from './components/Users/ViewProfile';
 
 function App() {
@@ -17,12 +21,16 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<Register />} />
         <Route path="/profile" element={<UserProfile />} >
+
           <Route path="profile-info" element={<ViewProfile />} />
+          <Route path="manage-profile" element={<ManageProfile />} >
+            <Route path="edit-profile" element={<EditProfile/>} />
+          </Route>
         </Route>
-        <Route path="/edit-profile" element={<Register />} />
+
         <Route path="/change-password" element={<Register />} />
 
-        <Route path='*' element={<ErrorPage/>} />  
+        <Route path='*' element={<ErrorPage />} />
       </Routes>
     </div>
   );
