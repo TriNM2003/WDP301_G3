@@ -6,20 +6,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true,
-      minlength: 3,
+      minlength: 5,
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      trim: true,
       match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
     },
     password: {
       type: String,
       required: true,
-      minlength: 5,
+      minlength: 8,
       validate: {
         validator: function (value) {
           return !/\s/.test(value); // Không cho phép khoảng trắng trong password
@@ -46,7 +44,7 @@ const userSchema = new mongoose.Schema(
         validator: function (value) {
           return value < new Date(); // Ngày sinh không được là tương lai
         },
-        message: "Ngày sinh không thể nằm trong tương lai!",
+        message: "Date of birth must not be in the future",
       },
     },
     address: {
@@ -64,8 +62,8 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "deactived", "banned"],
-      default: "active",
+      enum: ["active", "inactive", "deactived"],
+      default: "inactive",
     },
     site: {
       type: mongoose.Schema.Types.ObjectId,
