@@ -1,7 +1,7 @@
 const systemRoleRouter = require("./systemRole.route");
-const userRouter= require("./user.route");
+const authRouter= require("./auth.route");
 
 module.exports = {
     systemRoleRouter,
-    userRouter,
+    authRouter,
 };

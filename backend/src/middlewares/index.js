@@ -1,5 +1,5 @@
-const tokenAuth = require("./tokenAuth.middleware");
+const auth = require("./auth.middleware");
 
 module.exports = {
-    tokenAuth,
+    auth,
 };

@@ -80,7 +80,7 @@ const Login = () => {
                   />
                 </Form.Item>
 
-                <Link href="#" style={{ float: "right", marginBottom: 10 }}>
+                <Link href="/forgot-password" style={{ float: "right", marginBottom: 10 }}>
                   Forgot your password?
                 </Link>
 
@@ -101,6 +101,10 @@ const Login = () => {
                 >
                   {loading ? <LoadingOutlined spin /> : "Log in"}
                 </Button>
+
+                <Link href="/register" style={{ float: "left", marginTop: 20 }}>
+                  Already have an account?
+                </Link>
               </Form>
             </Col>
             

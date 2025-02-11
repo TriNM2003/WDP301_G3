@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");;
 
-const tokenAuth = (req, res, next) => {
+const verifyAccessToken = (req, res, next) => {
     const token = req.header("Authorization");
 
     if (!token) {
@@ -16,4 +16,8 @@ const tokenAuth = (req, res, next) => {
     }
 };
 
-module.exports = tokenAuth;
+const authMiddleware = {
+    verifyAccessToken,
+}
+
+module.exports = authMiddleware;
