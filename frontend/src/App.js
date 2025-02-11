@@ -29,16 +29,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/active-account" element={<ActiveAccount/>} />
-        <Route path="/forgot-password" element={<ForgotPassword/>} />
-        <Route path="/reset-password" element={<ResetPassword/>} />
-          
+        <Route path="/active-account" element={<ActiveAccount />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route path="/profile" element={<UserProfile />} >
           <Route path="profile-info" element={<ViewProfile />} />
-          <Route path="manage-profile" element={<ManageProfile />} >
-            <Route path="change-password" element={<ChangePassword />} />
-            <Route path="edit-profile" element={<EditProfile/>} />
-          </Route>
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="edit-profile" element={<EditProfile />} />
         </Route>
 
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Row, Col, message } from 'antd';
+import { Card, Button, Input, Row, Col, message, Menu, Modal } from 'antd';
 import { green, red } from "@ant-design/colors";
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const ChangePassword = () => {
     const [form, setForm] = useState({
@@ -8,51 +10,107 @@ const ChangePassword = () => {
         newPassword: '',
         confirmPassword: '',
     });
+    const [selectedKey, setSelectedKey] = useState('2');
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [modalSuccess, setModalSuccess] = useState(false);
+
+    const handleMenuClick = (e) => {
+        if (e.key === '4') {
+            setIsModalVisible(true);
+        } else {
+            setSelectedKey(e.key);
+        }
+    };
+
+    const handleDeleteConfirm = () => {
+        setIsModalVisible(false);
+        console.log("Account deleted");
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    };
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSave = () => {
-        if (form.newPassword !== form.confirmPassword) {
-            message.error('New password and confirmation do not match!');
-            return;
+    const handleSave = async () => {
+        let newErrors = {};
+        if (!form.oldPassword) newErrors.oldPassword = 'Old password is required';
+        if (!form.newPassword) newErrors.newPassword = 'New password is required';
+        if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your new password';
+        if (form.newPassword !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) return;
+
+        try {
+            const response = await axios.put('http://localhost:9999/users/change-password', {
+                userId: "67a9b1664bc75243014a4d17",
+                oldPassword: form.oldPassword,
+                newPassword: form.newPassword,
+            });
+            setModalSuccess(true);
+            setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+            setErrors({});
+        } catch (error) {
+            setErrors({ oldPassword: error.response?.data?.message || 'Old password is incorrect' });
+            message.error(error.response?.data?.message || 'Old password is incorrect');
         }
-        message.success('Password changed successfully!');
     };
 
-    return (
-        <div style={{ width: '100%', minHeight: '100vh', background: '#fff' }}>
-            <div style={{ width: '100%', height: '150px', background: 'linear-gradient(to right, #a1c4fd, #c2e9fb)', marginBottom: '20px' }}></div>
-            <Row justify="center">
-                <Col span={12}>
-                    <h2>Change password</h2>
-                    <Card style={{ padding: '20px', borderRadius: '0', border: '1px solid #ccc' }}>
-                        <Row gutter={[16, 16]} align="middle">
-                            <Col span={8}><label>Old password</label></Col>
-                            <Col span={16}><Input.Password name="oldPassword" value={form.oldPassword} onChange={handleChange} placeholder="Old password" style={{ borderRadius: '0' }} /></Col>
-                        </Row>
-                        <Row gutter={[16, 16]} align="middle" style={{ marginTop: '10px' }}>
-                            <Col span={8}><label>New password</label></Col>
-                            <Col span={16}><Input.Password name="newPassword" value={form.newPassword} onChange={handleChange} placeholder="New password" style={{ borderRadius: '0' }} /></Col>
-                        </Row>
-                        <Row gutter={[16, 16]} align="middle" style={{ marginTop: '10px' }}>
-                            <Col span={8}><label>Confirm new password</label></Col>
-                            <Col span={16}><Input.Password name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm new password" style={{ borderRadius: '0' }} /></Col>
-                        </Row>
-                        <Row style={{ marginTop: '20px' }}>
-                            <Col span={8}></Col>
-                            <Col span={3} style={{marginLeft:"5px"}}>
-                                <Button type="primary" onClick={handleSave} style={{ backgroundColor: green[6], borderColor: 'green', borderRadius: '0', width: '150px' }}>Save changes</Button>
-                            </Col>
-                            <Col span={5} style={{marginLeft:"212px"}}>
-                                <Button type="primary" danger style={{ borderRadius: '0', backgroundColor: red[6], width: '150px' }}>Discard changes</Button>
-                            </Col>
-                        </Row>
-                    </Card>
-                </Col>
-            </Row>
-        </div>
+    const handleDiscard = () => {
+        setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setErrors({});
+    };
+
+    return(
+        <Row>
+            <Col span={2}></Col>
+            <Col span={4}>
+                <Menu mode="vertical" selectedKeys={[selectedKey]} onClick={handleMenuClick} style={{ width: 250, borderRadius: '0', border: 'none', backgroundColor: '#fafafa' }}>
+                    <Menu.Item key="1"><Link to="/profile/edit-profile">Profile settings</Link></Menu.Item>
+                    <Menu.Item key="2"><Link to="/profile/change-password"> Change password</Link></Menu.Item>
+                    <Menu.Item key="3">Logout</Menu.Item>
+                    <Menu.Item key="4" style={{ color: red[6] }}>Delete Account</Menu.Item>
+                </Menu>
+            </Col>
+            <Col span={18} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '80%', textAlign: 'left' }}>
+                    <h2>Change Password</h2>
+                </div>
+                <Card style={{ width: '80%', padding: '20px', borderRadius: '0' }}>
+                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
+                        <Col span={6} style={{ textAlign: 'right' }}><label>Old password</label></Col>
+                        <Col span={12}><Input.Password name="oldPassword" value={form.oldPassword} onChange={handleChange} placeholder="Old password" style={{ borderRadius: '0' }} /></Col>
+                        <Col span={6} style={{ color: 'red' }}>{errors.oldPassword}</Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
+                        <Col span={6} style={{ textAlign: 'right' }}><label>New password</label></Col>
+                        <Col span={12}><Input.Password name="newPassword" value={form.newPassword} onChange={handleChange} placeholder="New password" style={{ borderRadius: '0' }} /></Col>
+                        <Col span={6} style={{ color: 'red' }}>{errors.newPassword}</Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
+                        <Col span={6} style={{ textAlign: 'right' }}><label>Confirm new password</label></Col>
+                        <Col span={12}><Input.Password name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm new password" style={{ borderRadius: '0' }} /></Col>
+                        <Col span={6} style={{ color: 'red' }}>{errors.confirmPassword}</Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={{ marginTop: '20px' }}>
+                        <Col span={10} style={{ textAlign: 'right', marginLeft:"-19px" }}>
+                            <Button type="primary" onClick={handleSave} style={{ backgroundColor: green[6], borderColor: 'green', borderRadius: '0' }}>Save changes</Button>
+                        </Col>
+                        <Col span={13}>
+                            <Button type="primary" danger onClick={handleDiscard} style={{ borderRadius: '0', backgroundColor: red[6] }}>Discard changes</Button>
+                        </Col>
+                    </Row>
+                </Card>
+            </Col>
+            <Modal title="Success" visible={modalSuccess} onOk={() => setModalSuccess(false)} footer={[<Button key="ok" type="primary" onClick={() => setModalSuccess(false)}>OK</Button>]}>                
+                <p>Password changed successfully!</p>
+            </Modal>
+        </Row>
     );
 };
 

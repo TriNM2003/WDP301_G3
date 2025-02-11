@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Avatar, Button, Row, Col } from 'antd';
 import { MailOutlined, PhoneOutlined, SolutionOutlined, ClusterOutlined } from '@ant-design/icons';
-
+import { Link } from 'react-router-dom';
 const ViewProfile = () => {
     return(<Row gutter={16}>
         <Col span={6}>
@@ -34,8 +34,9 @@ const ViewProfile = () => {
             </Row>
           </Card>
           <div style={{ textAlign: 'center', marginTop: 20 }}>
-              <Button type="primary">Edit profile</Button>
+              <Button type="primary"><Link to={"/profile/edit-profile"}>Edit profile</Link></Button>
             </div>
+            
         </Col>
         <Col span={18}>
           <Card title="Project you worked in" style={{ margin: '0 50px', border: '1px solid grey' }}>
