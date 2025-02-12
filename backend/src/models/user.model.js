@@ -27,19 +27,15 @@ const userSchema = new mongoose.Schema(
     },
     fullName: {
       type: String,
-      required: true,
-      trim: true,
       match: /^[a-zA-ZÀ-Ỹà-ỹ\s]+$/, // Chỉ cho phép chữ cái và dấu cách
     },
     phoneNumber: {
       type: String,
-      required: true,
-      unique: true,
-      match: /^(0[3|5|7|8|9])+([0-9]{8})$/, // Format số điện thoại Việt Nam
+      match: /^(0[3|5|7|8|9])+([0-9]{8})$/,
+      sparse: true
     },
     dob: {
       type: Date,
-      required: true,
       validate: {
         validator: function (value) {
           return value < new Date(); // Ngày sinh không được là tương lai
@@ -48,8 +44,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     address: {
-      type: String,
-      trim: true,
+      type: String
     },
     roles: [
       {
