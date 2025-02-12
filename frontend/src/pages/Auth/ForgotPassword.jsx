@@ -7,17 +7,46 @@ const { Title, Text } = Typography;
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false); // Trạng thái loading khi gửi email
   const navigate = useNavigate();
-  const [isHovered, setIsHovered] = useState(false);
 
-  const handleSendEmail = () => {
-    if (!email) {
-      message.error("Please enter your email!");
-      return;
+  const [errors, setErrors] = useState({});
+
+  const handleSendEmail = async () => {
+    if (!email.trim()) {
+        message.error("Please enter your email!");
+        return;
     }
-    message.success("Password reset email sent successfully!");
-    // Gọi API reset password tại đây
-  };
+
+    setLoading(true);
+    const hideMessage = message.loading("Sending email...", 0); // Hiển thị loading
+
+    try {
+        const response = await fetch("http://localhost:9999/auth/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+        hideMessage(); // Ẩn loading
+
+        if (response.ok) {
+            localStorage.setItem("resetToken", data.token); // Lưu token
+            message.success("Password reset email sent successfully! Check your inbox.");
+        } else {
+            message.error(data.status);
+        }
+    } catch (error) {
+        setErrors({ email: error.response?.data?.message });
+        message.error(error.response?.data?.message);
+    } finally {
+        setLoading(false);
+    }
+};
+
+
+
 
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -31,7 +60,7 @@ const ForgotPassword = () => {
         }}
       >
         {/* Biểu tượng minh họa */}
-        <div style={{ marginBottom: "20px"}}>
+        <div style={{ marginBottom: "20px" }}>
           <img src="https://t3.ftcdn.net/jpg/04/92/75/18/360_F_492751838_Ybun2zwpQC8AZv11AwZLdXJk4cUrTt5z.jpg" alt="Forgot Password" width="190px" />
         </div>
 
@@ -39,7 +68,7 @@ const ForgotPassword = () => {
         <Text>Enter your email so that we can send you a password reset link.</Text>
 
         {/* Input Email */}
-        <div style={{ marginTop: "20px",textAlign: "left" }}>
+        <div style={{ marginTop: "20px", textAlign: "left" }}>
           <Text strong>Email</Text>
           <Input
             size="large"
@@ -58,18 +87,16 @@ const ForgotPassword = () => {
           block
           style={{
             marginTop: "20px",
-            backgroundColor: isHovered ? "#5cdbd3" : "#13c2c2",
-            borderColor: isHovered ? "#5cdbd3" : "#13c2c2",
             borderRadius: "20px",
-            transform: isHovered ? "scale(1.05)" : "scale(1)", 
+            transform: "scale(1)",
             transition: "all 0.3s ease",
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
           onClick={handleSendEmail}
+          loading={loading} // Hiển thị trạng thái loading khi đang gửi email
         >
           Send Email
         </Button>
+
         {/* Quay lại Login */}
         <div style={{ marginTop: "15px" }}>
           <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate("/login")}>
