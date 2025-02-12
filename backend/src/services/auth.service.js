@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
-const createHttpErrors = require("http-errors");
-
+const passport = require("passport");
+require("../middlewares/auth.middleware");
 
 const register = async (req) => {
     const { username, email, password} = req.body;
@@ -39,6 +39,8 @@ const register = async (req) => {
 
     await newUser.save();
 
+    // send email here
+    
     return {
         status: 200,
         message: "Register successfully, please active your account!",
@@ -46,10 +48,10 @@ const register = async (req) => {
             username,
             email,
             password,
-            fullName: '',
+            fullName: null,
             phoneNumber: null,
             dob: null,
-            address: '',
+            address: null,
             status: "inactive",
         }
      };
@@ -74,28 +76,43 @@ const login = async (username, password) => {
         };
     }
 
-    const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_SECRET, {
+    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {
         expiresIn: "1d", 
     });
 
     return {
         status: 200,
         message: "Login successfully!",
-        token,
+        token: token,
         user: {
             id: user._id,
             username: user.username,
             email: user.email,
             fullName: user.fullName,
             phoneNumber: user.phoneNumber,
-            status: user.status,
+            dob: user.dob,
+            address: user.address,
+            roles: user.roles,
+            activities: user.activities,
+            teams: user.teams,
+            notifications: user.notifications,
+            status: user.status
         },
     };
 };
 
+//unfinished
+const loginByGoogleCallback = () => {
+    passport.authenticate('google'),{failureRedirect: "/auth/login"},(req, res) => {
+        res.redirect(`http://localhost:3000/auth/login`);
+    }
+}
+
+
 const authService = {
     login,
-    register
+    loginByGoogleCallback,
+    register,
 }
 
 module.exports = authService;

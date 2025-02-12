@@ -4,6 +4,8 @@ const bodyParser = require("body-parser");
 const httpsErrors = require("http-errors");
 const cors = require("cors"); 
 require("dotenv").config();
+const session = require("express-session");
+const passport = require("passport");
 
 const app = express();
 const db = require("./models/index");
@@ -18,6 +20,19 @@ app.use(cors({
 
 app.use(morgan("dev"));
 app.use(bodyParser.json());
+
+// khoi tao express session va passport (cho google login register)
+app.use(
+  session({
+    secret: "CatandDogWTH",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 app.get("/", async (req, res, next) => {
   res.status(200).json({ message: "Server is running" });
 });
