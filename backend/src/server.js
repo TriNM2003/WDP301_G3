@@ -8,6 +8,7 @@ require("dotenv").config();
 const app = express();
 const db = require("./models/index");
 const { systemRoleRouter } = require("./routes");
+const { userRouter } = require("./routes");
 
 // Sử dụng cors middleware để cho phép request từ localhost:3000
 app.use(cors({
@@ -24,6 +25,7 @@ app.get("/", async (req, res, next) => {
 
 // Định tuyến theo các chức năng thực tế
 app.use("/systemRoles", systemRoleRouter);
+app.use("/users", userRouter);
 
 app.use(async (req, res, next) => {
   next(httpsErrors(404, "Bad Request"));
