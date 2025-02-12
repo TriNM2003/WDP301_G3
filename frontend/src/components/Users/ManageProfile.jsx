@@ -28,6 +28,7 @@ const ManageProfile = () => {
         <Row>
             <Col span={2}></Col>
             <Col span={4}>
+                
                 <Menu
                     mode="vertical"
                     selectedKeys={[selectedKey]}
