@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
-const passport = require("passport");
+const passport = require("../configs/passport.config");
+const { stringify } = require("qs");
 require("../middlewares/auth.middleware");
 
 const register = async (req) => {
@@ -58,7 +59,7 @@ const register = async (req) => {
 };
 
 
-const login = async (username, password) => {
+const login = async (username, password, res) => {
     const user = await User.findOne({username: username});
 
     if (!user) {
@@ -76,14 +77,34 @@ const login = async (username, password) => {
         };
     }
 
-    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {
-        expiresIn: "1d", 
+    // accessToken
+    const accessToken = jwt.sign({id: user._id}, process.env.JWT_SECRET, {
+        expiresIn: "1h", 
+    });
+    // refresh token
+    const refreshToken = jwt.sign({id: user._id}, process.env.REFRESH_JWT_SECRET, {
+        expiresIn: "7d", 
+    });
+
+    // luu vao trong cookie
+    res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 60 * 60 * 1000
+    });
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 7 * 24 * 60 * 60 *1000
     });
 
     return {
         status: 200,
         message: "Login successfully!",
-        token: token,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         user: {
             id: user._id,
             username: user.username,
@@ -101,18 +122,61 @@ const login = async (username, password) => {
     };
 };
 
-//unfinished
+
+// const loginByGoogle = passport.authenticate('google', { scope: ['profile', 'email'] });
+
 const loginByGoogleCallback = () => {
-    passport.authenticate('google'),{failureRedirect: "/auth/login"},(req, res) => {
-        res.redirect(`http://localhost:3000/auth/login`);
-    }
+    return passport.authenticate('google',{failureRedirect: "/auth/login"},(req, res) => {
+        // tao cookie lu giu thong tin user
+        res.cookie("user", JSON.stringify(req.user), {httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000});
+        res.redirect(`http://localhost:3000/home123`);
+    });
 }
+
+const refreshAccessToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+
+        if (!refreshToken) {
+            return res.status(403).json({ message: "Refresh token not found!" });
+        }
+
+        // Xác thực refreshToken
+        const user = jwt.verify(refreshToken, process.env.REFRESH_JWT_SECRET);
+        if (!user) {
+            return res.status(403).json({ message: "Refresh token is invalid!" });
+        }
+
+        // Tạo accessToken mới
+        const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+            expiresIn: "1h",
+        });
+
+        // Đặt accessToken vào cookie
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 60 * 60 * 1000,
+        });
+
+        return res.status(200).json({
+            message: "Refresh token successfully!",
+            accessToken: accessToken,
+        });
+
+    } catch (err) {
+        console.error("Error refreshing token:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 
 const authService = {
     login,
     loginByGoogleCallback,
     register,
+    refreshAccessToken,
 }
 
 module.exports = authService;

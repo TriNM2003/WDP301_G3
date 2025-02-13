@@ -71,7 +71,7 @@ const LoginForm = () => {
             username: username,
             password: password
         }
-        const res = await axios.post(loginAPI, req);
+        const res = await axios.post(loginAPI, req, {withCredentials: true});
         return res.data
     } catch (error) {
         setTimeout(() => {
@@ -116,13 +116,13 @@ const LoginForm = () => {
                       }, 2000);
                       break;
                default:
-                if(loginResult.token){
+                if(loginResult.accessToken){
                     messageApi.open({
                         type: "success",
                         content: "Login successfully! Redirecting to homepage...",
                         duration: 2
                     }).then(() => {
-                        localStorage.setItem("accessToken", loginResult.token);
+                        localStorage.setItem("accessToken", loginResult.accessToken);
                         setUser(loginResult.user);
                         setLoading(false);
                         nav('/home')

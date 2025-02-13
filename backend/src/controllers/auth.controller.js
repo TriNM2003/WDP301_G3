@@ -1,6 +1,6 @@
 const authService = require("../services/auth.service");
 const passport = require("passport");
-const jwt = require("jsonwebtoken");
+require("../configs/passport.config");
 
 const register = async (req, res) => {
     try {
@@ -15,7 +15,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { username, password } = req.body;
-        const accountInfo = await authService.login(username, password);
+        const accountInfo = await authService.login(username, password, res);
         res.status(accountInfo.status).json(accountInfo);
     } catch (error) {
         res.status(400).json({ 
@@ -25,29 +25,41 @@ const login = async (req, res) => {
 };
 
 
-const loginByGoogleCallback = async (req, res, next) => {
-    passport.authenticate("google", { failureRedirect: "/auth/login" }, (err, user) => {
-        // if (err || !user) {
-        //     return res.redirect("/auth/login?error=Authentication Failed");
-        // }
+const loginByGoogle = passport.authenticate('google', { scope: ['email', 'profile'] });
 
-        // // Kiểm tra trạng thái tài khoản
-        // if (user.status !== "active") {
-        //     return res.redirect("/auth/login?error=Please activate your account");
-        // }
+const loginByGoogleCallback = (req, res, next) => {
+    if (!req.user) {
+        console.error("No user found after authentication.");
+        return res.redirect("http://localhost:3000/error");
+    }
 
-        // Tạo JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    req.logIn(req.user, (loginErr) => {
+        if (loginErr) {
+            console.error("Login error:", loginErr);
+            return res.redirect("http://localhost:3000/error");
+        }
 
-        // Chuyển hướng đến frontend với thông tin user
-        res.redirect(`http://localhost:3000/auth/login?username=${encodeURIComponent(user.username)}&email=${encodeURIComponent(user.email)}&password=${encodeURIComponent(user.password)}&status=${encodeURIComponent(user.status)}&token=${token}`);
-    })(req, res, next);
+        res.cookie("user", JSON.stringify(req.user), { httpOnly: true });
+        res.redirect("http://localhost:3000/home");
+    });
+};
+
+
+const refreshAccessToken = async (req, res) => {
+    try {
+        await authService.refreshAccessToken(req, res);
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
 }
 
 const authController = {
     register,
     login,
-    loginByGoogleCallback,
+    loginByGoogle, loginByGoogleCallback,
+    refreshAccessToken,
 }
 
 module.exports = authController;

@@ -1,54 +1,6 @@
 const jwt = require("jsonwebtoken");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const passport = require("passport");
 const createError = require("http-errors");
-const User = require("../models/user.model");
-
-passport.use(
-  new GoogleStrategy(
-      {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: "/auth/loginByGoogle/callback",
-          passReqToCallback: true,
-      },
-      async (req, accessToken, refreshToken, profile, done) => {
-          try {
-              let user = await User.findOne({ email: profile.emails[0].value });
-
-              let randomPassword = '';
-              if (!user) {
-                  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                  for (let i = 0; i < 10; i++) {
-                      randomPassword += characters.charAt(Math.floor(Math.random() * characters.length));
-                  }
-
-                  user = await new User({
-                      username: profile.displayName,
-                      email: profile.emails[0].value,
-                      password: randomPassword,
-                      fullName: profile.displayName,
-                      userAvatar: profile.photos[0]?.value || null,
-                      status: "inactive",
-                  }).save();
-              }
-
-              done(null, user);
-          } catch (err) {
-              done(err, null);
-          }
-      }
-  )
-);
-
-passport.serializeUser((user, done) => {
-    done(null, user);
-});
-
-passport.deserializeUser((obj, done) => {
-    done(null, obj);
-});
-
+const passport = require("passport");
 
 const verifyAccessToken = (req, res, next) => {
     if (!req.headers['authorization']) {
@@ -71,9 +23,11 @@ const verifyAccessToken = (req, res, next) => {
     })
 };
 
+const verifyGoogleCallback = passport.authenticate("google", { failureRedirect: "http://localhost:3000/error" });
+
 const authMiddleware = {
     verifyAccessToken,
-    passport,
+    verifyGoogleCallback,
 }
 
 module.exports = authMiddleware;
