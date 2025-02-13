@@ -40,7 +40,7 @@ const changePassword = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
     try {
         const userId = req.payload.id;
-        const user = await db.Users.findById(userId);
+        const user = await db.User.findById(userId);
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }
@@ -57,7 +57,7 @@ const editProfile = async (req, res, next) => {
         const { fullName, address, dob, phoneNumber } = req.body;
         const userId = req.payload.id;
         console.log(userId);
-        const user = await db.Users.findById(userId);
+        const user = await db.User.findById(userId);
         console.log(user);
         if (!user) {
             return res.status(400).json({ message: "User not found" });
@@ -68,7 +68,7 @@ const editProfile = async (req, res, next) => {
         user.dob = dob;
         user.address = address;
 
-        await db.Users.findByIdAndUpdate
+        await db.User.findByIdAndUpdate
         (userId, {
             fullName: fullName,
             phoneNumber: phoneNumber,
