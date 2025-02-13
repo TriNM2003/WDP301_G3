@@ -21,13 +21,7 @@ const EditProfile = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     
-        const handleMenuClick = (e) => {
-            if (e.key === '4') {
-                setIsModalVisible(true);
-            } else {
-                setSelectedKey(e.key);
-            }
-        };
+       
     
         const handleDeleteConfirm = () => {
             setIsModalVisible(false);
