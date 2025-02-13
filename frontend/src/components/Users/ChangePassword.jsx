@@ -36,15 +36,21 @@ const ChangePassword = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSave = async () => {
+    const validateForm = () => {
         let newErrors = {};
         if (!form.oldPassword) newErrors.oldPassword = 'Old password is required';
         if (!form.newPassword) newErrors.newPassword = 'New password is required';
         if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your new password';
         if (form.newPassword !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+        if (form.newPassword.length < 8 ) newErrors.newPassword = 'Password must be at least 8 characters';
+        if (form.newPassword.includes(" ")) newErrors.newPassword = 'Password must not contain spaces';
 
         setErrors(newErrors);
-        if (Object.keys(newErrors).length > 0) return;
+        return Object.keys(newErrors).length === 0 ;
+    };
+
+    const handleSave = async () => {
+       if(!validateForm()) return;
 
         await axios.put('http://localhost:9999/users/change-password',
             {
