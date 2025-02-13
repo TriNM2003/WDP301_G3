@@ -30,8 +30,8 @@ import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 
 function App() {
-  const { accessToken } = useContext(AppContext)
 
+  const { accessToken } = useContext(AppContext)
 
   return (
     <div className="App">
