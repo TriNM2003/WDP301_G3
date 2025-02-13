@@ -7,8 +7,14 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const { UserController } = require("../controllers");
 
 userRouter.use(bodyParser.json());
+userRouter.put("/change-password",
+    authMiddleware.verifyAccessToken,
+    UserController.changePassword
+)
+
 
 userRouter.get("/user-profile", authMiddleware.verifyAccessToken, UserController.getUserById);
 userRouter.put("/edit-profile", authMiddleware.verifyAccessToken, UserController.editProfile);
+
 
 module.exports = userRouter

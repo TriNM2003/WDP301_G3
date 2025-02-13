@@ -7,12 +7,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       minlength: 5,
+      //ko co dau cach
     },
     email: {
       type: String,
       required: true,
       unique: true,
       match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+      //ko co dau cach
     },
     password: {
       type: String,
