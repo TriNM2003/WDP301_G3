@@ -1,37 +1,85 @@
 import React, { useEffect, useState } from "react";
-import { Steps, Button, message, Card, Typography,Spin  } from "antd";
-import { CheckCircleFilled, MailFilled, SmileOutlined,LoadingOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { Steps, Button, message, Card, Typography, Spin } from "antd";
+import { CheckCircleFilled, MailFilled, SmileOutlined, LoadingOutlined } from "@ant-design/icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const { Step } = Steps;
 const { Title, Text } = Typography;
 
-const ActiveAccount = ({ isEmailVerified }) => {
-  const [current, setCurrent] = useState(0);
-  const navigate = useNavigate();
+const ActiveAccount = () => {
+  const [current, setCurrent] = useState(1); // Mặc định là bước "Verify Email"
   const [isWaiting, setIsWaiting] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (isEmailVerified) {
-      setCurrent(2); // Nếu email đã xác thực, chuyển đến bước "Enjoy Service"
+    // Lấy token từ URL khi người dùng truy cập link active từ email
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+
+    if (token) {
+      // Lưu token vào localStorage
+      localStorage.setItem("activationToken", token);
+
+      // Xóa token khỏi URL mà không cần reload trang
+      window.history.replaceState({}, document.title, "/active-account");
+
+      // Gửi token để xác thực tài khoản
+      verifyAccount(token);
     } else {
-      setCurrent(1); // Nếu chưa, thì ở bước "Verify Email"
+      const storedToken = localStorage.getItem("activationToken");
+      if (!storedToken) {
+        navigate("/not-found"); // Nếu không có token nào thì chuyển hướng
+      }
     }
-  }, [isEmailVerified]);
+  }, [location, navigate]);
 
-  const activateAccount = () => {
-    setIsWaiting(true); // Hiển thị hiệu ứng loading
-    message.loading({ content: "Processing activation...", key: "activate", duration: 2 });
+  const verifyAccount = async (token) => {
+    setIsWaiting(true);
+    try {
+      const response = await axios.post("http://localhost:9999/auth/verify-account", { token });
 
-    // Giả lập thời gian chờ xác nhận (API call giả định)
-    setTimeout(() => {
+      if (response.status === 200) {
+        message.success(response?.data?.message);
+        setCurrent(2);
+        localStorage.removeItem("activationToken"); // Xóa token sau khi kích hoạt thành công
+      } else {
+        message.error("Activation failed!");
+        navigate("/not-found");
+      }
+    } catch (error) {
+      message.error(error.response?.data?.message || "Something went wrong!");
+      navigate("/not-found");
+    } finally {
       setIsWaiting(false);
-      message.success({ content: "Account activated!", key: "activate" });
-      setCurrent(2); // Chuyển đến bước "Enjoy Service"
-    }, 5000); // Chờ 3 giây để mô phỏng API
+    }
   };
 
-  const afterActiveAccount = () => {
+  const sendActivationEmail = async () => {
+    setIsWaiting(true);
+    message.loading({ content: "Sending activation email...", key: "activate", duration: 2 });
+  
+    try {
+      const token = localStorage.getItem("activationToken");
+  
+      if (!token) {
+        message.error("Activation token is missing! Please login again.");
+        setIsWaiting(false);
+        return;
+      }
+  
+      const response = await axios.post("http://localhost:9999/auth/send-activation-email", { token });
+  
+      message.success({ content: "Activation email sent successfully! Check your inbox.", key: "activate" });
+    } catch (error) {
+      message.error(error.response?.data?.message || "Failed to send activation email!");
+    } finally {
+      setIsWaiting(false);
+    }
+  };
+
+  const goToHome = () => {
     navigate("/home");
   };
 
@@ -47,19 +95,22 @@ const ActiveAccount = ({ isEmailVerified }) => {
             padding: "20px",
           }}
         >
-      
-        <Title style={{ marginBottom: "50px", marginTop: "1px" }} level={3}>Activate your Account</Title>
+          <Title style={{ marginBottom: "50px", marginTop: "1px" }} level={3}>
+            Activate your Account
+          </Title>
 
           {/* Progress Steps */}
           <Steps current={current} size="small" style={{ marginBottom: "20px" }}>
             <Step title="Create Account" icon={<CheckCircleFilled style={{ color: "#1890ff" }} />} />
-            <Step 
-              title="Verify Email" 
+            <Step
+              title="Verify Email"
               icon={
-                isWaiting 
-                  ? <Spin indicator={<LoadingOutlined style={{ fontSize: 18, color: "#1890ff" }} spin />} /> 
-                  : <MailFilled style={{ color: current >= 1 ? "#1890ff" : "#d9d9d9" }} />
-              } 
+                isWaiting ? (
+                  <Spin indicator={<LoadingOutlined style={{ fontSize: 18, color: "#1890ff" }} spin />} />
+                ) : (
+                  <MailFilled style={{ color: current >= 1 ? "#1890ff" : "#d9d9d9" }} />
+                )
+              }
             />
             <Step title="Enjoy Service" icon={<SmileOutlined style={{ color: current === 2 ? "#1890ff" : "#d9d9d9" }} />} />
           </Steps>
@@ -71,12 +122,12 @@ const ActiveAccount = ({ isEmailVerified }) => {
           </Text>
 
           {current === 1 && (
-            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={activateAccount}>
+            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={sendActivationEmail}>
               ACTIVATE ACCOUNT
             </Button>
           )}
           {current === 2 && (
-            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={afterActiveAccount}>
+            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={goToHome}>
               Come to Homepage
             </Button>
           )}
