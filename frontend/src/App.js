@@ -31,7 +31,9 @@ import RegisterForm from './components/Auth/RegisterForm';
 
 function App() {
 
+
   const { accessToken } = useContext(AppContext)
+
 
   return (
     <div className="App">
@@ -63,11 +65,11 @@ function App() {
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
-                <Route path="manage-profile" element={<ManageProfile />} >
+              
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
-              </Route>
+             
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 

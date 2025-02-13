@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { useState, useEffect } from 'react';
 import { Card, Avatar, Button, Row, Col, Typography } from 'antd';
 import { MailOutlined, PhoneOutlined, RocketOutlined, CalendarOutlined, UserOutlined, EnvironmentOutlined } from '@ant-design/icons';
@@ -90,6 +91,7 @@ const ViewProfile = () => {
                   <Text strong>{project.platform}</Text>
                   <br />
                   <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
+
                 </Col>
               </Row>
             </Col>
