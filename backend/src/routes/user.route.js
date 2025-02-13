@@ -12,4 +12,9 @@ userRouter.put("/change-password",
     UserController.changePassword
 )
 
+
+userRouter.get("/user-profile", authMiddleware.verifyAccessToken, UserController.getUserById);
+userRouter.put("/edit-profile", authMiddleware.verifyAccessToken, UserController.editProfile);
+
+
 module.exports = userRouter
