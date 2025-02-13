@@ -10,12 +10,12 @@ const { Text } = Typography;
 const ViewProfile = () => {
   const [user, setUser] = useState({});
   const projects = [
-    { id: 1, name: 'WDP301_G3', icon: '🖥️', platform: 'Jira', color: '#ff5722' },
-    { id: 2, name: 'SDN302_G3', icon: '👥', platform: 'Jira', color: '#ff5722' },
-    { id: 3, name: 'EXE3', icon: '👥', platform: 'Jira', color: '#ff5722' },
-    { id: 4, name: 'MMA', icon: '👥', platform: 'Jira', color: '#ff5722' },
-    { id: 5, name: 'PRN', icon: '👥', platform: 'Jira', color: '#ff5722' },
-    { id: 6, name: 'PRM', icon: '👥', platform: 'Jira', color: '#ff5722' }
+    { id: 1, name: 'WDP301_G3', icon: '🖥️', platform: 'skrumio', color: '#ff5722' },
+    { id: 2, name: 'SDN302_G3', icon: '👥', platform: 'skrumio', color: '#ff5722' },
+    { id: 3, name: 'EXE3', icon: '👥', platform: 'skrumio', color: '#ff5722' },
+    { id: 4, name: 'MMA', icon: '👥', platform: 'skrumio', color: '#ff5722' },
+    { id: 5, name: 'PRN', icon: '👥', platform: 'skrumio', color: '#ff5722' },
+    { id: 6, name: 'PRM', icon: '👥', platform: 'skrumio', color: '#ff5722' }
   ];
   useEffect(() => {
     axios.get('http://localhost:9999/users/user-profile', {
