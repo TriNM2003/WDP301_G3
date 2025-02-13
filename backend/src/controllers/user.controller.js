@@ -2,10 +2,15 @@ const db = require('../models');
 const morgan = require("morgan")
 const mongoose = require("mongoose");
 const createHttpErrors = require("http-errors");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const authService = require("../services/auth.service");
+const passport = require("passport");
 
+//lấy token jwt để lấy thông tin user
 const getUserById = async (req, res, next) => {
     try {
-        const userId = req.params.userId;
+        const userId = req.payload.id;
         const user = await db.Users.findById(userId);
         if (!user) {
             return res.status(400).json({ message: "User not found" });
@@ -16,32 +21,36 @@ const getUserById = async (req, res, next) => {
     }
 }
 
+//lấy token jwt để update thông tin user
 const editProfile = async (req, res, next) => {
     try {
-        const { fullname, address, dob, phone } = req.body;
-        const  userId  = "67a9b1664bc75243014a4d17";
-        //req.params;
-
+        const { fullName, address, dob, phoneNumber } = req.body;
+        const userId = req.payload.id;
+        console.log(userId);
         const user = await db.Users.findById(userId);
         console.log(user);
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }
 
-        user.fullName = fullname;
-        user.address = address;
+        user.fullName = fullName;
+        user.phoneNumber = phoneNumber;
         user.dob = dob;
-        user.phoneNumber = phone;
+        user.address = address;
 
         await db.Users.findByIdAndUpdate
         (userId, {
-            fullName: fullname,
-            address: address,
+            fullName: fullName,
+            phoneNumber: phoneNumber,
             dob: dob,
-            phoneNumber: phone,
+            address: address,            
         });
-
-        res.status(200).json({ message: 'Profile updated successfully' });
+        
+        res.status(200).json({ 
+            fullName: fullName,
+            phoneNumber: phoneNumber,
+            dob: dob,
+            address: address, });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

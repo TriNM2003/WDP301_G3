@@ -1,22 +1,36 @@
-import React, { useState } from 'react';
-import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, DatePicker, Upload, Modal} from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal} from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { green, red, gray } from "@ant-design/colors";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 const EditProfile = () => {
     const [selectedKey, setSelectedKey] = useState('1');
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [form, setForm] = useState({
-        userId: '67a9b1664bc75243014a4d17',
-        fullname: '',
+    const [form, setForm] = useState({  
+        fullName: '',
         address: '',
         dob: '',
-        phone: '',
+        phoneNumber: '',
+        username: '',
+        email: ''
     });
     const [errors, setErrors] = useState({});
     const [successMessage, setSuccessMessage] = useState('');
     const [modalSuccess, setModalSuccess] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        axios.get('http://localhost:9999/users/user-profile', {
+            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+        })
+            .then(response => {
+                setForm(response.data);
+            })
+            .catch(error => {
+                message.error("Failed to load user data");
+            });
+    }, []);
 
     const handleMenuClick = (e) => {
         if (e.key === '4') {
@@ -25,41 +39,40 @@ const EditProfile = () => {
             setSelectedKey(e.key);
         }
     };
+
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     const handleSave = async () => {
         let newErrors = {};
-        if (!form.fullname) newErrors.fullname = 'Email is required';
+        if (!form.fullName) newErrors.fullName = 'fullName is required';
         if (!form.address) newErrors.address = 'Address is required';
-        if (!form.phone) newErrors.phone = 'Phone number is required';
+        if (!form.phoneNumber) newErrors.phoneNumber = 'phoneNumber number is required';
         if (!form.dob) newErrors.dob = 'Date of birth is required';
 
         setErrors(newErrors);
-        if (Object.keys(newErrors).length === 0) {
-            setSuccessMessage('Profile details update successfully');
-            message.success('Profile updated successfully!');
-        }
+        if (Object.keys(newErrors).length > 0) return;
 
-        await axios.put('http://localhost:5000/users/edit-profile', form)
-            .then((response) => {
-                console.log(response.data);
+        axios.put('http://localhost:9999/users/edit-profile', form, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+        })
+            .then(() => {
+                console.log(form)
                 setModalSuccess(true);
-                setForm({ 
-                    fullname: '',
-                    address: '',
-                    dob: '',
-                    phone: '', });
-                setErrors({});
-            }).catch((error) => {
-                console.log(error?.response?.data?.message);
-                setErrors({ oldPassword: error.response?.data?.message });
+            })
+            .catch(error => {
+                message.error(error.response?.data?.message);
+                setErrors({ Profile: error.response?.data?.message });
             });
     };
 
     const handleDiscard = () => {
-        setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setForm({ 
+            fullName: '',
+            address: '',
+            dob: '',
+            phoneNumber: '', });
         setErrors({});
     };
 
@@ -104,20 +117,20 @@ const EditProfile = () => {
                                 <Button icon={<UploadOutlined />}>Click to Upload</Button>
                             </Upload>
                         </Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.fullname}</Col>
+                        <Col span={6} style={{ color: 'red' }}>{errors.fullName}</Col>
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
                         <Col span={6}><label>Username</label></Col>
-                        <Col span={12}><div style={{ border: "1px solid #d9d9d9" }}>Adadawdkawd</div></Col>
+                        <Col span={12}><div style={{ border: "1px solid #d9d9d9", textAlign: "left", paddingLeft:"10px" }}>{form.username}</div></Col>
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
                         <Col span={6}><label>Email</label></Col>
-                        <Col span={12}><div style={{ border: "1px solid #d9d9d9" }}>Adadawdkawd@gmail.com</div></Col>
+                        <Col span={12}><div style={{ border: "1px solid #d9d9d9", textAlign: "left", paddingLeft:"10px" }}>{form.email}</div></Col>
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
                         <Col span={6}><label>Fullname</label></Col>
-                        <Col span={12}><Input name="fullname" value={form.fullname} onChange={handleChange} placeholder="FullName" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.fullname}</Col>
+                        <Col span={12}><Input name="fullName" value={form.fullName} onChange={handleChange} placeholder="fullName" style={{ borderRadius: '0' }} /></Col>
+                        <Col span={6} style={{ color: 'red' }}>{errors.fullName}</Col>
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
                         <Col span={6}><label>Address</label></Col>
@@ -126,19 +139,19 @@ const EditProfile = () => {
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
                         <Col span={6}><label>Date of birth</label></Col>
-                        <Col span={12}><DatePicker name="dob" value={form.dob} onChange={handleChange} style={{ width: '100%', borderRadius: '0' }} /></Col>
+                        <Col span={12}><Input name="dob" type="date" value={form.dob ? new Date(form.dob).toISOString().split('T')[0] : ''} onChange={handleChange} style={{ borderRadius: '0' }} /></Col>
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
                         <Col span={6}><label>Phone number</label></Col>
-                        <Col span={12}><Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone number" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.phone}</Col>
+                        <Col span={12}><Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="phone number" style={{ borderRadius: '0' }} /></Col>
+                        <Col span={6} style={{ color: 'red' }}>{errors.phoneNumber}</Col>
                     </Row>
                     <Row gutter={[8, 8]} style={{ marginTop: '20px' }}>
                         <Col span={10} style={{ textAlign: 'right', marginLeft: "-19px" }}>
                             <Button type="primary" onClick={handleSave} style={{ backgroundColor: green[6], borderColor: 'green', borderRadius: '0' }}>Save changes</Button>
                         </Col>
                         <Col span={13}>
-                            <Button type="primary" style={{ borderRadius: '0', backgroundColor: red[6] }}>Discard changes</Button>
+                            <Button type="primary" onClick={handleDiscard} style={{ borderRadius: '0', backgroundColor: red[6] }}>Discard changes</Button>
                         </Col>
                     </Row>
                     {successMessage && (
