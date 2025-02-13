@@ -6,11 +6,21 @@ import { useNavigate } from 'react-router-dom';
 export const AppContext = createContext();
 
 const AppProvider = ({ children }) => {
+    //parameter
+    // const [accessToken,setAccessToken] = useState()
+    const accessToken =localStorage.getItem("accessToken");
     //token
-    const accessToken = localStorage.getItem('accessToken');
+    // useEffect(()=>{
+    //     const token =localStorage.getItem("accessToken")|| null;
+    //     if(token != null){
+    //         setAccessToken(token);
+    //     }
+    // },[])
     // api
     const authAPI = "http://localhost:9999/auth";
     const userApi = "http://localhost:9999/users";
+
+    
 
     //parameter
     const [user, setUser] = useState({});
@@ -39,6 +49,7 @@ const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{
+            accessToken,
             authAPI,
             accessToken,
            user, setUser

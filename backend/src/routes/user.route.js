@@ -14,6 +14,7 @@ userRouter.put("/change-password",
 
 
 userRouter.get("/user-profile", authMiddleware.verifyAccessToken, UserController.getUserById);
+
 userRouter.put("/edit-profile", authMiddleware.verifyAccessToken, UserController.editProfile);
 
 

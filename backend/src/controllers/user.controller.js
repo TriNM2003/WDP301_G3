@@ -8,7 +8,7 @@ const bcrypt = require("bcrypt");
 const authService = require("../services/auth.service");
 const passport = require("passport");
 
-//lấy token jwt để lấy thông tin user
+
 const changePassword = async (req, res, next) => {
     try {
         const userId = req.payload.id;
@@ -33,6 +33,10 @@ const changePassword = async (req, res, next) => {
 }
 
 
+
+//get user by Id
+
+
 const getUserById = async (req, res, next) => {
     try {
         const userId = req.payload.id;
@@ -40,6 +44,7 @@ const getUserById = async (req, res, next) => {
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }
+
         res.status(200).json(user);
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -76,15 +81,20 @@ const editProfile = async (req, res, next) => {
             phoneNumber: phoneNumber,
             dob: dob,
             address: address, });
+
+       
+
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 }
 
 const UserControllers = {
+
     editProfile,
     getUserById,
   changePassword
+
 };
 
 module.exports = UserControllers;

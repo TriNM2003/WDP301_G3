@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Input, Button, Typography, Modal, Form, message } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const { Title } = Typography;
 
@@ -11,20 +12,39 @@ const ResetPassword = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const navigate = useNavigate();
 
-  const handleSaveChange = () => {
-    form
-      .validateFields()
-      .then(() => {
-        setIsModalVisible(true); // Nếu không có lỗi, hiển thị modal
-      })
-      .catch((errorInfo) => {
-        console.log("Validation Failed:", errorInfo);
-        message.error("Please fill in all required fields correctly!");
-      });
-  };
+  const handleSaveChange = async () => {
+    try {
+        const token = localStorage.getItem("resetToken");
+        if (!token) {
+            message.error("Reset token is missing or expired. Please request again.");
+            return;
+        }
+
+        const values = await form.validateFields();
+
+        const response = await axios.post("http://localhost:9999/auth/reset-password", {
+            password: values.password,
+            confirmPassword: values.confirmPassword,
+            token: token, // Gửi token trong body request
+        });
+        console.log(response.token);
+        console.log(response.data);
+        
+        localStorage.removeItem("resetToken"); // Xóa token sau khi đặt lại mật khẩu
+        message.success(response?.data?.status);
+        
+        
+        setIsModalVisible(true); 
+    } catch (error) {
+        message.error(error.response?.data?.status);
+        console.log(error.response?.data?.status);
+        
+    }
+};
+
 
   const handleLoginRedirect = () => {
-    navigate("/login"); // Chuyển đến trang đăng nhập
+    navigate("/auth/login"); // Chuyển đến trang đăng nhập
   };
 
   return (
