@@ -2,15 +2,14 @@ import React from 'react'
 import { Button, Card, Carousel, Col, Collapse, Row, Space } from 'antd'
 import Title from 'antd/es/typography/Title'
 import { ArrowRightOutlined, GoogleCircleFilled, GoogleOutlined, GooglePlusCircleFilled, GooglePlusOutlined, MailOutlined } from '@ant-design/icons'
-import { Link } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import Welcome from '../../components/Home/Welcome'
 import Home from '../../components/Home/Home'
 function HomePage() {
   return (
     <div>
       
-      <Welcome/>
-      {/* <Home/> */}
+      <Outlet/>
       {/* <Row>
         <Col span={24}>
           <Title level={3} style={{ textAlign: "center" }}>Frequently Asked Questions</Title>
@@ -42,7 +41,7 @@ function HomePage() {
               background: "#fff",
               height: "55vh"
             }}
-            cover={<img src="../wellcome-bg.jpg" />}
+            cover={<img src="../images/homepage/adv_1.jpg" style={{height: "20vh"}} />}
           >
             <Title level={4}>Align teams with clear goals</Title>
             <p style={{ color: "#555" }}>Ensure everyone stays on the same page with well-defined objectives, structured workflows, and transparent communication.</p>
@@ -62,7 +61,7 @@ function HomePage() {
               background: "#fff",
               height: "55vh"
             }}
-            cover={<img src="../wellcome-bg.jpg" />}
+            cover={<img src="../images/homepage/adv_2.jpg" style={{height: "20vh"}} />}
           >
             <Title level={4}>Track work your way</Title>
             <p style={{ color: "#555" }}>Customize task views, manage priorities, and adapt workflows to suit your team’s needs for maximum efficiency.</p>
@@ -82,7 +81,7 @@ function HomePage() {
               background: "#fff",
               height: "55vh"
             }}
-            cover={<img src="../wellcome-bg.jpg" />}
+            cover={<img src="../images/homepage/adv_3.jpg" style={{height: "20vh"}} />}
           >
             <Title level={4}>Stay connected with real-time updates</Title>
             <p style={{ color: "#555" }}>Receive instant notifications on task changes, project progress, and team activities to keep everything on track.</p>
@@ -102,12 +101,12 @@ function HomePage() {
               background: "#fff",
               height: "55vh"
             }}
-            cover={<img src="../wellcome-bg.jpg" />}
+            cover={<img src="../images/homepage/adv_4.jpg" style={{height: "20vh"}} />}
           >
             <Title level={4}>Optimize with powerful insights</Title>
             <p style={{ color: "#555" }}>Monitor performance, analyze trends, and generate detailed reports to make data-driven decisions and improve productivity.</p>
             <br />
-            <a href="#" style={{ color: "#00A862", fontWeight: "bold", display: "block" }}>
+            <a href="/login" style={{ color: "#00A862", fontWeight: "bold", display: "block" }}>
               Try →
             </a>
           </Card>
@@ -119,24 +118,24 @@ function HomePage() {
       </Row>
       <Row>
         <Col span={24}>
-          <Carousel style={{ margin: "3%" }} autoplay autoplaySpeed={1000} infinite={true} dotPosition="right">
+          <Carousel style={{ margin: "3%" }} autoplay autoplaySpeed={2000} infinite={true} dotPosition="right">
             <div >
-              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../wellcome-bg.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }} >
+              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/homepage/carousel_1.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }} >
 
               </Title>
             </div>
             <div>
-              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../wellcome-bg.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}  >
+              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/homepage/carousel_2.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}  >
 
               </Title>
             </div>
             <div>
-              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../wellcome-bg.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}  >
+              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/homepage/carousel_3.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}  >
 
               </Title>
             </div>
             <div>
-              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../wellcome-bg.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}  >
+              <Title level={3} style={{ color: "white", height: "50vh", background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/homepage/carousel_4.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}  >
 
               </Title>
             </div>

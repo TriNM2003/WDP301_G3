@@ -74,6 +74,13 @@ const LoginForm = () => {
         const res = await axios.post(loginAPI, req);
         return res.data
     } catch (error) {
+      if (error.response?.status === 403) { 
+        localStorage.setItem("activationToken", error.response.data.token);
+        message.warning("Your account has not been activated. You need to activate it to access the system.");
+        setTimeout(() => {
+            nav('/active-account'); 
+        }, 1000);
+      }
         setTimeout(() => {
             setLoading(false);
             messageApi.open({
