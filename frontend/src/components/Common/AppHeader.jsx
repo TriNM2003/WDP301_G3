@@ -8,7 +8,7 @@ import { DownOutlined, LogoutOutlined, MailOutlined, SettingOutlined } from '@an
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 function AppHeader() {
-    const { accessToken } = useContext(AppContext);
+    const { accessToken, user } = useContext(AppContext);
     const navigate = useNavigate();
     return (
         <Row justify="space-between" style={{ width: "100%", height: "100%", backgroundColor: "#fff", padding: "0 20px" }} >
@@ -30,8 +30,8 @@ function AppHeader() {
             </Col>
             {!accessToken && <Col span={8} >
                 <Flex gap="small" justify='end' align='center' style={{ height: "100%" }}>
-                    <Button href='/login' color='default' variant='outlined'  >Login</Button>
-                    <Button href='/register' color='cyan' variant='solid'>Register </Button>
+                    <Button href='/auth/login' color='default' variant='outlined'  >Login</Button>
+                    <Button href='/auth/register' color='cyan' variant='solid'>Register </Button>
                 </Flex>
             </Col>}
             {accessToken  && <Col span={2} align="end" justify="center" >
@@ -40,9 +40,9 @@ function AppHeader() {
                         <Menu>
                             <Menu.Item key="1" disabled>My Account</Menu.Item>
                             <Menu.Divider />
-                            <Menu.Item key="2" extra="⌘P"  onClick={() => navigate('/profile')}>Profile</Menu.Item>
-                            <Menu.Item key="3" extra="⌘B"  onClick={() => navigate('/profile')}>Edit profile</Menu.Item>
-                            <Menu.Item key="4" extra="⌘B"  onClick={() => navigate('/profile')}>Change password</Menu.Item>
+                            <Menu.Item key="2" extra="⌘P"  onClick={() => navigate('/profile/profile-info')}>Profile</Menu.Item>
+                            <Menu.Item key="3" extra="⌘B"  onClick={() => navigate('/profile/edit-profile')}>Edit profile</Menu.Item>
+                            <Menu.Item key="4" extra="⌘B"  onClick={() => navigate('/profile/change-password')}>Change password</Menu.Item>
                             <Menu.Divider />
                             <Menu.Item key="5" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S">
                                 Logout
@@ -53,10 +53,10 @@ function AppHeader() {
                 >
                     <Title style={{margin:"0",height:"100%"}} level={5} onClick={(e) => e.preventDefault()}>
                         <Space style={{height:"100%"}}>
-                            <Avatar src={<img src={'./wellcome-bg.jpg'} alt="avatar" />} />
-                            Username
-
-                        </Space>
+                            <Avatar src={<img src={user?.avatar} alt="avatar" />} />
+                            {user?.username}
+                        
+                        </Space>    
                     </Title>
                 </Dropdown>
             </Col>}

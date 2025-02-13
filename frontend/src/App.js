@@ -28,8 +28,6 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
-import { useContext } from 'react';
-import { AppContext } from './context/AppContext';
 
 function App() {
   const { accessToken } = useContext(AppContext)
