@@ -37,7 +37,6 @@ const ViewProfile = () => {
           <div style={{ textAlign: 'center', marginTop: 20 }}>
               <Button type="primary"><Link to={"/profile/edit-profile"}>Edit profile</Link></Button>
             </div>
-            
         </Col>
         <Col span={18}>
           <Card title="Project you worked in" style={{ margin: '0 50px', border: '1px solid grey' }}>

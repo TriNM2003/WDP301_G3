@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal} from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { green, red, gray } from "@ant-design/colors";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 const EditProfile = () => {
     const [selectedKey, setSelectedKey] = useState('1');
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -19,25 +17,6 @@ const EditProfile = () => {
     });
     const [errors, setErrors] = useState({});
     const [successMessage, setSuccessMessage] = useState('');
-
-    
-        const handleMenuClick = (e) => {
-            if (e.key === '4') {
-                setIsModalVisible(true);
-            } else {
-                setSelectedKey(e.key);
-            }
-        };
-    
-        const handleDeleteConfirm = () => {
-            setIsModalVisible(false);
-            console.log("Account deleted"); // Replace with actual delete function
-        };
-    
-        const handleCancel = () => {
-            setIsModalVisible(false);
-        };
-
     const [modalSuccess, setModalSuccess] = useState(false);
     const navigate = useNavigate();
 
@@ -60,7 +39,6 @@ const EditProfile = () => {
             setSelectedKey(e.key);
         }
     };
-
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -97,7 +75,6 @@ const EditProfile = () => {
             phoneNumber: '', });
         setErrors({});
     };
-
 
     return (
         <Row>
@@ -190,7 +167,6 @@ const EditProfile = () => {
                 <p>Profile changed successfully!</p>
             </Modal>
         </Row >
-
     )
 };
 
