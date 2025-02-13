@@ -99,7 +99,7 @@ const ForgotPassword = () => {
 
         {/* Quay lại Login */}
         <div style={{ marginTop: "15px" }}>
-          <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate("/login")}>
+          <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate("/auth/login")}>
             Back to Login
           </Button>
         </div>

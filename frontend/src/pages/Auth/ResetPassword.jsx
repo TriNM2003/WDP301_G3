@@ -44,7 +44,7 @@ const ResetPassword = () => {
 
 
   const handleLoginRedirect = () => {
-    navigate("/login"); // Chuyển đến trang đăng nhập
+    navigate("/auth/login"); // Chuyển đến trang đăng nhập
   };
 
   return (

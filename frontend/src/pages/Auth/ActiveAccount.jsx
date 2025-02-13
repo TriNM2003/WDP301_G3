@@ -14,15 +14,26 @@ const ActiveAccount = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Lấy token từ URL
+    // Lấy token từ URL khi người dùng truy cập link active từ email
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
 
     if (token) {
-      // Nếu có token, gọi API xác thực tài khoản
+      // Lưu token vào localStorage
+      localStorage.setItem("activationToken", token);
+
+      // Xóa token khỏi URL mà không cần reload trang
+      window.history.replaceState({}, document.title, "/active-account");
+
+      // Gửi token để xác thực tài khoản
       verifyAccount(token);
+    } else {
+      const storedToken = localStorage.getItem("activationToken");
+      if (!storedToken) {
+        navigate("/not-found"); // Nếu không có token nào thì chuyển hướng
+      }
     }
-  }, [location]);
+  }, [location, navigate]);
 
   const verifyAccount = async (token) => {
     setIsWaiting(true);
@@ -31,56 +42,38 @@ const ActiveAccount = () => {
 
       if (response.status === 200) {
         message.success(response?.data?.message);
-        // console.log(response?.data?.message);
-        
-        setCurrent(2); // Chuyển đến bước "Enjoy Service"
+        setCurrent(2);
+        localStorage.removeItem("activationToken"); // Xóa token sau khi kích hoạt thành công
       } else {
         message.error("Activation failed!");
+        navigate("/not-found");
       }
     } catch (error) {
-      message.error(error.response?.data?.status);
+      message.error(error.response?.data?.message || "Something went wrong!");
+      navigate("/not-found");
     } finally {
       setIsWaiting(false);
     }
   };
 
-
-//   const handleSave = async (values) => {
-//     try {
-//         const response = await axios.put('http://localhost:9999/users/change-password', {
-//             userId: "67a9b1664bc75243014a4d17",
-//             oldPassword: values.oldPassword,
-//             newPassword: values.newPassword,
-//         });
-//         setModalSuccess(true);
-//     } catch (error) {
-//         setErrors({ oldPassword: error.response?.data?.message});
-//         message.error(error.response?.data?.message );
-//     }
-// };
-
   const sendActivationEmail = async () => {
     setIsWaiting(true);
     message.loading({ content: "Sending activation email...", key: "activate", duration: 2 });
-
+  
     try {
-      const response = await fetch("http://localhost:9999/auth/send-activation-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "haothhe176192@fpt.edu.vn" }), 
-      });
-
-    
-      const data = await response.json();
-      if (response.ok) {
-        message.success({ content: "Activation email sent successfully! Check your inbox.", key: "activate" });
-      } else {
-        message.error(data?.status);
-        console.log(data?.status);
-        
+      const token = localStorage.getItem("activationToken");
+  
+      if (!token) {
+        message.error("Activation token is missing! Please login again.");
+        setIsWaiting(false);
+        return;
       }
+  
+      const response = await axios.post("http://localhost:9999/auth/send-activation-email", { token });
+  
+      message.success({ content: "Activation email sent successfully! Check your inbox.", key: "activate" });
     } catch (error) {
-      message.error(error.response?.data?.status);
+      message.error(error.response?.data?.message || "Failed to send activation email!");
     } finally {
       setIsWaiting(false);
     }

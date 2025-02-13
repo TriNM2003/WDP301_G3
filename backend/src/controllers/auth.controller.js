@@ -122,40 +122,37 @@ const passport = require("passport");
     
 
     const sendActivationEmail = async (req, res) => {
-        const { email } = req.body;
+        const { token } = req.body;
     
         try {
-            const user = await db.Users.findOne({ email });
+            if (!token) {
+                return res.status(400).json({ message: "Missing activation token!" });
+            }
+    
+            // Giải mã token để lấy email
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await db.Users.findById(decoded.id);
             if (!user) {
-                return res.status(404).json({ status: "User not found!" });
+                return res.status(404).json({ message: "User not found!" });
             }
-            
+    
             if (user.status === "active") {
-                return res.status(400).json({ status: "Account is already activated!" });
+                return res.status(400).json({ message: "Account is already activated!" });
             }
     
-            // Tạo token kích hoạt (JWT)
-            const token = jwt.sign(
-                { id: user._id, email: user.email },
-                process.env.JWT_SECRET,
-                { expiresIn: "10m" }
-            );
-    
-            // Link xác nhận email (Chuyển hướng đến trang ActiveAccount kèm token)
+            // Tạo link kích hoạt
             const activationLink = `http://localhost:3000/active-account?token=${token}`;
     
-            // Nội dung email
             const emailBody = `
                 <h2>Confirm Your Account Activation</h2>
                 <p>Click the button below to activate your account:</p>
-                <a href="${activationLink}" 
+                <a href="${activationLink}"
                    style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
-                    Confirm Active
+                    Confirm Activation
                 </a>
-                <p>If you didn't request this, please ignore this email.</p>
             `;
     
-            // Gửi email kích hoạt
+            // Gửi email
             const transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
@@ -164,28 +161,25 @@ const passport = require("passport");
                 },
             });
     
-            const mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: "Activate Your Account",
-                html: emailBody,
-            };
-    
+            const mailOptions = { from: process.env.EMAIL_USER, to: user.email, subject: "Activate Your Account", html: emailBody };
             await transporter.sendMail(mailOptions);
-            res.json({ status: "Activation email sent successfully!" });
+    
+            res.json({ message: "Activation email sent successfully!" });
     
         } catch (error) {
             console.error(error);
-            res.status(500).json({ status: "Something went wrong!" });
+            res.status(500).json({ message: "Something went wrong!" });
         }
     };
+    
+    
 
     const verifyAccount = async (req, res) => {
         const { token } = req.body;
     
         try {
             if (!token) {
-                return res.status(400).json({ status: "Missing token!" });
+                return res.status(400).json({ message: "Missing token!" });
             }
     
             // Giải mã token JWT
@@ -194,29 +188,30 @@ const passport = require("passport");
             // Tìm user theo ID từ token
             const user = await db.Users.findById(decoded.id);
             if (!user) {
-                return res.status(404).json({ status: "User Not Exists!" });
+                return res.status(404).json({ message: "User not found!" });
             }
     
+            // Kiểm tra nếu tài khoản đã được kích hoạt trước đó
             if (user.status === "active") {
-                return res.status(400).json({ status: "Account is already activated!" });
+                return res.status(400).json({ message: "This activation link is no longer valid" });
             }
     
-            // Cập nhật trạng thái tài khoản
-            await db.Users.updateOne(
-                { _id: decoded.id },
-                { $set: { status: "active" } }
-            );
+            // Cập nhật trạng thái tài khoản thành "active"
+            await db.Users.updateOne({ _id: decoded.id }, { $set: { status: "active" } });
     
-            res.json({ status: "Account activated successfully!" });
+            res.json({ message: "Account activated successfully!" });
     
         } catch (error) {
             console.error(error);
+    
             if (error.name === "TokenExpiredError") {
-                return res.status(400).json({ status: "Activation link expired!" });
+                return res.status(400).json({ message: "Activation link expired!" });
             }
-            res.status(500).json({ status: "Something went wrong!" });
+    
+            res.status(500).json({ message: "Something went wrong!" });
         }
     };
+    
     
 
 
@@ -234,6 +229,15 @@ const login = async (req, res) => {
     try {
         const { username, password } = req.body;
         const accountInfo = await authService.login(username, password);
+
+          // Nếu tài khoản chưa kích hoạt, trả về thông báo và token để kích hoạt
+          if (accountInfo.status === 403) {
+            return res.status(403).json({
+                message: accountInfo.message,
+                token: accountInfo.token
+            });
+        }
+
         res.status(accountInfo.status).json(accountInfo);
     } catch (error) {
         res.status(400).json({ 
