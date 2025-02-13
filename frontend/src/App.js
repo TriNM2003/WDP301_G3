@@ -4,7 +4,6 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/Home/HomePage';
 import ErrorPage from './pages/Error/ErrorPage';
 import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
 import UserProfile from './pages/Users/UserProfile';
 import ActiveAccount from './pages/Auth/ActiveAccount';
 import ForgotPassword from './pages/Auth/ForgotPassword';
@@ -27,7 +26,10 @@ import { Content, Header } from 'antd/es/layout/layout';
 import AppHeader from './components/Common/AppHeader';
 import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
-
+import LoginForm from './components/Auth/LoginForm';
+import RegisterForm from './components/Auth/RegisterForm';
+import { useContext } from 'react';
+import { AppContext } from './context/AppContext';
 
 function App() {
   const { accessToken } = useContext(AppContext)
@@ -45,8 +47,10 @@ function App() {
               <Route path='/home' element={<HomePage />}>
                 <Route path='' element={<Welcome />} />
               </Route>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path='/auth' element={<Login />}>
+                <Route path="login" element={<LoginForm />} />
+                <Route path="register" element={<RegisterForm />} />
+              </Route>
               <Route path="/active-account" element={<ActiveAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />

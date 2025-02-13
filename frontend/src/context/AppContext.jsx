@@ -16,11 +16,13 @@ const AppProvider = ({ children }) => {
     //         setAccessToken(token);
     //     }
     // },[])
-
     // api
+    const authAPI = "http://localhost:9999/auth";
 
     
 
+    //parameter
+    const [user, setUser] = useState({});
 
 
 
@@ -30,7 +32,10 @@ const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{
-            accessToken
+            accessToken,
+            authAPI,
+            accessToken,
+           user, setUser
         }}>
             {children}
         </AppContext.Provider>
