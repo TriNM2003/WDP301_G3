@@ -18,6 +18,7 @@ const AppProvider = ({ children }) => {
     // },[])
     // api
     const authAPI = "http://localhost:9999/auth";
+    const userApi = "http://localhost:9999/users";
 
     
 
@@ -26,9 +27,25 @@ const AppProvider = ({ children }) => {
 
 
 
-    //call api
 
+    //call api
+    useEffect(() => {
+       
+            
+    });
     //fuction
+    const changePassword = async (userId, oldPassword, newPassword) => {
+        try {
+            const response = await axios.put(`${userApi}/change-password`, {
+                userId,
+                oldPassword,
+                newPassword
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response.data;
+        }
+    };
 
     return (
         <AppContext.Provider value={{

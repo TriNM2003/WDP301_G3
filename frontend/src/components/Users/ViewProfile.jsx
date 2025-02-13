@@ -9,6 +9,7 @@ import axios from 'axios';
 const { Text } = Typography;
 
 const ViewProfile = () => {
+
   const [user, setUser] = useState({});
   const projects = [
     { id: 1, name: 'WDP301_G3', icon: '🖥️', platform: 'skrumio', color: '#ff5722' },
