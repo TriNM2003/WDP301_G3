@@ -9,7 +9,7 @@ const passport = require("passport");
 
 const app = express();
 const db = require("./models/index");
-const { systemRoleRouter, authRouter } = require("./routes");
+const { systemRoleRouter, authRouter, userRouter } = require("./routes");
 
 // Sử dụng cors middleware để cho phép request từ localhost:3000
 app.use(cors({
@@ -40,6 +40,7 @@ app.get("/", async (req, res, next) => {
 // Định tuyến theo các chức năng thực tế
 app.use("/systemRoles", systemRoleRouter);
 app.use("/auth", authRouter);
+app.use("/users", userRouter);
 
 app.use(async (req, res, next) => {
   next(httpsErrors(404, "Bad Request"));

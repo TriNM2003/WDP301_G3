@@ -23,29 +23,27 @@ import { AppContext } from './context/AppContext';
 
 
 function App() {
-  const {accessToken} = useContext(AppContext);
+  const { accessToken } = useContext(AppContext);
   return (
     <div className="App">
       <Routes>
         <Route path="/home" element={<HomePage />} />
 
-        {accessToken === null && 
-        <Route path='/auth' element={<Login />}>
+        {accessToken === null &&
+          <Route path='/auth' element={<Login />}>
             <Route path="login" element={<LoginForm />} />
             <Route path="register" element={<RegisterForm />} />
-        </Route>}
-        
+          </Route>}
 
-        <Route path="/active-account" element={<ActiveAccount/>} />
-        <Route path="/forgot-password" element={<ForgotPassword/>} />
-        <Route path="/reset-password" element={<ResetPassword/>} />
-          
+
+        <Route path="/active-account" element={<ActiveAccount />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route path="/profile" element={<UserProfile />} >
           <Route path="profile-info" element={<ViewProfile />} />
-          <Route path="manage-profile" element={<ManageProfile />} >
-            <Route path="change-password" element={<ChangePassword />} />
-            <Route path="edit-profile" element={<EditProfile/>} />
-          </Route>
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="edit-profile" element={<EditProfile />} />
         </Route>
 
 
