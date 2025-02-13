@@ -46,19 +46,26 @@ const ChangePassword = () => {
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
 
-        await axios.put('http://localhost:9999/users/change-password', {
-            userId: "67a9b1664bc75243014a4d17",
-            oldPassword: form.oldPassword,
-            newPassword: form.newPassword,
-        }).then((response) => {
-            console.log(response.data);
-            setModalSuccess(true);
-            setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
-            setErrors({});
-        }).catch((error) => {
-            console.log(error?.response?.data?.message);
-            setErrors({ oldPassword: error.response?.data?.message });
-        });
+        await axios.put('http://localhost:9999/users/change-password',
+            {
+                oldPassword: form.oldPassword,
+                newPassword: form.newPassword,
+                confirmPassword: form.confirmPassword,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+                },
+
+            }).then((response) => {
+                console.log(response.data);
+                setModalSuccess(true);
+                setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                setErrors({});
+            }).catch((error) => {
+                console.log(error?.response?.data?.message);
+                setErrors({ oldPassword: error.response?.data?.message });
+            });
 
     };
 
@@ -109,8 +116,8 @@ const ChangePassword = () => {
                         <Col span={12}><Input.Password name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm new password" style={{ borderRadius: '0' }} /></Col>
                         <Col span={6} style={{ color: 'red' }}>{errors.confirmPassword}</Col>
                     </Row>
-                    <Row gutter={[8, 8]} style={{ marginTop: '20px',}}>
-                        <Col span={9} style={{ textAlign: 'right',  marginLeft: '5px' }}>
+                    <Row gutter={[8, 8]} style={{ marginTop: '20px', }}>
+                        <Col span={9} style={{ textAlign: 'right', marginLeft: '5px' }}>
                             <Button type="primary" onClick={handleSave} style={{ backgroundColor: green[6], borderColor: 'green', borderRadius: '0' }}>Save changes</Button>
                         </Col>
                         <Col span={13} style={{ marginLeft: '22px' }}>
