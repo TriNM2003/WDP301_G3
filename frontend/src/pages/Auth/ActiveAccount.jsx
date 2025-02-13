@@ -69,7 +69,11 @@ const ActiveAccount = () => {
         return;
       }
   
-      const response = await axios.post("http://localhost:9999/auth/send-activation-email", { token });
+      const response = await fetch("http://localhost:9999/auth/send-activation-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
   
       message.success({ content: "Activation email sent successfully! Check your inbox.", key: "activate" });
     } catch (error) {
