@@ -7,12 +7,14 @@ export const AppContext = createContext();
 
 const AppProvider = ({ children }) => {
     //token
-
+    const accessToken = localStorage.getItem('accessToken');
     // api
+    const authAPI = "http://localhost:9999/auth";
     const userApi = "http://localhost:9999/users";
 
     //parameter
-    const [user, setUser] = useState();
+    const [user, setUser] = useState({});
+
 
 
 
@@ -37,7 +39,9 @@ const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{
-           
+            authAPI,
+            accessToken,
+           user, setUser
         }}>
             {children}
         </AppContext.Provider>
