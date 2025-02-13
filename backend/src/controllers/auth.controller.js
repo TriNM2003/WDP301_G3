@@ -51,7 +51,7 @@ const passport = require("passport");
     async function forgotPassword(req, res) {
         const { email } = req.body;
         try {
-            const user = await db.Users.findOne({ email });
+            const user = await db.User.findOne({ email });
             if (!user) {
                 return res.status(404).json({ status: "User or Email not found!" });
             }
@@ -96,7 +96,7 @@ const passport = require("passport");
             }
     
             // Tìm user theo ID từ token
-            const user = await db.Users.findById(decoded.id);
+            const user = await db.User.findById(decoded.id);
             if (!user) {
                 return res.status(404).json({ status: "User Not Exists!" });
             }
@@ -105,7 +105,7 @@ const passport = require("passport");
             const encryptedPassword = await bcrypt.hash(password, 10);
     
             // Cập nhật mật khẩu mới vào database
-            await db.Users.updateOne(
+            await db.User.updateOne(
                 { _id: decoded.id },
                 { $set: { password: encryptedPassword } }
             );
@@ -131,7 +131,7 @@ const passport = require("passport");
     
             // Giải mã token để lấy email
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await db.Users.findById(decoded.id);
+            const user = await db.User.findById(decoded.id);
             if (!user) {
                 return res.status(404).json({ message: "User not found!" });
             }
@@ -186,7 +186,7 @@ const passport = require("passport");
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
             // Tìm user theo ID từ token
-            const user = await db.Users.findById(decoded.id);
+            const user = await db.User.findById(decoded.id);
             if (!user) {
                 return res.status(404).json({ message: "User not found!" });
             }
@@ -197,7 +197,7 @@ const passport = require("passport");
             }
     
             // Cập nhật trạng thái tài khoản thành "active"
-            await db.Users.updateOne({ _id: decoded.id }, { $set: { status: "active" } });
+            await db.User.updateOne({ _id: decoded.id }, { $set: { status: "active" } });
     
             res.json({ message: "Account activated successfully!" });
     
