@@ -2,15 +2,14 @@ import React from 'react'
 import { Button, Card, Carousel, Col, Collapse, Row, Space } from 'antd'
 import Title from 'antd/es/typography/Title'
 import { ArrowRightOutlined, GoogleCircleFilled, GoogleOutlined, GooglePlusCircleFilled, GooglePlusOutlined, MailOutlined } from '@ant-design/icons'
-import { Link } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import Welcome from '../../components/Home/Welcome'
 import Home from '../../components/Home/Home'
 function HomePage() {
   return (
     <div>
       
-      <Welcome/>
-      {/* <Home/> */}
+      <Outlet/>
       {/* <Row>
         <Col span={24}>
           <Title level={3} style={{ textAlign: "center" }}>Frequently Asked Questions</Title>
