@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const passport = require("../configs/passport.config");
 const { stringify } = require("qs");
+const redisClient = require("../utils/redisClient");
 require("../middlewares/auth.middleware");
 
 const register = async (req) => {
@@ -87,24 +88,19 @@ const login = async (username, password, res) => {
     });
 
     // luu vao trong cookie
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 60 * 60 * 1000
-    });
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 *1000
-    });
+    // res.cookie("accessToken", accessToken, {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "none",
+    //     maxAge: 60 * 60 * 1000
+    // });
+    // luu vao trong redis
+    await redisClient.set(`refreshToken:${user._id}`, refreshToken, "EX",  7 * 24 * 60 * 60 * 1000).then(() => console.log("Create user refresh token successfully!"));
 
     return {
         status: 200,
         message: "Login successfully!",
         accessToken: accessToken,
-        refreshToken: refreshToken,
         user: {
             id: user._id,
             username: user.username,
@@ -133,12 +129,22 @@ const loginByGoogleCallback = () => {
     });
 }
 
+const getRefreshToken = async (userId) => {
+    const refreshToken = await redisClient.get(`refreshToken:${userId}`);
+    if (!refreshToken) {
+        throw new Error("Refresh token not found!");
+    }
+    return refreshToken;
+}
+
 const refreshAccessToken = async (req, res) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
-
-        if (!refreshToken) {
-            return res.status(403).json({ message: "Refresh token not found!" });
+        // lay refresh token va user id
+        const { refreshToken, id} = req.body;
+        // kiem tra refresh token co ton tai trong redis khong
+        const isExist = await redisClient.get(`refreshToken:${id}`);
+        if (!isExist) {
+            return res.status(403).json({ message: "Refresh token not found or already expired!" });
         }
 
         // Xác thực refreshToken
@@ -152,16 +158,8 @@ const refreshAccessToken = async (req, res) => {
             expiresIn: "1h",
         });
 
-        // Đặt accessToken vào cookie
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 60 * 60 * 1000,
-        });
-
         return res.status(200).json({
-            message: "Refresh token successfully!",
+            message: "Refresh access token successfully!",
             accessToken: accessToken,
         });
 
@@ -176,6 +174,7 @@ const authService = {
     login,
     loginByGoogleCallback,
     register,
+    getRefreshToken,
     refreshAccessToken,
 }
 

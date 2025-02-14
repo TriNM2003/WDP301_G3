@@ -12,6 +12,7 @@ authRouter.get("/loginByGoogle", authController.loginByGoogle);
 // thong tin tra ve
 authRouter.get("/loginByGoogle/callback", verifyGoogleCallback, authController.loginByGoogleCallback);
 
-authRouter.get("/refresh", authController.refreshAccessToken);
+authRouter.post("/refresh", authController.refreshAccessToken);
+authRouter.post("/getRefreshToken", authController.getRefreshToken);
 
 module.exports = authRouter;
