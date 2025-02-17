@@ -10,6 +10,7 @@ const { Text } = Typography;
 
 const ViewProfile = () => {
 
+
   const [user, setUser] = useState({});
   const projects = [
     { id: 1, name: 'WDP301_G3', icon: '🖥️', platform: 'skrumio', color: '#ff5722' },
@@ -92,6 +93,7 @@ const ViewProfile = () => {
                   <Text strong>{project.platform}</Text>
                   <br />
                   <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
+
 
                 </Col>
               </Row>

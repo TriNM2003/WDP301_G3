@@ -1,5 +1,4 @@
 const db = require('../models');
-
 const morgan = require("morgan")
 const mongoose = require("mongoose");
 const createHttpErrors = require("http-errors");
@@ -7,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const authService = require("../services/auth.service");
 const passport = require("passport");
+
 
 
 const changePassword = async (req, res, next) => {
@@ -35,7 +35,6 @@ const changePassword = async (req, res, next) => {
 
 
 //get user by Id
-
 
 const getUserById = async (req, res, next) => {
     try {
@@ -98,4 +97,3 @@ const UserControllers = {
 };
 
 module.exports = UserControllers;
-
