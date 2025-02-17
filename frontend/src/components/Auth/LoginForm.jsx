@@ -123,7 +123,8 @@ const LoginForm = () => {
                         duration: 2
                     }).then(() => {
                         localStorage.setItem("accessToken", loginResult.accessToken);
-                        localStorage.setItem("userId", loginResult.user._id);
+                        localStorage.setItem("accessTokenExp", loginResult.accessTokenExp);
+                        localStorage.setItem("userId", loginResult.user.id);
                         setUser(loginResult.user);
                         setLoading(false);
                         nav('/home')
@@ -257,6 +258,7 @@ const LoginForm = () => {
               >
                 Continue with Google
               </Button>
+
             </Col>
 
           </Row>

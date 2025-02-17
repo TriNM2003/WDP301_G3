@@ -6,6 +6,9 @@ const { stringify } = require("qs");
 const redisClient = require("../utils/redisClient");
 require("../middlewares/auth.middleware");
 
+// het han trong 1h
+const accessTokenExp = 60 * 60;
+
 const register = async (req) => {
     const { username, email, password} = req.body;
 
@@ -80,7 +83,7 @@ const login = async (username, password, res) => {
 
     // accessToken
     const accessToken = jwt.sign({id: user._id}, process.env.JWT_SECRET, {
-        expiresIn: "1h", 
+        expiresIn: accessTokenExp, 
     });
     // refresh token
     const refreshToken = jwt.sign({id: user._id}, process.env.REFRESH_JWT_SECRET, {
@@ -101,6 +104,7 @@ const login = async (username, password, res) => {
         status: 200,
         message: "Login successfully!",
         accessToken: accessToken,
+        accessTokenExp: accessTokenExp,
         user: {
             id: user._id,
             username: user.username,
@@ -138,36 +142,29 @@ const getRefreshToken = async (userId) => {
 }
 
 const refreshAccessToken = async (req, res) => {
-    try {
-        // lay refresh token va user id
-        const { refreshToken, id} = req.body;
-        // kiem tra refresh token co ton tai trong redis khong
-        const isExist = await redisClient.get(`refreshToken:${id}`);
-        if (!isExist) {
-            return res.status(403).json({ message: "Refresh token not found or already expired!" });
-        }
+    // lay refresh token va user id
+    const { refreshToken, id} = req.body;
+    const user = await User.findById(id);
 
-        // Xác thực refreshToken
-        const user = jwt.verify(refreshToken, process.env.REFRESH_JWT_SECRET);
-        if (!user) {
-            return res.status(403).json({ message: "Refresh token is invalid!" });
-        }
-
-        // Tạo accessToken mới
-        const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
-        });
-
-        return res.status(200).json({
-            message: "Refresh access token successfully!",
-            accessToken: accessToken,
-        });
-
-    } catch (err) {
-        console.error("Error refreshing token:", err);
-        return res.status(500).json({ message: "Internal Server Error" });
+    // Xác thực refreshToken
+    // console.log(refreshToken);
+    const isValid = jwt.verify(refreshToken, process.env.REFRESH_JWT_SECRET);
+    if (!isValid) {
+        throw new Error("Refresh token is invalid!");
     }
+
+    // Tạo accessToken mới
+    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: accessTokenExp,
+    });
+
+    return {
+        message: "Refresh access token successfully!",
+        accessToken: accessToken,
+        accessTokenExp: accessTokenExp,
+    };
 };
+
 
 
 const authService = {

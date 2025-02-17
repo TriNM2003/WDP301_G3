@@ -20,6 +20,9 @@ import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import { useContext } from 'react';
 import { AppContext } from './context/AppContext';
+import { Button } from 'antd';
+import axios from 'axios';
+import authAxios from './utils/authAxios';
 
 
 function App() {
@@ -34,7 +37,7 @@ function App() {
             <Route path="login" element={<LoginForm />} />
             <Route path="register" element={<RegisterForm />} />
         </Route>}
-        
+
 
         <Route path="/active-account" element={<ActiveAccount/>} />
         <Route path="/forgot-password" element={<ForgotPassword/>} />
