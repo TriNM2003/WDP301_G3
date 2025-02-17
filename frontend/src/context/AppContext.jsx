@@ -9,8 +9,9 @@ const AppProvider = ({ children }) => {
     //parameter
     // const [accessToken,setAccessToken] = useState()
     // const accessToken =localStorage.getItem("accessToken");
-    const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
-   
+    const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
+
+    const [defaultSelectedKeys,setDefaultSelectedKeys] = useState(null);
     //token
     // useEffect(()=>{
     //     const token =localStorage.getItem("accessToken")|| null;
@@ -41,7 +42,8 @@ const AppProvider = ({ children }) => {
             authAPI,
             accessToken,
            user, setUser,
-           setAccessToken
+           setAccessToken,
+           defaultSelectedKeys,setDefaultSelectedKeys
         }}>
             {children}
         </AppContext.Provider>

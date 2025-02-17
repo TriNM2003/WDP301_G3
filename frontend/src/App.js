@@ -28,6 +28,9 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
+import _id from './pages/Sites/_id';
+import { cyan } from '@ant-design/colors';
+
 
 function App() {
 
@@ -38,7 +41,7 @@ function App() {
   return (
     <div className="App">
       <Layout>
-        <Header style={{ padding: "0" }}>
+        <Header style={{ padding: "0", borderBottom:`solid 1px ${cyan[`1`]}` }}>
           <AppHeader />
         </Header>
         <Content>
@@ -68,6 +71,9 @@ function App() {
               
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="edit-profile" element={<EditProfile />} />
+                </Route>
+                <Route path="site" element={<_id/>} >
+                  <Route path='project' element={<_id/>}></Route>
                 </Route>
              
               <Route path='*' element={<Navigate to="/home" />} />
