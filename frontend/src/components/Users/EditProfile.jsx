@@ -17,6 +17,20 @@ const EditProfile = () => {
     });
     const [errors, setErrors] = useState({});
     const [successMessage, setSuccessMessage] = useState('');
+
+
+    
+       
+    
+        const handleDeleteConfirm = () => {
+            setIsModalVisible(false);
+            console.log("Account deleted"); // Replace with actual delete function
+        };
+    
+        const handleCancel = () => {
+            setIsModalVisible(false);
+        };
+
     const [modalSuccess, setModalSuccess] = useState(false);
     const navigate = useNavigate();
 
