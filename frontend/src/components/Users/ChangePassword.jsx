@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Form, Row, Col, message, Menu, Modal, Input, Breadcrumb } from 'antd';
+import { ExclamationCircleOutlined, LockOutlined, UserOutlined, LogoutOutlined, DeleteOutlined } from '@ant-design/icons';
 import { green, red } from "@ant-design/colors";
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -11,26 +12,11 @@ const ChangePassword = () => {
         confirmPassword: '',
     });
     const [selectedKey, setSelectedKey] = useState('2');
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [isConfirmDeleteModalVisible, setIsConfirmDeleteModalVisible] = useState(false);
     const [errors, setErrors] = useState({});
     const [modalSuccess, setModalSuccess] = useState(false);
-
-    const handleMenuClick = (e) => {
-        if (e.key === '4') {
-            setIsModalVisible(true);
-        } else {
-            setSelectedKey(e.key);
-        }
-    };
-
-    const handleDeleteConfirm = () => {
-        setIsModalVisible(false);
-        console.log("Account deleted");
-    };
-
-    const handleCancel = () => {
-        setIsModalVisible(false);
-    };
+    const [messageApi, contextHolder] = message.useMessage();
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,19 +24,35 @@ const ChangePassword = () => {
 
     const validateForm = () => {
         let newErrors = {};
+        
         if (!form.oldPassword) newErrors.oldPassword = 'Old password is required';
-        if (!form.newPassword) newErrors.newPassword = 'New password is required';
-        if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your new password';
-        if (form.newPassword !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-        if (form.newPassword.length < 8 ) newErrors.newPassword = 'Password must be at least 8 characters';
-        if (form.newPassword.includes(" ")) newErrors.newPassword = 'Password must not contain spaces';
-
+        if (!form.newPassword) {
+            newErrors.newPassword = 'New password is required';
+        } else {
+            if (form.newPassword.length < 8) newErrors.newPassword = 'Password must be at least 8 characters';
+            if (form.newPassword.includes(" ")) newErrors.newPassword = 'Password must not contain spaces';
+        }
+    
+        if (!form.confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your new password';
+        } else if (form.newPassword !== form.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+    
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0 ;
+        return Object.keys(newErrors).length === 0;
     };
 
+    useEffect(() => {
+        axios.get('http://localhost:9999/users/user-profile', {
+            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+        })
+            .then(response => setForm(response.data))
+            .catch(() => message.error("Failed to load user data"));
+    }, []);
+
     const handleSave = async () => {
-       if(!validateForm()) return;
+        if (!validateForm()) return;
 
         await axios.put('http://localhost:9999/users/change-password',
             {
@@ -59,20 +61,14 @@ const ChangePassword = () => {
                 confirmPassword: form.confirmPassword,
             },
             {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-                },
-
-            }).then((response) => {
-                console.log(response.data);
-                setModalSuccess(true);
+                headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+            })
+            .then(() => {
+                messageApi.open({ content: 'Password changed successfully!', duration: 2, type: 'success' });
                 setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
                 setErrors({});
-            }).catch((error) => {
-                console.log(error?.response?.data?.message);
-                setErrors({ oldPassword: error.response?.data?.message });
-            });
-
+            })
+            .catch(error => setErrors({ oldPassword: error.response?.data?.message }));
     };
 
     const handleDiscard = () => {
@@ -80,62 +76,115 @@ const ChangePassword = () => {
         setErrors({});
     };
 
-    return (
-        <Row>
-            <Col span={2}></Col>
-            <Col span={4}>
-                <Breadcrumb style={{ margin: '16px 0' }}
-                    items={[
-                        {
-                            title: <a href="/profile/profile-info">Profile</a>,
-                        },
-                        {
-                            title: <a href="/profile/change-password">Change Password</a>,
-                        },
-                    ]}
-                />
+    const handleDeleteAccount = async () => {
+        axios.delete('http://localhost:9999/users/delete-user', {
+            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+        })
+            .then(() => {
+                localStorage.removeItem('accessToken');
+                messageApi.success('Account deleted successfully!', 2);
+                window.location.reload();
+                window.location.href = '/auth/login';
+            })
+            .catch(error => messageApi.error(error.response?.data?.message));
 
-                <Menu mode="vertical" selectedKeys={[selectedKey]} onClick={handleMenuClick} style={{ width: 250, borderRadius: '0', border: 'none', backgroundColor: '#fafafa' }}>
-                    <Menu.Item key="1"><Link to="/profile/edit-profile">Profile settings</Link></Menu.Item>
-                    <Menu.Item key="2" style={{ borderRadius: '0', borderRight: '3px solid #1890ff' }}><Link to="/profile/change-password"> Change password</Link></Menu.Item>
-                    <Menu.Item key="3">Logout</Menu.Item>
-                    <Menu.Item key="4" style={{ color: red[6] }}>Delete Account</Menu.Item>
-                </Menu>
-            </Col>
-            <Col span={18} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '80%', textAlign: 'left' }}>
-                    <h2>Change Password</h2>
-                </div>
-                <Card style={{ width: '80%', padding: '20px', borderRadius: '0' }}>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6} style={{ textAlign: 'right' }}><label>Old password</label></Col>
-                        <Col span={12}><Input.Password name="oldPassword" value={form.oldPassword} onChange={handleChange} placeholder="Old password" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.oldPassword}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6} style={{ textAlign: 'right' }}><label>New password</label></Col>
-                        <Col span={12}><Input.Password name="newPassword" value={form.newPassword} onChange={handleChange} placeholder="New password" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.newPassword}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6} style={{ textAlign: 'right' }}><label>Confirm new password</label></Col>
-                        <Col span={12}><Input.Password name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm new password" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.confirmPassword}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginTop: '20px', }}>
-                        <Col span={9} style={{ textAlign: 'right', marginLeft: '5px' }}>
-                            <Button type="primary" onClick={handleSave} style={{ backgroundColor: green[6], borderColor: 'green', borderRadius: '0' }}>Save changes</Button>
-                        </Col>
-                        <Col span={13} style={{ marginLeft: '22px' }}>
-                            <Button type="primary" danger onClick={handleDiscard} style={{ borderRadius: '0', backgroundColor: red[6] }}>Discard changes</Button>
-                        </Col>
-                    </Row>
-                </Card>
-            </Col>
-            <Modal title="Success" visible={modalSuccess} onOk={() => setModalSuccess(false)} footer={[<Button key="ok" type="primary" onClick={() => setModalSuccess(false)}>OK</Button>]}>
-                <p>Password changed successfully!</p>
+        setIsConfirmDeleteModalVisible(false);
+        setIsDeleteModalVisible(false);
+    };
+
+    const handleMenuClick = (e) => {
+        if (e.key === '4') {
+            setIsDeleteModalVisible(true);
+        } else {
+            setSelectedKey(e.key);
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/auth/login';
+    };
+
+    return (
+        <>
+            {contextHolder}
+            <Row gutter={[16, 16]} justify="center" style={{ minHeight: '100vh', padding: '20px' }}>
+                <Col xs={24} sm={8} md={6} lg={4}>
+                    <Breadcrumb style={{ marginBottom: '16px' }}>
+                        <Breadcrumb.Item><Link to="/profile/profile-info">Profile</Link></Breadcrumb.Item>
+                        <Breadcrumb.Item><Link to="/profile/change-password">Change Password</Link></Breadcrumb.Item>
+                    </Breadcrumb>
+
+                    <Menu mode="vertical" selectedKeys={[selectedKey]} onClick={handleMenuClick}
+                        style={{ width: '100%', borderRadius: '8px', border: 'none', backgroundColor: '#fafafa', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                        <Menu.Item key="1" icon={<UserOutlined />} style={{ borderRadius: '8px' }}>
+                            <Link to="/profile/edit-profile">Profile settings</Link>
+                        </Menu.Item>
+                        <Menu.Item key="2" icon={<LockOutlined />} style={{ borderRadius: '8px', borderRight: '3px solid #1890ff' }}>
+                            <Link to="/profile/change-password">Change password</Link>
+                        </Menu.Item>
+                        <Menu.Item key="3" icon={<LogoutOutlined />} style={{ borderRadius: '8px' }} onClick={handleLogout}>
+                            Logout
+                        </Menu.Item>
+                        <Menu.Item key="4" icon={<DeleteOutlined />} style={{ borderRadius: '8px', color: red[6] }}>
+                            Delete Account
+                        </Menu.Item>
+                    </Menu>
+                </Col>
+
+                <Col xs={24} sm={16} md={12} lg={10}>
+                    <Card style={{ width: '100%', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                        <h2 style={{ textAlign: 'center' }}>Change Password</h2>
+                        <Form layout="vertical">
+                            <Form.Item label="Old Password" validateStatus={errors.oldPassword ? "error" : ""} help={errors.oldPassword}>
+                                <Input.Password name="oldPassword" value={form.oldPassword} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item label="New Password" validateStatus={errors.newPassword ? "error" : ""} help={errors.newPassword}>
+                                <Input.Password name="newPassword" value={form.newPassword} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item label="Confirm New Password" validateStatus={errors.confirmPassword ? "error" : ""} help={errors.confirmPassword}>
+                                <Input.Password name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item>
+                                <Button type="primary" onClick={handleSave} style={{ marginRight: '10px' }}>Save changes</Button>
+                                <Button danger onClick={handleDiscard}>Discard changes</Button>
+                            </Form.Item>
+                        </Form>
+                    </Card>
+                </Col>
+            </Row>
+
+            <Modal
+                title="Confirm Account Deletion"
+                visible={isDeleteModalVisible}
+                onCancel={() => setIsDeleteModalVisible(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
+                    <Button key="delete" type="primary" danger onClick={() => setIsConfirmDeleteModalVisible(true)}>Delete Account</Button>
+                ]}
+            >
+                <p><b>Full Name:</b> {form.fullName}</p>
+                <p><b>Email:</b> {form.email}</p>
+                <p><b>Phone Number:</b> {form.phoneNumber}</p>
+                <p><b>Address:</b> {form.address}</p>
             </Modal>
-        </Row>
+
+            <Modal
+                title="Are you sure?"
+                visible={isConfirmDeleteModalVisible}
+                onCancel={() => setIsConfirmDeleteModalVisible(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setIsConfirmDeleteModalVisible(false)}>Cancel</Button>,
+                    <Button key="confirmDelete" type="primary" danger onClick={handleDeleteAccount}>Confirm Delete</Button>
+                ]}
+            >
+                <ExclamationCircleOutlined style={{ color: 'red', fontSize: '24px', marginBottom: '10px' }} />
+                <p>Are you sure you want to delete your account? This action is irreversible.</p>
+            </Modal>
+        </>
     );
 };
 

@@ -17,5 +17,7 @@ userRouter.get("/user-profile", authMiddleware.verifyAccessToken, UserController
 
 userRouter.put("/edit-profile", authMiddleware.verifyAccessToken, UserController.editProfile);
 
+userRouter.delete("/delete-user", authMiddleware.verifyAccessToken, UserController.deleteUser);
+
 
 module.exports = userRouter

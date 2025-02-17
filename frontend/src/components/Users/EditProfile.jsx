@@ -1,37 +1,27 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal} from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal, Avatar, Form } from 'antd';
+import { UploadOutlined, ExclamationCircleOutlined, UserOutlined, LockOutlined, LogoutOutlined, DeleteOutlined, } from '@ant-design/icons';
 import { green, red, gray } from "@ant-design/colors";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const EditProfile = () => {
     const [selectedKey, setSelectedKey] = useState('1');
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [isConfirmDeleteModalVisible, setIsConfirmDeleteModalVisible] = useState(false);
+    const [messageApi, contextHolder] = message.useMessage();
     const [form, setForm] = useState({  
         fullName: '',
         address: '',
         dob: '',
         phoneNumber: '',
         username: '',
-        email: ''
+        email: '',
+        avatar: '',
     });
     const [errors, setErrors] = useState({});
     const [successMessage, setSuccessMessage] = useState('');
-
-    
-       
-    
-        const handleDeleteConfirm = () => {
-            setIsModalVisible(false);
-            console.log("Account deleted"); // Replace with actual delete function
-        };
-    
-        const handleCancel = () => {
-            setIsModalVisible(false);
-        };
-
     const [modalSuccess, setModalSuccess] = useState(false);
     const navigate = useNavigate();
 
@@ -47,17 +37,19 @@ const EditProfile = () => {
             });
     }, []);
 
-    const handleMenuClick = (e) => {
-        if (e.key === '4') {
-            setIsModalVisible(true);
-        } else {
-            setSelectedKey(e.key);
-        }
-    };
 
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleUpload = (info) => {
+        if (info.file.status === 'done') {
+            setForm({ ...form, avatar: URL.createObjectURL(info.file.originFileObj) });
+            message.success(`${info.file.name} file uploaded successfully`);
+        } else if (info.file.status === 'error') {
+            message.error(`${info.file.name} file upload failed.`);
+        }
     };
 
     const handleSave = async () => {
@@ -75,7 +67,8 @@ const EditProfile = () => {
         })
             .then(() => {
                 console.log(form)
-                setModalSuccess(true);
+                messageApi.open({ content: 'Profile changed successfully!', duration: 2, type: 'success' });
+                window.location.reload();
             })
             .catch(error => {
                 message.error(error.response?.data?.message);
@@ -92,98 +85,145 @@ const EditProfile = () => {
         setErrors({});
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/auth/login';
+    };
+
+    const handleDeleteAccount = async () => {
+        axios.delete('http://localhost:9999/users/delete-user', {
+            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+        })
+            .then(() => {
+                localStorage.removeItem('accessToken');
+                messageApi.success('Account deleted successfully!', 2);
+                window.location.reload();
+                window.location.href = '/auth/login';
+            })
+            .catch(error => {
+                messageApi.error(error.response?.data?.message);
+            });
+
+        setIsConfirmDeleteModalVisible(false);
+        setIsDeleteModalVisible(false);
+    };
+
+    const handleMenuClick = (e) => {
+        if (e.key === '4') {
+            setIsDeleteModalVisible(true);
+        } else {
+            setSelectedKey(e.key);
+        }
+    };
+
 
     return (
-        <Row>
-            <Col span={2}></Col>
-            <Col span={4}>
-                <Breadcrumb style={{ margin: '16px 0' }}
-                    items={[
-                        {
-                            title: <a href="/profile/profile-info">Profile</a>,
-                        },
-                        {
-                            title: <a href="/profile/edit-profile">Edit Profile</a>,
-                        },
-                    ]}
-                />
+        <div style={{ minHeight: '100vh', width: '100%', padding: '20px' }}>
+        {contextHolder}
+        <Row gutter={[16, 16]} justify="center">
+        <Col xs={24} sm={8} md={6} lg={4}>
+                    <Breadcrumb style={{ marginBottom: '16px' }}>
+                        <Breadcrumb.Item><Link to="/profile/profile-info">Profile</Link></Breadcrumb.Item>
+                        <Breadcrumb.Item><Link to="/profile/edit-profile">Edit Profile</Link></Breadcrumb.Item>
+                    </Breadcrumb>
 
-                <Menu mode="vertical" selectedKeys={[selectedKey]} onClick={handleMenuClick} style={{ width: 250, borderRadius: '0', border: 'none', backgroundColor: '#fafafa' }}>
-                    <Menu
-                        mode="vertical"
-                        selectedKeys={[selectedKey]}
-                        onClick={handleMenuClick}
-                        style={{ width: 250, borderRadius: '0', border: 'none', backgroundColor: '#fafafa' }}
-                    >
-                        <Menu.Item key="1" style={{ backgroundColor: selectedKey === '1' ? '#e6f7ff' : 'transparent', borderRight: selectedKey === '1' ? '3px solid #1890ff' : 'none', borderRadius: '0' }}><Link to={"/profile/edit-profile"}>Profile settings</Link></Menu.Item>
-                        <Menu.Item key="2" style={{ backgroundColor: selectedKey === '2' ? '#e6f7ff' : 'transparent', borderRight: selectedKey === '2' ? '3px solid #1890ff' : 'none', borderRadius: '0' }}><Link to={"/profile/change-password"}> Change password</Link> </Menu.Item>
-                        <Menu.Item key="3" style={{ backgroundColor: selectedKey === '3' ? '#e6f7ff' : 'transparent', borderRight: selectedKey === '3' ? '3px solid #1890ff' : 'none', borderRadius: '0' }}>Logout</Menu.Item>
-                        <Menu.Item key="4" style={{ backgroundColor: selectedKey === '4' ? '#e6f7ff' : 'transparent', borderRight: selectedKey === '4' ? '3px solid #1890ff' : 'none', borderRadius: '0', color: red[6] }}>Delete Account</Menu.Item>
+                    <Menu mode="vertical" selectedKeys={[selectedKey]}  onClick={handleMenuClick}
+                        style={{ width: '100%', borderRadius: '8px', border: 'none', backgroundColor: '#fafafa', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                        <Menu.Item key="1" icon={<UserOutlined />} style={{ borderRadius: '8px', borderRight: '3px solid #1890ff' }}>
+                            <Link to="/profile/edit-profile">Profile settings</Link>
+                        </Menu.Item>
+                        <Menu.Item key="2" icon={<LockOutlined />} style={{ borderRadius: '8px' }}>
+                            <Link to="/profile/change-password">Change password</Link>
+                        </Menu.Item>
+                        <Menu.Item key="3" icon={<LogoutOutlined />} style={{ borderRadius: '8px' }} onClick={handleLogout}>
+                            Logout
+                        </Menu.Item>
+                        <Menu.Item key="4" icon={<DeleteOutlined />} style={{ borderRadius: '8px', color: red[6] }}>
+                            Delete Account
+                        </Menu.Item>
                     </Menu>
-                </Menu>
-            </Col>
-            <Col span={18} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '80%', textAlign: 'left' }}>
-                    <h2>Profile Setting</h2>
-                </div>
-                <Card style={{ width: '80%', margin: '0 auto', padding: '20px', borderRadius: '0' }}>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Avatar</label></Col>
-                        <Col span={12}>
-                            <Upload >
-                                <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                            </Upload>
-                        </Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.fullName}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Username</label></Col>
-                        <Col span={12}><div style={{ border: "1px solid #d9d9d9", textAlign: "left", paddingLeft:"10px" }}>{form.username}</div></Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Email</label></Col>
-                        <Col span={12}><div style={{ border: "1px solid #d9d9d9", textAlign: "left", paddingLeft:"10px" }}>{form.email}</div></Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Fullname</label></Col>
-                        <Col span={12}><Input name="fullName" value={form.fullName} onChange={handleChange} placeholder="fullName" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.fullName}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Address</label></Col>
-                        <Col span={12}><Input name="address" value={form.address} onChange={handleChange} placeholder='Address' style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.address}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Date of birth</label></Col>
-                        <Col span={12}><Input name="dob" type="date" value={form.dob ? new Date(form.dob).toISOString().split('T')[0] : ''} onChange={handleChange} style={{ borderRadius: '0' }} /></Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginBottom: '20px' }}>
-                        <Col span={6}><label>Phone number</label></Col>
-                        <Col span={12}><Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="phone number" style={{ borderRadius: '0' }} /></Col>
-                        <Col span={6} style={{ color: 'red' }}>{errors.phoneNumber}</Col>
-                    </Row>
-                    <Row gutter={[8, 8]} style={{ marginTop: '20px' }}>
-                        <Col span={10} style={{ textAlign: 'right', marginLeft: "-19px" }}>
-                            <Button type="primary" onClick={handleSave} style={{ backgroundColor: green[6], borderColor: 'green', borderRadius: '0' }}>Save changes</Button>
-                        </Col>
-                        <Col span={13}>
-                            <Button type="primary" onClick={handleDiscard} style={{ borderRadius: '0', backgroundColor: red[6] }}>Discard changes</Button>
-                        </Col>
-                    </Row>
-                    {successMessage && (
-                        <Row style={{ marginTop: '10px', textAlign: 'center' }}>
-                            <Col span={19} style={{ marginLeft: "-15px", marginTop: "10px" }}>
-                                <span style={{ backgroundColor: '#f6ffed', padding: '5px', border: '1px solid #b7eb8f' }}>{successMessage}</span>
-                            </Col>
+                </Col>
+            <Col xs={24} sm={16} md={12} lg={10}>
+            <Card style={{ width: '100%', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                        <h2 style={{ textAlign: 'center' }}>Edit Profile</h2>
+                        
+                        <Row justify="center" style={{ marginBottom: '20px' }}>
+                            <Avatar size={100} src={form.avatar || "https://via.placeholder.com/100"} />
                         </Row>
-                    )}
-                </Card>
+
+                        <Form layout="vertical">
+                            <Form.Item label="Avatar">
+                                <Upload name="avatar" showUploadList={false} customRequest={({ file }) => handleUpload({ file, status: 'done' })}>
+                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                </Upload>
+                            </Form.Item>
+
+                            <Form.Item label="Username">
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px' , textAlign:'left' }}>
+                                    {form.username}
+                                </div>
+                            </Form.Item>
+
+                            <Form.Item label="Email">
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign:'left' }}>
+                                    {form.email}
+                                </div>
+                            </Form.Item>
+
+                            <Form.Item label="Full Name" validateStatus={errors.fullName ? "error" : ""} help={errors.fullName}>
+                                <Input name="fullName" value={form.fullName} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item label="Address" validateStatus={errors.address ? "error" : ""} help={errors.address}>
+                                <Input name="address" value={form.address} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item label="Date of Birth" validateStatus={errors.dob ? "error" : ""} help={errors.dob}>
+                                <Input name="dob" type="date" value={form.dob ? new Date(form.dob).toISOString().split('T')[0] : ''} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item label="Phone Number" validateStatus={errors.phoneNumber ? "error" : ""} help={errors.phoneNumber}>
+                                <Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} />
+                            </Form.Item>
+
+                            <Form.Item>
+                                <Button type="primary" onClick={handleSave} style={{ marginRight: '10px' }}>Save</Button>
+                                <Button danger onClick={handleDiscard}>Discard</Button>
+                            </Form.Item>
+                        </Form>
+                    </Card>
             </Col>
-            <Modal title="Success" visible={modalSuccess} onOk={() => setModalSuccess(false)} footer={[<Button key="ok" type="primary" onClick={() => setModalSuccess(false)}>OK</Button>]}>
-                <p>Profile changed successfully!</p>
-            </Modal>
         </Row >
+        <Modal
+                title="Confirm Account Deletion"
+                visible={isDeleteModalVisible}
+                onCancel={() => setIsDeleteModalVisible(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
+                    <Button key="delete" type="primary" danger onClick={() => setIsConfirmDeleteModalVisible(true)}>Delete Account</Button>
+                ]}
+            >
+                <p><b>Full Name:</b> {form.fullName}</p>
+                <p><b>Email:</b> {form.email}</p>
+                <p><b>Phone Number:</b> {form.phoneNumber}</p>
+                <p><b>Address:</b> {form.address}</p>
+            </Modal>
+
+            {/* Modal xác nhận trước khi xóa */}
+            <Modal
+                title="Are you sure?"
+                visible={isConfirmDeleteModalVisible}
+                onCancel={() => setIsConfirmDeleteModalVisible(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setIsConfirmDeleteModalVisible(false)}>Cancel</Button>,
+                    <Button key="confirmDelete" type="primary" danger onClick={handleDeleteAccount}>Confirm Delete</Button>
+                ]}
+            >
+                <ExclamationCircleOutlined style={{ color: 'red', fontSize: '24px', marginBottom: '10px' }} />
+                <p>Are you sure you want to delete your account? This action is irreversible.</p>
+            </Modal>
+        </div>
+        
 
     )
 };
