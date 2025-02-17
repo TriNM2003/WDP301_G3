@@ -17,5 +17,5 @@ db.connectDB = async () => {
     process.exit(1); // Kết thúc quá trình nếu có lỗi
   }
 };
-
+// hao
 module.exports = db;
