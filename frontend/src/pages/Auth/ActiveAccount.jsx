@@ -1,39 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Steps, Button, message, Card, Typography, Spin } from "antd";
 import { CheckCircleFilled, MailFilled, SmileOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { AppContext } from "../../context/AppContext";
 
 const { Step } = Steps;
 const { Title, Text } = Typography;
 
 const ActiveAccount = () => {
-  const [current, setCurrent] = useState(1); // Mặc định là bước "Verify Email"
+  const [current, setCurrent] = useState(1);
   const [isWaiting, setIsWaiting] = useState(false);
+  const [tempAccessToken, setTempAccessToken] = useState(null);
+  const [tempUser, setTempUser] = useState(null);
+
   const location = useLocation();
   const navigate = useNavigate();
+  const { setAccessToken, setUser } = useContext(AppContext);
 
   useEffect(() => {
-    // Lấy token từ URL khi người dùng truy cập link active từ email
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
 
     if (token) {
-      // Lưu token vào localStorage
       localStorage.setItem("activationToken", token);
-
-      // Xóa token khỏi URL mà không cần reload trang
       window.history.replaceState({}, document.title, "/active-account");
 
-      // Gửi token để xác thực tài khoản
-      verifyAccount(token);
+      if (current < 2 && localStorage.getItem("activationToken")) {
+        verifyAccount(token);
+      }
     } else {
       const storedToken = localStorage.getItem("activationToken");
-      if (!storedToken) {
-        navigate("/not-found"); // Nếu không có token nào thì chuyển hướng
+      if (!storedToken && current < 2) {
+        navigate("/not-found");
       }
     }
-  }, [location, navigate]);
+  }, [location, navigate, current]);
 
   const verifyAccount = async (token) => {
     setIsWaiting(true);
@@ -41,9 +43,16 @@ const ActiveAccount = () => {
       const response = await axios.post("http://localhost:9999/auth/verify-account", { token });
 
       if (response.status === 200) {
-        message.success(response?.data?.message);
+        if (!response.data.alreadyActivated) {
+          message.success({ content: "Account activated successfully!", key: "activate" });
+        }
+        // Lưu token và user vào state tạm thời, nhưng không đăng nhập ngay
+        const { accessToken, user } = response.data;
+        if (accessToken && user) {
+          setTempAccessToken(accessToken);
+          setTempUser(user);
+        }
         setCurrent(2);
-        localStorage.removeItem("activationToken"); // Xóa token sau khi kích hoạt thành công
       } else {
         message.error("Activation failed!");
         navigate("/not-found");
@@ -59,22 +68,18 @@ const ActiveAccount = () => {
   const sendActivationEmail = async () => {
     setIsWaiting(true);
     message.loading({ content: "Sending activation email...", key: "activate", duration: 2 });
-  
+
     try {
       const token = localStorage.getItem("activationToken");
-  
+
       if (!token) {
         message.error("Activation token is missing! Please login again.");
         setIsWaiting(false);
         return;
       }
-  
-      const response = await fetch("http://localhost:9999/auth/send-activation-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-  
+
+      await axios.post("http://localhost:9999/auth/send-activation-email", { token });
+
       message.success({ content: "Activation email sent successfully! Check your inbox.", key: "activate" });
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to send activation email!");
@@ -84,6 +89,13 @@ const ActiveAccount = () => {
   };
 
   const goToHome = () => {
+    if (tempAccessToken && tempUser) {
+      localStorage.setItem("accessToken", tempAccessToken);
+      localStorage.removeItem("activationToken");
+      setAccessToken(tempAccessToken);
+      setUser(tempUser);
+    }
+
     navigate("/home");
   };
 
@@ -122,16 +134,26 @@ const ActiveAccount = () => {
           <Text style={{ display: "block", marginBottom: "20px" }}>
             {current === 0 && "Your account has been created successfully."}
             {current === 1 && "Check your email and click the verification link."}
-            {current === 2 && "Welcome to our service!"}
+            {current === 2 && "Welcome to our service! Click 'Come to Homepage' to continue."}
           </Text>
 
           {current === 1 && (
-            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={sendActivationEmail}>
+            <Button
+              type="primary"
+              size="large"
+              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
+              onClick={sendActivationEmail}
+            >
               ACTIVATE ACCOUNT
             </Button>
           )}
           {current === 2 && (
-            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={goToHome}>
+            <Button
+              type="primary"
+              size="large"
+              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
+              onClick={goToHome}
+            >
               Come to Homepage
             </Button>
           )}
