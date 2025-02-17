@@ -75,19 +75,6 @@ const login = async (username, password) => {
             message: "Wrong password!"
         };
     }
-  // Nếu tài khoản chưa kích hoạt, gửi token về FE để kích hoạt
-  if (user.status === "inactive") {
-    const token = jwt.sign(
-        { id: user._id, email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "10m" }
-    );
-    return {  
-        status: 403,
-        message: "Account not activated! Redirecting to activation page...",
-        token
-    };
-} 
 
     const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {
         expiresIn: "1d", 

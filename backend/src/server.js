@@ -38,10 +38,8 @@ app.get("/", async (req, res, next) => {
 
 // Định tuyến theo các chức năng thực tế
 app.use("/systemRoles", systemRoleRouter);
-
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
-
 
 app.use(async (req, res, next) => {
   next(httpsErrors(404, "Bad Request"));

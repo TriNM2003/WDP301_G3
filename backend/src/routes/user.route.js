@@ -9,7 +9,6 @@ const { UserController } = require("../controllers");
 userRouter.use(bodyParser.json());
 
 userRouter.get("/user-profile", authMiddleware.verifyAccessToken, UserController.getUserById);
-
 userRouter.put("/edit-profile", authMiddleware.verifyAccessToken, UserController.editProfile);
 
 module.exports = userRouter

@@ -1,101 +1,37 @@
-import React, { useEffect, useState, useContext } from "react";
-import { Steps, Button, message, Card, Typography, Spin } from "antd";
-import { CheckCircleFilled, MailFilled, SmileOutlined, LoadingOutlined } from "@ant-design/icons";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import { AppContext } from "../../context/AppContext";
+import React, { useEffect, useState } from "react";
+import { Steps, Button, message, Card, Typography,Spin  } from "antd";
+import { CheckCircleFilled, MailFilled, SmileOutlined,LoadingOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const { Step } = Steps;
 const { Title, Text } = Typography;
 
-const ActiveAccount = () => {
-  const [current, setCurrent] = useState(1);
-  const [isWaiting, setIsWaiting] = useState(false);
-  const [tempAccessToken, setTempAccessToken] = useState(null);
-  const [tempUser, setTempUser] = useState(null);
-
-  const location = useLocation();
+const ActiveAccount = ({ isEmailVerified }) => {
+  const [current, setCurrent] = useState(0);
   const navigate = useNavigate();
-  const { setAccessToken, setUser } = useContext(AppContext);
+  const [isWaiting, setIsWaiting] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
-
-    if (token) {
-      localStorage.setItem("activationToken", token);
-      window.history.replaceState({}, document.title, "/active-account");
-
-      if (current < 2 && localStorage.getItem("activationToken")) {
-        verifyAccount(token);
-      }
+    if (isEmailVerified) {
+      setCurrent(2); // Nếu email đã xác thực, chuyển đến bước "Enjoy Service"
     } else {
-      const storedToken = localStorage.getItem("activationToken");
-      if (!storedToken && current < 2) {
-        navigate("/not-found");
-      }
+      setCurrent(1); // Nếu chưa, thì ở bước "Verify Email"
     }
-  }, [location, navigate, current]);
+  }, [isEmailVerified]);
 
-  const verifyAccount = async (token) => {
-    setIsWaiting(true);
-    try {
-      const response = await axios.post("http://localhost:9999/auth/verify-account", { token });
+  const activateAccount = () => {
+    setIsWaiting(true); // Hiển thị hiệu ứng loading
+    message.loading({ content: "Processing activation...", key: "activate", duration: 2 });
 
-      if (response.status === 200) {
-        if (!response.data.alreadyActivated) {
-          message.success({ content: "Account activated successfully!", key: "activate" });
-        }
-        // Lưu token và user vào state tạm thời, nhưng không đăng nhập ngay
-        const { accessToken, user } = response.data;
-        if (accessToken && user) {
-          setTempAccessToken(accessToken);
-          setTempUser(user);
-        }
-        setCurrent(2);
-      } else {
-        message.error("Activation failed!");
-        navigate("/not-found");
-      }
-    } catch (error) {
-      message.error(error.response?.data?.message || "Something went wrong!");
-      navigate("/not-found");
-    } finally {
+    // Giả lập thời gian chờ xác nhận (API call giả định)
+    setTimeout(() => {
       setIsWaiting(false);
-    }
+      message.success({ content: "Account activated!", key: "activate" });
+      setCurrent(2); // Chuyển đến bước "Enjoy Service"
+    }, 5000); // Chờ 3 giây để mô phỏng API
   };
 
-  const sendActivationEmail = async () => {
-    setIsWaiting(true);
-    message.loading({ content: "Sending activation email...", key: "activate", duration: 2 });
-
-    try {
-      const token = localStorage.getItem("activationToken");
-
-      if (!token) {
-        message.error("Activation token is missing! Please login again.");
-        setIsWaiting(false);
-        return;
-      }
-
-      await axios.post("http://localhost:9999/auth/send-activation-email", { token });
-
-      message.success({ content: "Activation email sent successfully! Check your inbox.", key: "activate" });
-    } catch (error) {
-      message.error(error.response?.data?.message || "Failed to send activation email!");
-    } finally {
-      setIsWaiting(false);
-    }
-  };
-
-  const goToHome = () => {
-    if (tempAccessToken && tempUser) {
-      localStorage.setItem("accessToken", tempAccessToken);
-      localStorage.removeItem("activationToken");
-      setAccessToken(tempAccessToken);
-      setUser(tempUser);
-    }
-
+  const afterActiveAccount = () => {
     navigate("/home");
   };
 
@@ -111,22 +47,19 @@ const ActiveAccount = () => {
             padding: "20px",
           }}
         >
-          <Title style={{ marginBottom: "50px", marginTop: "1px" }} level={3}>
-            Activate your Account
-          </Title>
+      
+        <Title style={{ marginBottom: "50px", marginTop: "1px" }} level={3}>Activate your Account</Title>
 
           {/* Progress Steps */}
           <Steps current={current} size="small" style={{ marginBottom: "20px" }}>
             <Step title="Create Account" icon={<CheckCircleFilled style={{ color: "#1890ff" }} />} />
-            <Step
-              title="Verify Email"
+            <Step 
+              title="Verify Email" 
               icon={
-                isWaiting ? (
-                  <Spin indicator={<LoadingOutlined style={{ fontSize: 18, color: "#1890ff" }} spin />} />
-                ) : (
-                  <MailFilled style={{ color: current >= 1 ? "#1890ff" : "#d9d9d9" }} />
-                )
-              }
+                isWaiting 
+                  ? <Spin indicator={<LoadingOutlined style={{ fontSize: 18, color: "#1890ff" }} spin />} /> 
+                  : <MailFilled style={{ color: current >= 1 ? "#1890ff" : "#d9d9d9" }} />
+              } 
             />
             <Step title="Enjoy Service" icon={<SmileOutlined style={{ color: current === 2 ? "#1890ff" : "#d9d9d9" }} />} />
           </Steps>
@@ -134,26 +67,16 @@ const ActiveAccount = () => {
           <Text style={{ display: "block", marginBottom: "20px" }}>
             {current === 0 && "Your account has been created successfully."}
             {current === 1 && "Check your email and click the verification link."}
-            {current === 2 && "Welcome to our service! Click 'Come to Homepage' to continue."}
+            {current === 2 && "Welcome to our service!"}
           </Text>
 
           {current === 1 && (
-            <Button
-              type="primary"
-              size="large"
-              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
-              onClick={sendActivationEmail}
-            >
+            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={activateAccount}>
               ACTIVATE ACCOUNT
             </Button>
           )}
           {current === 2 && (
-            <Button
-              type="primary"
-              size="large"
-              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
-              onClick={goToHome}
-            >
+            <Button type="primary" size="large" style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }} onClick={afterActiveAccount}>
               Come to Homepage
             </Button>
           )}
