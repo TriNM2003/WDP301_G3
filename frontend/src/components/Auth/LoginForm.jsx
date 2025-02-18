@@ -18,50 +18,122 @@ const LoginForm = () => {
     const {setUser, authAPI} = useContext(AppContext);
 
     const loginAPI = `${authAPI}/login`;
+    const googleLoginAPI_ALT = `${authAPI}/loginByGoogleUsername`;
     const googleLoginAPI = `${authAPI}/loginByGoogle`;
 
 
     useEffect(() => {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get("token");
+      
+      if(urlParams.get("isLoginByGoogle")){
+        axios.post(`${authAPI}/getGoogleUser`, {} ,{
+          withCredentials: true
+      })
+          .then(res => {
+            console.log(res.data.user);
+            const googleEmail = res.data.user.email;
+            const googleUsername = res.data.user.username;
+            const googlePassword = res.data.user.password;
+            
+            const result = axios.post(googleLoginAPI_ALT, {username: googleUsername, password: googlePassword}, {withCredentials: true});
+            const loginResult = result.data;
 
-      if(token){
-        const username = urlParams.get("username");
-        const email = urlParams.get("email");
-        const password = urlParams.get("password");
-        const status = urlParams.get("status");
-        console.log(token, username, email, password, status);
-        // xoa info tren thanh saerch
-        window.history.replaceState({}, document.title, "/auth/login");
+            switch(loginResult.user.status){
+              case 'inactive':
+                  setTimeout(() => {
+                      setLoading(false);
+                      messageApi.open({
+                        type: "warning",
+                        content: "Your account is not activated! Please active your account",
+                      });
+                    }, 2000);
+                    break;
+              case 'deactivate':
+                  setTimeout(() => {
+                      setLoading(false);
+                      messageApi.open({
+                        type: "warning",
+                        content: "Your account is deactivated!",
+                      });
+                    }, 2000);
+                    break;
+             default:
+              if(loginResult.accessToken){
+                  messageApi.open({
+                      type: "success",
+                      content: "Login successfully! Redirecting to homepage...",
+                      duration: 2
+                  }).then(() => {
+                      localStorage.setItem("accessToken", loginResult.accessToken);
+                      localStorage.setItem("accessTokenExp", loginResult.accessTokenExp);
+                      localStorage.setItem("userId", loginResult.user.id);
+                      setUser(loginResult.user);
+                      setLoading(false);
+                      nav('/home')
+                  });
+              }else{
+                  setTimeout(() => {
+                      setLoading(false);
+                      messageApi.open({
+                        type: "error",
+                        content: "Token not found!",
+                      });
+                    }, 1000);
+              }
+              break;
+          }
 
-        if (status === 'deactivated') {
-          messageApi.open({
-            type: "warning",
-            content: "Your account is deactivated!",
-            duration: 3
           })
-        } else if (status === 'inactive') {
-          messageApi.open({
-            type: "warning",
-            content: "Your account is not activated! Please active your account",
-            duration: 3
-          })
-        } else if(status === 'active'){
-          messageApi.open({
-            type: "success",
-            content: "Login by Google successfully! Redirecting to homepage...",
-            duration: 3
-          }).then(() => nav('/home'));
-        }else{
-          messageApi.open({
-            type: "error",
-            content: "Cancel google login!",
-            duration: 3
-          })
-        }
+          .catch(err => console.log(err));
+
+
+
+        messageApi.open({
+          type: "success",
+          content: "Login by Google successfully! Redirecting to homepage...",
+          duration: 3
+        });
+        
+      }
+      // const token = urlParams.get("token");
+
+      // if(token){
+      //   const username = urlParams.get("username");
+      //   const email = urlParams.get("email");
+      //   const password = urlParams.get("password");
+      //   const status = urlParams.get("status");
+      //   console.log(token, username, email, password, status);
+      //   // xoa info tren thanh saerch
+      //   window.history.replaceState({}, document.title, "/auth/login");
+
+      //   if (status === 'deactivated') {
+      //     messageApi.open({
+      //       type: "warning",
+      //       content: "Your account is deactivated!",
+      //       duration: 3
+      //     })
+      //   } else if (status === 'inactive') {
+      //     messageApi.open({
+      //       type: "warning",
+      //       content: "Your account is not activated! Please active your account",
+      //       duration: 3
+      //     })
+      //   } else if(status === 'active'){
+      //     messageApi.open({
+      //       type: "success",
+      //       content: "Login by Google successfully! Redirecting to homepage...",
+      //       duration: 3
+      //     }).then(() => nav('/home'));
+      //   }else{
+      //     messageApi.open({
+      //       type: "error",
+      //       content: "Cancel google login!",
+      //       duration: 3
+      //     })
+      //   }
 
       
-      }
+      // }
     }, [messageApi, nav])
 
   const handleLogin = async () => {
@@ -71,7 +143,7 @@ const LoginForm = () => {
             username: username,
             password: password
         }
-        const res = await axios.post(loginAPI, req);
+        const res = await axios.post(loginAPI, req, {withCredentials: true});
         return res.data
     } catch (error) {
       if (error.response?.status === 403) { 
@@ -123,13 +195,15 @@ const LoginForm = () => {
                       }, 2000);
                       break;
                default:
-                if(loginResult.token){
+                if(loginResult.accessToken){
                     messageApi.open({
                         type: "success",
                         content: "Login successfully! Redirecting to homepage...",
                         duration: 2
                     }).then(() => {
-                        localStorage.setItem("accessToken", loginResult.token);
+                        localStorage.setItem("accessToken", loginResult.accessToken);
+                        localStorage.setItem("accessTokenExp", loginResult.accessTokenExp);
+                        localStorage.setItem("userId", loginResult.user.id);
                         setUser(loginResult.user);
                         setLoading(false);
                         nav('/home')
@@ -263,6 +337,7 @@ const LoginForm = () => {
               >
                 Continue with Google
               </Button>
+
             </Col>
 
           </Row>

@@ -5,7 +5,12 @@ const httpsErrors = require("http-errors");
 const cors = require("cors"); 
 require("dotenv").config();
 const session = require("express-session");
-const passport = require("passport");
+
+const path = require("path");
+
+const passport = require("./configs/passport.config");
+const cookieParser = require("cookie-parser");
+
 
 const app = express();
 const db = require("./models/index");
@@ -19,6 +24,7 @@ app.use(cors({
 
 app.use(morgan("dev"));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // khoi tao express session va passport (cho google login register)
 app.use(
@@ -26,6 +32,7 @@ app.use(
     secret: "CatandDogWTH",
     resave: false,
     saveUninitialized: false,
+    cookie: { secure: false }
   })
 );
 app.use(passport.initialize());
@@ -41,6 +48,7 @@ app.use("/systemRoles", systemRoleRouter);
 
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.use(async (req, res, next) => {
