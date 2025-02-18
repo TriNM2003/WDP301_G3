@@ -18,12 +18,11 @@ const EditProfile = () => {
         phoneNumber: '',
         username: '',
         email: '',
-        avatar: '',
+        userAvatar: '',
     });
     const [errors, setErrors] = useState({});
-    const [successMessage, setSuccessMessage] = useState('');
-    const [modalSuccess, setModalSuccess] = useState(false);
-    const navigate = useNavigate();
+    const [imagePreview, setImagePreview] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     useEffect(() => {
         axios.get('http://localhost:9999/users/user-profile', {
@@ -31,6 +30,7 @@ const EditProfile = () => {
         })
             .then(response => {
                 setForm(response.data);
+                setImagePreview(response.data.userAvatar);
             })
             .catch(error => {
                 message.error("Failed to load user data");
@@ -43,37 +43,41 @@ const EditProfile = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleUpload = (info) => {
-        if (info.file.status === 'done') {
-            setForm({ ...form, avatar: URL.createObjectURL(info.file.originFileObj) });
-            message.success(`${info.file.name} file uploaded successfully`);
-        } else if (info.file.status === 'error') {
-            message.error(`${info.file.name} file upload failed.`);
-        }
+     // Xử lý chọn ảnh và hiển thị ngay lập tức
+     const handleFileChange = ({ file }) => {
+        const fileReader = new FileReader();
+        fileReader.onload = () => setImagePreview(fileReader.result);
+        fileReader.readAsDataURL(file);
+        setSelectedFile(file);
     };
 
+    // Xử lý lưu thông tin user
     const handleSave = async () => {
-        let newErrors = {};
-        if (!form.fullName) newErrors.fullName = 'fullName is required';
-        if (!form.address) newErrors.address = 'Address is required';
-        if (!form.phoneNumber) newErrors.phoneNumber = 'phoneNumber number is required';
-        if (!form.dob) newErrors.dob = 'Date of birth is required';
+        const formData = new FormData();
+        formData.append("fullName", form.fullName);
+        formData.append("address", form.address);
+        formData.append("dob", form.dob);
+        formData.append("phoneNumber", form.phoneNumber);
 
-        setErrors(newErrors);
-        if (Object.keys(newErrors).length > 0) return;
+        if (selectedFile) {
+            formData.append("userAvatar", selectedFile);  // Gửi file ảnh
+        }
 
-        axios.put('http://localhost:9999/users/edit-profile', form, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+        axios.put('http://localhost:9999/users/edit-profile', formData, {
+            headers: { 
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                'Content-Type': 'multipart/form-data'
+            }
         })
-            .then(() => {
-                console.log(form)
-                messageApi.open({ content: 'Profile changed successfully!', duration: 2, type: 'success' });
-                window.location.reload();
-            })
-            .catch(error => {
-                message.error(error.response?.data?.message);
-                setErrors({ Profile: error.response?.data?.message });
-            });
+        .then(response => {
+            console.log(response.data);
+            messageApi.open({ content: 'Profile updated successfully!', duration: 2, type: 'success' });
+            setImagePreview(response.data.userAvatar);  // Cập nhật ảnh Cloudinary
+            setTimeout(window.location.reload(), 3000);
+        })
+        .catch(error => {
+            message.error(error.response?.data?.message );
+        });
     };
 
     const handleDiscard = () => {
@@ -148,14 +152,18 @@ const EditProfile = () => {
                         <h2 style={{ textAlign: 'center' }}>Edit Profile</h2>
                         
                         <Row justify="center" style={{ marginBottom: '20px' }}>
-                            <Avatar size={100} src={form.avatar || "https://via.placeholder.com/100"} />
+                            <Avatar size={100} src={imagePreview || "https://via.placeholder.com/100"} />
                         </Row>
 
                         <Form layout="vertical">
                             <Form.Item label="Avatar">
-                                <Upload name="avatar" showUploadList={false} customRequest={({ file }) => handleUpload({ file, status: 'done' })}>
-                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
-                                </Upload>
+                            <Upload 
+                            showUploadList={false}
+                            beforeUpload={() => false}  // Ngăn tải lên tự động
+                            onChange={handleFileChange}
+                        >
+                            <Button icon={<UploadOutlined />}>Upload Image</Button>
+                        </Upload>
                             </Form.Item>
 
                             <Form.Item label="Username">

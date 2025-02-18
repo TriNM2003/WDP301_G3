@@ -37,7 +37,7 @@ const UserProfile = () => {
         <Col xs={24} sm={12} md={8} lg={6} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Avatar
             size={150}
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR81iX4Mo49Z3oCPSx-GtgiMAkdDop2uVmVvw&s"
+            src={user.userAvatar || 'https://www.w3schools.com/howto/img_avatar.png'}
             style={{ border: '4px solid white' }}
           />
           <h2 style={{ marginTop: 10 }}>{user.username}</h2>

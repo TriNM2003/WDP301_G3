@@ -6,6 +6,7 @@ const cors = require("cors");
 require("dotenv").config();
 const session = require("express-session");
 const passport = require("passport");
+const path = require("path");
 
 const app = express();
 const db = require("./models/index");
@@ -42,6 +43,7 @@ app.use("/systemRoles", systemRoleRouter);
 
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.use(async (req, res, next) => {
