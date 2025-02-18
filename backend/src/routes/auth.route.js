@@ -33,6 +33,11 @@ authRouter.get("/loginByGoogle/callback", verifyGoogleCallback, authController.l
 
 authRouter.post("/refresh", authController.refreshAccessToken);
 authRouter.post("/getRefreshToken", authController.getRefreshToken);
+authRouter.post("/getGoogleUser", authController.getGoogleUser);  
+authRouter.post("/loginByGoogleUsername", authController.loginByGoogleUsername);
+
+authRouter.post("/logout", authController.logout);
+
 
 // authRouter.get("/testToken", authMiddleware.verifyAccessToken, (req, res) => { res.status(200).json({ message: "Token is valid" }) });
 

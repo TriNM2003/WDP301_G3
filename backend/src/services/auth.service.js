@@ -138,12 +138,73 @@ const login = async (username, password, res) => {
 
 // const loginByGoogle = passport.authenticate('google', { scope: ['profile', 'email'] });
 
-const loginByGoogleCallback = () => {
-    return passport.authenticate('google',{failureRedirect: "/auth/login"},(req, res) => {
-        // tao cookie lu giu thong tin user
-        res.cookie("user", JSON.stringify(req.user), {httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000});
-        res.redirect(`http://localhost:3000/home123`);
-    });
+// const loginByGoogleCallback = () => {
+//     return passport.authenticate('google',{failureRedirect: "/auth/login"},(req, res) => {
+//         // tao cookie lu giu thong tin user
+//         res.cookie("user", JSON.stringify(req.user), {httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000});
+//         res.redirect(`http://localhost:3000/home123`);
+//     });
+// }
+
+const logout = async (userId) => {
+    await redisClient.del(`refreshToken:${userId}`).then(() => console.log("Delete user refresh token successfully!"));
+    return {
+        status: 200,
+        message: "Logout successfully!"
+    };
+}
+const loginByGoogleUsername = async (username) => {
+    const user = await User.findOne({username: username});
+
+    if (!user) {
+        return {
+            status: 404,
+            message: "Username not found!"
+        };
+    }
+
+  // Nếu tài khoản chưa kích hoạt, gửi token về FE để kích hoạt
+  if (user.status === "inactive") {
+    const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "10m" }
+    );
+    return {  
+        status: 403,
+        message: "Account not activated! Redirecting to activation page...",
+        token
+    };
+}
+}
+
+const getGoogleUser = async (user) => {
+    if (!user) {
+        return {
+            status: 404,
+            message: "User not found!"
+        };
+    }
+
+    return {
+        status: 200,
+        message: "Get user successfully!",
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            password: user.password,
+            fullName: user.fullName,
+            phoneNumber: user.phoneNumber,
+            dob: user.dob,
+            address: user.address,
+            roles: user.roles,
+            activities: user.activities,
+            teams: user.teams,
+            notifications: user.notifications,
+            status: user.status
+        },
+    };
 }
 
 const getRefreshToken = async (userId) => {
@@ -182,10 +243,11 @@ const refreshAccessToken = async (req, res) => {
 
 const authService = {
     login,
-    loginByGoogleCallback,
+    // loginByGoogleCallback,
+    getGoogleUser,loginByGoogleUsername,
     register,
     getRefreshToken,
-    refreshAccessToken,
+    refreshAccessToken,logout,
 }
 
 module.exports = authService;

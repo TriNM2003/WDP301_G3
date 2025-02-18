@@ -43,31 +43,10 @@ function App() {
         </Header>
         <Content>
           <Routes>
-            {!accessToken && <>
-              <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Welcome />} />
-              </Route>
-              <Route path='/auth' element={<Login />}>
-                <Route path="login" element={<LoginForm />} />
-                <Route path="register" element={<RegisterForm />} />
-              </Route>
-              <Route path="/active-account" element={<ActiveAccount />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route element={<ErrorPage />}>
-                <Route path='*' element={<E404 />} />
-              </Route>
-            </>}
-
-        {accessToken === null && <>
+        {accessToken ? <>
           <Route path='/home' element={<HomePage />}>
                 <Route path='' element={<Welcome />} />
           </Route>
-
-        <Route path='/auth' element={<Login />}>
-            <Route path="login" element={<LoginForm />} />
-            <Route path="register" element={<RegisterForm />} />
-        </Route>
 
         <Route path="/profile" element={<UserProfile />} >
           <Route path="profile-info" element={<ViewProfile />} />
@@ -77,11 +56,19 @@ function App() {
           </Route>
         </Route>
           </>
-        }
-        
+          :
+          <>
+
+        <Route path='/auth' element={<Login />}>
+            <Route path="login" element={<LoginForm />} />
+            <Route path="register" element={<RegisterForm />} />
+        </Route>
         <Route path="/active-account" element={<ActiveAccount/>} />
         <Route path="/forgot-password" element={<ForgotPassword/>} />
         <Route path="/reset-password" element={<ResetPassword/>} />
+          </>
+        }
+        
         
           </Routes>
         </Content>
