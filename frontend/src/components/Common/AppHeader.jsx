@@ -7,9 +7,33 @@ import { DownOutlined, LogoutOutlined, MailOutlined, SettingOutlined } from '@an
 
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
+import axios from 'axios';
 function AppHeader() {
-    const { accessToken, user } = useContext(AppContext);
+    const { accessToken, user, setUser } = useContext(AppContext);
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            const userId = localStorage.getItem("userId");
+    
+            await axios.post('http://localhost:9999/auth/logout', { id: userId });
+    
+            console.log("Logout successfully");
+    
+            // Xóa dữ liệu trong localStorage
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("accessTokenExp");
+            localStorage.removeItem("userId");
+            setUser({});
+    
+            // Chuyển hướng đến trang login
+            navigate('/auth/login');
+        } catch (error) {
+            console.log("Logout failed:", error);
+        }
+    };
+    
+
     return (
         <Row justify="space-between" style={{ width: "100%", height: "100%", backgroundColor: "#fff", padding: "0 20px" }} >
             <Col span={3} align="start">
@@ -44,7 +68,8 @@ function AppHeader() {
                             <Menu.Item key="3" extra="⌘B"  onClick={() => navigate('/profile/edit-profile')}>Edit profile</Menu.Item>
                             <Menu.Item key="4" extra="⌘B"  onClick={() => navigate('/profile/change-password')}>Change password</Menu.Item>
                             <Menu.Divider />
-                            <Menu.Item key="5" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S">
+                            <Menu.Item key="5" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S"
+                            onClick={() => handleLogout()}>
                                 Logout
                             </Menu.Item>
                         </Menu>

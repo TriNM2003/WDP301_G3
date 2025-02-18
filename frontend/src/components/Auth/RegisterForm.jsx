@@ -55,7 +55,7 @@ const RegisterForm = () => {
                     messageApi.open({
                         type: "success",
                         content: "Register successfully! please active your account through email sent your email address!",
-                        duration: 5
+                        duration: 2
                     }).then(() =>  nav("/auth/login"));
                    
                 }
