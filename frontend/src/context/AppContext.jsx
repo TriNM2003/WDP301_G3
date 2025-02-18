@@ -8,8 +8,8 @@ export const AppContext = createContext();
 const AppProvider = ({ children }) => {
     //parameter
     // const [accessToken,setAccessToken] = useState()
-    // const accessToken =localStorage.getItem("accessToken");
-    const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
+    const accessToken =localStorage.getItem("accessToken"); 
+    // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
     const [defaultSelectedKeys,setDefaultSelectedKeys] = useState(null);
     //token
@@ -59,7 +59,7 @@ const AppProvider = ({ children }) => {
             authAPI,
             accessToken,
            user, setUser,
-           setAccessToken,
+        //    setAccessToken,
            defaultSelectedKeys,setDefaultSelectedKeys
         }}>
             {children}
