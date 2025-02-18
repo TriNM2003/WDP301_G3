@@ -39,6 +39,7 @@ const register = async (req) => {
         phoneNumber: null,
         dob: null,
         address: null,
+        userAvatar: null,
         status: "inactive",
     });
 
@@ -57,6 +58,7 @@ const register = async (req) => {
             phoneNumber: null,
             dob: null,
             address: null,
+            userAvatar: null,
             status: "inactive",
         }
      };
