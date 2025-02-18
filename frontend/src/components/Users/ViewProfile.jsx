@@ -14,6 +14,8 @@ const ViewProfile = () => {
     { id: 3, name: 'EXE3', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
     { id: 4, name: 'MMA', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
     { id: 5, name: 'PRN', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
+    { id: 6, name: 'PRM', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
+    { id: 6, name: 'PRM', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
     { id: 6, name: 'PRM', icon: '👥', platform: 'Skrumio', color: '#ff5722' }
   ];
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -78,93 +80,49 @@ const ViewProfile = () => {
 
       {/* Card Projects */}
       <Col xs={24} sm={24} md={14} lg={17}>
-        <Card 
+      <Card 
           title="Projects You Worked In"
-          style={{ 
-            margin: '20px', 
-            border: '1px solid grey', 
-            background: '#f9f9f9', 
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
-            transition: 'box-shadow 0.3s ease' 
-          }}
+          style={{ margin: '20px', border: '1px solid grey', background: '#f9f9f9', height: '400px', overflow: 'hidden' }}
           onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)'}
           onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'}
         >
-          <Row gutter={[16, 16]}>
-            {projects.map((project) => (
-              <Col xs={24} sm={24} md={24} lg={12} key={project.id}>
-                <Row  
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    padding: '15px', 
-                    border: '1px solid #e0e0e0', 
-                    borderRadius: '8px', 
-                    background: 'white', 
-                    marginBottom: '10px',
-                    cursor: 'pointer',
-                    transition: 'box-shadow 0.3s ease',
-                  }}
-                  onClick={() => alert(`Clicked on ${project.name}`)}
-                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.2)'}
-                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-                >
-                  <Col span={4}>
-                    <RocketOutlined style={{ fontSize: '18px', color: '#1890ff' }} />
-                  </Col>
-                  <Col span={4}>
-                    <Avatar size={40} shape="square" style={{ backgroundColor: project.color }}>{project.icon}</Avatar>
-                  </Col>
-                  <Col span={16}>
-                    <Text strong>{project.platform}</Text>
-                    <br />
-                    <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
-                  </Col>
-                </Row>
-              </Col>
-            ))}
-          </Row>
-          <div style={{ textAlign: 'center', marginTop: 20 }}>
-            <Button type="primary" onClick={() => setIsModalVisible(true)}>View all projects</Button>
+          <div style={{ maxHeight: '350px', overflowY: 'auto', paddingRight: '10px' }}>
+            <Row gutter={[16, 16]} style={{ margin: 0 }}>
+              {projects.map((project) => (
+                <Col xs={24} sm={24} md={12} lg={12} key={project.id}>
+                  <Row  
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      padding: '15px', 
+                      border: '1px solid #e0e0e0', 
+                      borderRadius: '8px', 
+                      background: 'white', 
+                      marginBottom: '10px',
+                      cursor: 'pointer',
+                      width: '100%'
+                    }}
+                    onClick={() => alert(`Clicked on ${project.name}`)}
+                  >
+                    <Col span={4}>
+                      <RocketOutlined style={{ fontSize: '18px', color: '#1890ff' }} />
+                    </Col>
+                    <Col span={4}>
+                      <Avatar size={40} shape="square" style={{ backgroundColor: project.color }}>{project.icon}</Avatar>
+                    </Col>
+                    <Col span={16}>
+                      <Text strong>{project.platform}</Text>
+                      <br />
+                      <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
+                    </Col>
+                  </Row>
+                </Col>
+              ))}
+            </Row>
           </div>
         </Card>
       </Col>
 
-      {/* Modal hiển thị tất cả project */}
-      <Modal title="All Projects" visible={isModalVisible} onCancel={() => setIsModalVisible(false)} footer={null}>
-      <Row gutter={[16, 16]}>
-          {projects.map((project) => (
-            <Col span={24} key={project.id}>
-              <Row  style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  padding: '15px', 
-                  border: '1px solid #e0e0e0', 
-                  borderRadius: '8px', 
-                  background: 'white', 
-                  marginBottom: '10px',
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.3s ease',
-                }}
-                onClick={() => alert(`Clicked on ${project.name}`)}
-                onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.2)'}
-                onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}>
-                <Col span={2}>
-                  <RocketOutlined style={{ fontSize: '18px', color: '#1890ff' }} />
-                </Col>
-                <Col span={4}>
-                  <Avatar size={40} shape="square" style={{ backgroundColor: project.color }}>{project.icon}</Avatar>
-                </Col>
-                <Col span={18}>
-                  <Text strong>{project.platform}</Text>
-                  <br />
-                  <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
-                </Col>
-              </Row>
-            </Col>
-          ))}
-        </Row>
-      </Modal>
     </Row>
   );
 }
