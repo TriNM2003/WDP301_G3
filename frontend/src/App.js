@@ -8,13 +8,9 @@ import UserProfile from './pages/Users/UserProfile';
 import ActiveAccount from './pages/Auth/ActiveAccount';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ResetPassword from './pages/Auth/ResetPassword';
-
 import ChangePassword from './components/Users/ChangePassword';
-
-
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
-
 import ViewProfile from './components/Users/ViewProfile';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Home from './components/Home/Home';
@@ -28,6 +24,10 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
+import { Button } from 'antd';
+import axios from 'axios';
+import authAxios from './utils/authAxios';
+
 
 function App() {
 
@@ -59,21 +59,30 @@ function App() {
               </Route>
             </>}
 
-            <Route element={<ProtectedRoute />}>
-              <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Home />} />
-              </Route>
-              <Route path="/profile" element={<UserProfile />} >
-                <Route path="profile-info" element={<ViewProfile />} />
-              
-                  <Route path="change-password" element={<ChangePassword />} />
-                  <Route path="edit-profile" element={<EditProfile />} />
-                </Route>
-             
-              <Route path='*' element={<Navigate to="/home" />} />
-            </Route>
+        {accessToken === null && <>
+          <Route path='/home' element={<HomePage />}>
+                <Route path='' element={<Welcome />} />
+          </Route>
 
+        <Route path='/auth' element={<Login />}>
+            <Route path="login" element={<LoginForm />} />
+            <Route path="register" element={<RegisterForm />} />
+        </Route>
 
+        <Route path="/profile" element={<UserProfile />} >
+          <Route path="profile-info" element={<ViewProfile />} />
+          <Route path="manage-profile" element={<ManageProfile />} >
+            <Route path="change-password" element={<ChangePassword />} />
+            <Route path="edit-profile" element={<EditProfile/>} />
+          </Route>
+        </Route>
+          </>
+        }
+        
+        <Route path="/active-account" element={<ActiveAccount/>} />
+        <Route path="/forgot-password" element={<ForgotPassword/>} />
+        <Route path="/reset-password" element={<ResetPassword/>} />
+        
           </Routes>
         </Content>
       </Layout>

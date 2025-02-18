@@ -5,8 +5,6 @@ const db = require("../models/index");
 const authService = require("../services/auth.service");
 const passport = require("passport");
 
-
-
 async function sendEmail(type, email, link) {
     const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -211,7 +209,6 @@ const verifyAccount = async (req, res) => {
 
 
 
-
 const register = async (req, res) => {
     try {
         const accountInfo = await authService.register(req);
@@ -225,16 +222,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { username, password } = req.body;
-        const accountInfo = await authService.login(username, password);
-
-        // Nếu tài khoản chưa kích hoạt, trả về thông báo và token để kích hoạt
-        if (accountInfo.status === 403) {
-            return res.status(403).json({
-                message: accountInfo.message,
-                token: accountInfo.token
-            });
-        }
-
+        const accountInfo = await authService.login(username, password, res);
         res.status(accountInfo.status).json(accountInfo);
     } catch (error) {
         res.status(400).json({
@@ -244,23 +232,47 @@ const login = async (req, res) => {
 };
 
 
-const loginByGoogleCallback = async (req, res, next) => {
-    passport.authenticate("google", { failureRedirect: "/auth/login" }, (err, user) => {
-        // if (err || !user) {
-        //     return res.redirect("/auth/login?error=Authentication Failed");
-        // }
+const loginByGoogle = passport.authenticate('google', { scope: ['email', 'profile'] });
 
-        // // Kiểm tra trạng thái tài khoản
-        // if (user.status !== "active") {
-        //     return res.redirect("/auth/login?error=Please activate your account");
-        // }
+const loginByGoogleCallback = (req, res, next) => {
+    if (!req.user) {
+        console.error("No user found after authentication.");
+        return res.redirect("http://localhost:3000/error");
+    }
 
-        // Tạo JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    req.logIn(req.user, (loginErr) => {
+        if (loginErr) {
+            console.error("Login error:", loginErr);
+            return res.redirect("http://localhost:3000/error");
+        }
 
-        // Chuyển hướng đến frontend với thông tin user
-        res.redirect(`http://localhost:3000/auth/login?username=${encodeURIComponent(user.username)}&email=${encodeURIComponent(user.email)}&password=${encodeURIComponent(user.password)}&status=${encodeURIComponent(user.status)}&token=${token}`);
-    })(req, res, next);
+        res.cookie("user", JSON.stringify(req.user), { httpOnly: true });
+        res.redirect("http://localhost:3000/home");
+    });
+};
+
+const getRefreshToken = async (req, res) => {
+    try {
+        // lay refresh token theo user id
+        const refreshToken = await authService.getRefreshToken(req.body.id);
+        res.status(200).json(refreshToken);
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
+}
+
+const refreshAccessToken = async (req, res) => {
+    try {
+        // lay access token moi dua tren refresh token va user id
+        const result = await authService.refreshAccessToken(req, res);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
 }
 
 const AuthController = {
@@ -271,8 +283,10 @@ const AuthController = {
     verifyAccount,
     login,
     register,
-    loginByGoogleCallback
-
+    loginByGoogleCallback,
+    loginByGoogle,
+    getRefreshToken,
+    refreshAccessToken,
 }
 
 module.exports = AuthController
