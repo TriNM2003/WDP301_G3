@@ -1,5 +1,4 @@
 import React from 'react'
-import SiteNav from '../../Project/Common/ProjectNav'
 import { Outlet } from 'react-router-dom'
 
 function SiteContent() {

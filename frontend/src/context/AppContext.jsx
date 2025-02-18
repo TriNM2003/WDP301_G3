@@ -35,10 +35,20 @@ const AppProvider = ({ children }) => {
 
 
     //call api
-    useEffect(() => {
-       
-            
-    });
+        useEffect(() => {
+            axios.get(`${userApi}/user-profile`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+              }
+            })
+              .then(res => {
+                setUser(res.data);
+              })
+              .catch(error => {
+                console.log(error.response?.data?.message);
+              });
+          }, []);
+
     //fuction
     const changePassword = async (userId, oldPassword, newPassword) => {
         try {
@@ -59,11 +69,7 @@ const AppProvider = ({ children }) => {
             authAPI,
             accessToken,
            user, setUser,
-<<<<<<< HEAD
         //    setAccessToken,
-=======
-           setAccessToken,
->>>>>>> ed81002 (feat layout site, project)
            defaultSelectedKeys,setDefaultSelectedKeys
         }}>
             {children}

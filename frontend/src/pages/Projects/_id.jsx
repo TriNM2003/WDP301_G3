@@ -1,25 +1,18 @@
 import { red } from '@ant-design/colors'
-import { DeleteOutlined, EllipsisOutlined, GroupOutlined, LeftOutlined, MoreOutlined, SettingOutlined, UserAddOutlined } from '@ant-design/icons'
-import { Button, Col, List, Menu, Popover, Row, Space, Tabs } from 'antd'
-import Dropdown from 'antd/es/dropdown/dropdown'
-import TabPane from 'antd/es/tabs/TabPane'
-import Title from 'antd/es/typography/Title'
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, UserAddOutlined } from '@ant-design/icons'
+import { Button, Col, Dropdown, Menu, Row, Space, Tabs } from 'antd'
 
-function SiteNav() {
-    const popoverContent = (
-        <List
-            size="small"
-            dataSource={["Chỉnh sửa", "Xóa", "Sao chép"]}
-            renderItem={(item) => <List.Item ><Link>{item}</Link></List.Item>}
-        />
-    );
-    return (
-        <>
-            <Row justify='space-around'>
+import TabPane from 'antd/es/tabs/TabPane'
+import React from 'react'
+import Summary from '../../components/Project/Detail/Summary'
+import Title from 'antd/es/typography/Title'
+
+function _id() {
+  return (
+    <div>
+        <Row justify='space-around'>
                 <Col span={6} align='start'>
-                    <Title level={4}> Project name</Title>
+                    <Title level={4}> Project name </Title>
                 </Col>
                 <Col span={8}>
 
@@ -51,14 +44,14 @@ function SiteNav() {
                     </Space>
                 </Col>
 
-            </Row>
+        </Row>
             <Row>
                 <Col span={24} >
                     <Tabs  defaultActiveKey="1">
                         <TabPane   key="0">
                         </TabPane>
                         <TabPane  tab="Summary" key="1">
-                            Nội dung Tab Summary
+                            <Summary/>
                         </TabPane>
                         <TabPane tab="Your tasks" key="2">
                             Nội dung Tab Your Tasks
@@ -72,8 +65,8 @@ function SiteNav() {
                     </Tabs>
                 </Col>
             </Row>
-        </>
-    )
+    </div>
+  )
 }
 
-export default SiteNav
+export default _id

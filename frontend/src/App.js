@@ -28,7 +28,8 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
-import _id from './pages/Sites/_id';
+import S_id from './pages/Sites/_id';
+import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
 
 
@@ -72,8 +73,8 @@ function App() {
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
-                <Route path="site" element={<_id/>} >
-                  <Route path='project' element={<_id/>}></Route>
+                <Route path="site" element={<S_id/>} >
+                  <Route path='project' element={<P_id/>}></Route>
                 </Route>
              
               <Route path='*' element={<Navigate to="/home" />} />

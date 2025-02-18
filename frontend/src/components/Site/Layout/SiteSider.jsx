@@ -19,7 +19,7 @@ function SiteSider() {
   };
   return (
     <>
-      <Title level={2}>Sitename</Title>
+      <Title level={3}>Sitename</Title>
       <Divider />
       <Menu
         mode="inline"
