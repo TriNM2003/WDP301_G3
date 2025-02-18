@@ -43,32 +43,35 @@ function App() {
         </Header>
         <Content>
           <Routes>
-        {accessToken ? <>
-          <Route path='/home' element={<HomePage />}>
+          {!accessToken && <>
+              <Route path='/home' element={<HomePage />}>
                 <Route path='' element={<Welcome />} />
-          </Route>
+              </Route>
+              <Route path='/auth' element={<Login />}>
+                <Route path="login" element={<LoginForm />} />
+                <Route path="register" element={<RegisterForm />} />
+              </Route>
+              <Route path="/active-account" element={<ActiveAccount />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route element={<ErrorPage />}>
+                <Route path='*' element={<E404 />} />
+              </Route>
+            </>}
 
-        <Route path="/profile" element={<UserProfile />} >
-          <Route path="profile-info" element={<ViewProfile />} />
-          <Route path="manage-profile" element={<ManageProfile />} >
-            <Route path="change-password" element={<ChangePassword />} />
-            <Route path="edit-profile" element={<EditProfile/>} />
-          </Route>
-        </Route>
-          </>
-          :
-          <>
-
-        <Route path='/auth' element={<Login />}>
-            <Route path="login" element={<LoginForm />} />
-            <Route path="register" element={<RegisterForm />} />
-        </Route>
-        <Route path="/active-account" element={<ActiveAccount/>} />
-        <Route path="/forgot-password" element={<ForgotPassword/>} />
-        <Route path="/reset-password" element={<ResetPassword/>} />
-          </>
-        }
-        
+            <Route element={<ProtectedRoute />}>
+              <Route path='/home' element={<HomePage />}>
+                <Route path='' element={<Home />} />
+              </Route>
+              <Route path="/profile" element={<UserProfile />} >
+                <Route path="profile-info" element={<ViewProfile />} />
+              
+                  <Route path="change-password" element={<ChangePassword />} />
+                  <Route path="edit-profile" element={<EditProfile />} />
+                </Route>
+             
+              <Route path='*' element={<Navigate to="/home" />} />
+            </Route>
         
           </Routes>
         </Content>
