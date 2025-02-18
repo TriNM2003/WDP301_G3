@@ -59,7 +59,11 @@ const AppProvider = ({ children }) => {
             authAPI,
             accessToken,
            user, setUser,
+<<<<<<< HEAD
         //    setAccessToken,
+=======
+           setAccessToken,
+>>>>>>> ed81002 (feat layout site, project)
            defaultSelectedKeys,setDefaultSelectedKeys
         }}>
             {children}
