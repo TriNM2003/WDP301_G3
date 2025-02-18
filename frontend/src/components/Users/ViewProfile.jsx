@@ -114,7 +114,8 @@ const ViewProfile = () => {
                       <Text strong>{project.platform}</Text>
                       <br />
                       <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
-                    </Col>
+    
+                </Col>
                   </Row>
                 </Col>
               ))}

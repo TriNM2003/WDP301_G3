@@ -8,7 +8,9 @@ export const AppContext = createContext();
 const AppProvider = ({ children }) => {
     //parameter
     // const [accessToken,setAccessToken] = useState()
-    const accessToken =localStorage.getItem("accessToken");
+    const accessToken =localStorage.getItem("accessToken"); 
+    // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
+   
     //token
     // useEffect(()=>{
     //     const token =localStorage.getItem("accessToken")|| null;
@@ -20,6 +22,9 @@ const AppProvider = ({ children }) => {
     const authAPI = "http://localhost:9999/auth";
     const userApi = "http://localhost:9999/users";
 
+      // State lưu thông tin user & accessToken
+  
+  
     
 
     //parameter
@@ -52,7 +57,8 @@ const AppProvider = ({ children }) => {
             accessToken,
             authAPI,
             accessToken,
-           user, setUser
+           user, setUser,
+        //    setAccessToken
         }}>
             {children}
         </AppContext.Provider>

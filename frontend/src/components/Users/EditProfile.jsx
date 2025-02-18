@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal, Avatar, Form } from 'antd';
 import { UploadOutlined, ExclamationCircleOutlined, UserOutlined, LockOutlined, LogoutOutlined, DeleteOutlined, } from '@ant-design/icons';
 import { green, red, gray } from "@ant-design/colors";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 const EditProfile = () => {
     const [selectedKey, setSelectedKey] = useState('1');
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -36,7 +34,6 @@ const EditProfile = () => {
                 message.error("Failed to load user data");
             });
     }, []);
-
 
 
     const handleChange = (e) => {

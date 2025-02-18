@@ -10,11 +10,6 @@ const cloudinary = require("../configs/cloudinary");
 
 
 userRouter.use(bodyParser.json());
-userRouter.put("/change-password",
-    authMiddleware.verifyAccessToken,
-    UserController.changePassword
-)
-
 
 userRouter.get("/user-profile", 
     authMiddleware.verifyAccessToken, 
@@ -31,6 +26,5 @@ userRouter.delete("/delete-user",
     authMiddleware.verifyAccessToken, 
     UserController.deleteUser
 );
-
 
 module.exports = userRouter

@@ -11,7 +11,6 @@ const path = require("path");
 const app = express();
 const db = require("./models/index");
 const { systemRoleRouter, authRouter, userRouter } = require("./routes");
-
 // Sử dụng cors middleware để cho phép request từ localhost:3000
 app.use(cors({
   origin: 'http://localhost:3000',
