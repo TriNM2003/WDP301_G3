@@ -8,8 +8,8 @@ export const AppContext = createContext();
 const AppProvider = ({ children }) => {
     //parameter
     // const [accessToken,setAccessToken] = useState()
-    // const accessToken =localStorage.getItem("accessToken");
-    const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
+    const accessToken =localStorage.getItem("accessToken"); 
+    // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
    
     //token
     // useEffect(()=>{
@@ -20,6 +20,7 @@ const AppProvider = ({ children }) => {
     // },[])
     // api
     const authAPI = "http://localhost:9999/auth";
+    const userApi = "http://localhost:9999/users";
 
       // State lưu thông tin user & accessToken
   
@@ -31,9 +32,25 @@ const AppProvider = ({ children }) => {
 
 
 
-    //call api
 
+    //call api
+    useEffect(() => {
+       
+            
+    });
     //fuction
+    const changePassword = async (userId, oldPassword, newPassword) => {
+        try {
+            const response = await axios.put(`${userApi}/change-password`, {
+                userId,
+                oldPassword,
+                newPassword
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response.data;
+        }
+    };
 
     return (
         <AppContext.Provider value={{
@@ -41,7 +58,7 @@ const AppProvider = ({ children }) => {
             authAPI,
             accessToken,
            user, setUser,
-           setAccessToken
+        //    setAccessToken
         }}>
             {children}
         </AppContext.Provider>

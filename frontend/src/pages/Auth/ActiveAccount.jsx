@@ -92,7 +92,7 @@ const ActiveAccount = () => {
     if (tempAccessToken && tempUser) {
       localStorage.setItem("accessToken", tempAccessToken);
       localStorage.removeItem("activationToken");
-      setAccessToken(tempAccessToken);
+      
       setUser(tempUser);
     }
 
