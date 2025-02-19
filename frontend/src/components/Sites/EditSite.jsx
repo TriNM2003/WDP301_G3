@@ -153,6 +153,7 @@ const EditSite = () => {
                                 style={{
                                     borderRadius: "8px",
                                     boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                                    padding: "0 150px",
                                 }}
                             >
                                 <Row justify="center" style={{ marginBottom: '20px' }}>
@@ -171,25 +172,30 @@ const EditSite = () => {
                                     form={form}
                                     onFinish={handleSubmit}
                                     initialValues={{
-                                        siteName: "Example Site",
+                                        siteOwner: "Nigga",
                                     }}
                                 >
 
                                     {/* Site Name */}
+                                    <Form.Item label="Site Owner" name="siteOwner">
+                                        <p style={{border: "1px solid #d9d9d9", borderRadius: "8px", padding: '5px', textAlign: "left"}}>Bigger</p>
+                                    </Form.Item>
+
                                     <Form.Item label="Site Name" name="siteName">
                                         <Input placeholder="Enter site name" />
                                     </Form.Item>
 
 
 
+
                                     {/* Save Change Button */}
-                                    <Form.Item>
+                                    <Form.Item style={{ textAlign: "left" }}>
                                         <Button
                                             type="primary"
                                             htmlType="submit"
                                             loading={loading}
                                             style={{
-                                                width: "100%",
+                                                width: "35%",
                                                 borderRadius: "6px",
                                                 fontSize: "16px",
                                                 padding: "10px",
