@@ -27,6 +27,7 @@ import RegisterForm from './components/Auth/RegisterForm';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+import CreateSite from './pages/Sites/CreateSite';
 
 
 function App() {
@@ -70,6 +71,8 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
              
+              <Route path='/create-site' element={<CreateSite />} />
+
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
