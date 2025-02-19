@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select } from "antd";
-import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb } from "antd";
+import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 
 const { Column } = Table;
 const { Title } = Typography;
@@ -27,20 +28,32 @@ const UserManagement = () => {
     };
 
     const data = [
-        { key: "1", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", name: "Figga", email: "Figga@gmail.com", access: ["member" ], lastActive: "Mar 4, 2024", dateAdded: "July 4, 2022" },
-        { key: "2", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", name: "nigga", email: "nigga@gmail.com", access: ["nigger" ], lastActive: "Mar 4, 2024", dateAdded: "July 4, 2022" },
-        { key: "3", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", name: "rigga", email: "rigga@gmail.com", access: ["member" ], lastActive: "Mar 2, 2024", dateAdded: "July 4, 2022" },
-        { key: "4", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", name: "digger", email: "digger@gmail.com", access: ["member" ], lastActive: "Mar 6, 2024", dateAdded: "July 4, 2022" },
-        { key: "5", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", name: "hamurger", email: "hamurger@gmail.com", access: ["member"], lastActive: "Mar 8, 2024", dateAdded: "July 4, 2022" },
-        { key: "6", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", name: "youtuber", email: "youtuber@gmail.com", access: ["member"], lastActive: "Mar 6, 2024", dateAdded: "July 4, 2022" }
+        { key: "1", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", username: "Figga", email: "Figga@gmail.com", access: ["member" ], fullName: " phan van Figga", dateAdded: "July 4, 2022" },
+        { key: "2", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", username: "nigga", email: "nigga@gmail.com", access: ["nigger" ], fullName: "Mai nigga", dateAdded: "July 4, 2022" },
+        { key: "3", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", username: "rigga", email: "rigga@gmail.com", access: ["member" ], fullName: "Le van rigga", dateAdded: "July 4, 2022" },
+        { key: "4", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", username: "digger", email: "digger@gmail.com", access: ["member" ], fullName: "Do digger", dateAdded: "July 4, 2022" },
+        { key: "5", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", username: "hamurger", email: "hamurger@gmail.com", access: ["member"], fullName: "john hambuger", dateAdded: "July 4, 2022" },
+        { key: "6", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/", username: "youtuber", email: "youtuber@gmail.com", access: ["member"], fullName: "cris tube", dateAdded: "July 4, 2022" }
     ];
 
     return (
         <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fafafa" }}>
+             <Breadcrumb>
+                <Breadcrumb.Item><Link>Team</Link></Breadcrumb.Item>
+                <Breadcrumb.Item><Link>Team member</Link></Breadcrumb.Item>
+            </Breadcrumb>
+
+            <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
+                <Col>
+                    <Title level={3}>
+                        <ArrowLeftOutlined style={{ marginRight: 8 }} /> Team Member{" "}
+                    </Title>
+                </Col>
+            </Row>
             {/* Header */}
             <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
                 <Col>
-                    <Title level={3}>Users <span style={{ color: "#999" }}>44</span></Title>
+                    <Title level={3}>All member <span style={{ color: "#999" }}>44</span></Title>
                 </Col>
                 <Col>
                     <Input
@@ -50,47 +63,49 @@ const UserManagement = () => {
                         value={searchText}
                         onChange={handleSearch}
                     />
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>Add user</Button>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>Add member</Button>
                 </Col>
             </Row>
 
             {/* Table */}
             <Table
                 dataSource={data}
-                pagination={false}
+                pagination={3}
                 rowClassName={() => "custom-table-row"}
                 style={{ borderRadius: "8px", overflow: "hidden" }}
             >
                 <Column
-                    title="User name"
-                    key="name"
+                    title="Member"
+                    key="username"
+                    sorter={(a, b) => a.name.localeCompare(b.username)}
                     render={(text, record) => (
                         <Row align="middle">
                             <Avatar src={record.avatar} size={40} style={{ marginRight: "10px" }} />
                             <div>
-                                <div style={{ fontWeight: "bold" }}>{record.name}</div>
+                                <div style={{ fontWeight: "bold" }}>{record.username}</div>
                                 <div style={{ color: "#888" }}>{record.email}</div>
                             </div>
                         </Row>
                     )}
                 />
+                <Column title="Full Name" dataIndex="fullName" key="fullName" sorter={(a, b) => a.fullName.localeCompare(b.fullName)} />
                 <Column
                     title="Access"
                     key="access"
                     render={(text, record) => (
                         <>
                             {record.access.map((role) => (
-                                <Tag color={role === "Admin" ? "green" : role === "Data Export" ? "blue" : "purple"} key={role}>
+                                <Tag color={ role === "member" ? "blue" : "purple"} key={role}>
                                     {role}
                                 </Tag>
                             ))}
                         </>
                     )}
                 />
-                <Column title="Last active" dataIndex="lastActive" key="lastActive" sorter={(a, b) => new Date(a.lastActive) - new Date(b.lastActive)} />
+                
                 <Column title="Date added" dataIndex="dateAdded" key="dateAdded" sorter={(a, b) => new Date(a.dateAdded) - new Date(b.dateAdded)}  />
                 <Column
-                    title=""
+                    title="Action"
                     key="actions"
                     render={(text, record) => (
                         <Dropdown
