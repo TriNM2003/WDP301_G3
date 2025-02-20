@@ -13,6 +13,7 @@ import {
   Modal,
   Avatar,
   Radio,
+  message
 } from "antd";
 import {
   UserOutlined,
@@ -24,8 +25,9 @@ import {
   UserAddOutlined,
   MailOutlined,
   CloseCircleOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
-import { gold, green } from "@ant-design/colors";
+import { gold, gray, green } from "@ant-design/colors";
 
 const { Title } = Typography;
 const { confirm } = Modal;
@@ -35,17 +37,28 @@ const MembersManagement = () => {
   const [members, setMembers] = useState([
     { key: "1", name: "John", email: "John@gmail.com", role: "Owner" },
     { key: "2", name: "Alice", email: "Alice@gmail.com", role: "Member" },
-    { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Admin" },
-    { key: "4", name: "Bob", email: "Bob@gmail.com", role: "Admin" },
-    { key: "5", name: "Bob", email: "Bob@gmail.com", role: "Admin" },
-    { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Admin" },
-    { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Admin" },
+    { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Site Admin" },
+    { key: "4", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+    { key: "5", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+    { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+    { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Member" },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState(null);
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState([]);
+  const [messageApi, contexHolder] = message.useMessage();
+
+  const handleInviteMember = () => {
+    setInviteModalVisible(false);
+    messageApi.open({
+      type: "success",
+      content: "Invite members successfully",
+      duration: 2
+    });
+  }
+
 
   // Xử lý tìm kiếm
   let filteredMembers;
@@ -78,8 +91,8 @@ const MembersManagement = () => {
           onChange={(e) => handleRoleChange(record.key, e.target.value)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
-          <Radio value="Owner">Owner</Radio>
-          <Radio value="Admin">Admin</Radio>
+          {/* <Radio value="Owner">Owner</Radio> */}
+          <Radio value="Site" disabled>Site Admin</Radio>
           <Radio value="Member">Member</Radio>
         </Radio.Group>
       </Menu.ItemGroup>
@@ -124,23 +137,39 @@ const MembersManagement = () => {
     {
       title: <div style={{textAlign: "center"}}><span>Action</span></div>,
       key: "action",
+      align: "center",
       render: (_, record) => (
-        <Popconfirm
-          title="Are you sure to revoke access?"
-          icon={<ExclamationCircleOutlined style={{ color: gold[6] }} />}
-          onConfirm={() => handleRevokeAccess(record.key)}
-          okText="Yes"
-          cancelText="No"
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item key="kick">
+                <Popconfirm
+                  title="Are you sure to revoke access?"
+                  icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
+                  onConfirm={() => handleRevokeAccess(record.key)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button danger type="text">Revoke access</Button>
+                </Popconfirm>
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={["click"]}
         >
-          <div style={{textAlign: "center"}}><Button type="link" icon={<CloseCircleOutlined />} style={{fontSize: "1.5rem"}} danger /></div>
-        </Popconfirm>
-      ),
+          <Button icon={<MoreOutlined />} type="text" />
+        </Dropdown>
+      )
+      ,
       width: "15%"
     },
   ];
 
   return (
-    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white'}}>
+    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)"}}>
+      {/* hien thi message api */}
+      {contexHolder}
+
       {/* Breadcrumb */}
       <Breadcrumb style={{ marginBottom: "20px" }}>
         <Breadcrumb.Item>Home</Breadcrumb.Item>
@@ -198,7 +227,7 @@ const MembersManagement = () => {
         visible={inviteModalVisible}
         onCancel={() => setInviteModalVisible(false)}
         footer={[
-          <Button key="add" color={green[6]} variant="solid" onClick={() => setInviteModalVisible(false)}>
+          <Button key="add" color={green[6]} variant="solid" onClick={() => handleInviteMember()}>
             Add
           </Button>,
           <Button key="cancel" color="danger" variant="solid" onClick={() => setInviteModalVisible(false)} danger>
