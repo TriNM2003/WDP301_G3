@@ -1,5 +1,5 @@
 import { red } from '@ant-design/colors'
-import { DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, UserAddOutlined } from '@ant-design/icons'
+import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, SyncOutlined, TableOutlined, UserAddOutlined } from '@ant-design/icons'
 import { Button, Col, Dropdown, Menu, Row, Space, Tabs } from 'antd'
 
 import TabPane from 'antd/es/tabs/TabPane'
@@ -50,16 +50,16 @@ function _id() {
                     <Tabs  defaultActiveKey="1">
                         <TabPane   key="0">
                         </TabPane>
-                        <TabPane  tab="Summary" key="1">
+                        <TabPane  tab="Summary" key="1" icon={<BarChartOutlined/>}>
                             <Summary/>
                         </TabPane>
                         <TabPane tab="Your tasks" key="2">
                             Nội dung Tab Your Tasks
                         </TabPane>
-                        <TabPane tab="Sprint" key="3">
+                        <TabPane tab="Sprint" key="3" icon={<SyncOutlined/>}>
                             Nội dung Tab Sprint
                         </TabPane>
-                        <TabPane tab="Board" key="4">
+                        <TabPane tab="Board" key="4" icon={<TableOutlined/>}>
                             Nội dung Tab Board
                         </TabPane>
                     </Tabs>
