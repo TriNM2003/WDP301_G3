@@ -5,42 +5,30 @@ import {
   Dropdown,
   Menu,
   Popconfirm,
-  Select,
   Input,
   Space,
   Typography,
   Breadcrumb,
-  Modal,
   Avatar,
-  Radio,
   message
 } from "antd";
 import {
   UserOutlined,
-  DownOutlined,
-  LockOutlined,
   ExclamationCircleOutlined,
-  PlusOutlined,
   SearchOutlined,
-  UserAddOutlined,
-  MailOutlined,
-  CloseCircleOutlined,
   MoreOutlined,
   FileImageOutlined,
 } from "@ant-design/icons";
-import { gold, gray, green } from "@ant-design/colors";
 
 const { Title } = Typography;
-const { confirm } = Modal;
-const { Option } = Select;
 
 // component
 const ViewListProject = () => {
 
   // member data
   const [projects, setProjects] = useState([
-    { key: "1", name: "SDN302", lead: "JohnSmith@gmail.com"},
-    { key: "2", name: "WDP301", lead: "TriNM@gmail.com"},
+    { key: "1", name: "SDN302", projectManager: "JohnSmith@gmail.com"},
+    { key: "2", name: "WDP301", projectManager: "TriNM@gmail.com"},
   ]);
 
   // search state
@@ -92,19 +80,19 @@ const ViewListProject = () => {
           <FileImageOutlined style={{fontSize: "1.6rem"}}/>{text}
         </Space>
       ),
-        sorter: (a, b) => a.name - b.name,
+        sorter: (a, b) => a.name.localeCompare(b.name),
       width: "40%"
     },
-    { title: "Lead",
-        dataIndex: "lead",
-         key: "lead" ,
+    { title: "Project Manager",
+        dataIndex: "projectManager",
+         key: "projectManager" ,
          render: (text) => (
           <Space>
             <Avatar icon={<UserOutlined />} style={{ fontSize: "16px" }} />
             {text}
           </Space>
         ),
-        sorter: (a, b) => a.lead - b.lead,
+        sorter: (a, b) => a.projectManager.localeCompare(b.projectManager),
         width: "40%"
     },
     {
@@ -114,8 +102,8 @@ const ViewListProject = () => {
       render: (_, record) => (
         <Dropdown
           overlay={
-            <Menu>
-              <Menu.Item key="kick">
+            <Menu mode="vertical">
+              <Menu.Item key="removeProject">
                 <Popconfirm
                   title="Are you sure to remove this project?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
@@ -125,6 +113,9 @@ const ViewListProject = () => {
                 >
                   <Button danger type="text">Remove</Button>
                 </Popconfirm>
+              </Menu.Item>
+              <Menu.Item key="projectSettings">
+                <Button type="text" onClick={() => showingMessage("success", "project setting clicked", 1)}>Project settings</Button>
               </Menu.Item>
             </Menu>
           }
@@ -154,7 +145,7 @@ const ViewListProject = () => {
       {/* title and button */}
       <div style={{ display: "flex", gap: "10px",  marginRight: "20px", justifyContent: "space-between" }}>
           <Title level={2}>Projects</Title>
-          <Button type="primary" style={{marginTop: "30px"}} onClick={() => handleAddProject()}>Create project</Button>
+          <Button type="primary" style={{marginTop: "35px"}} onClick={() => handleAddProject()}>Create project</Button>
       </div>
 
       <div style={{ display: "flex", marginBottom: "20px"}}>
@@ -171,7 +162,7 @@ const ViewListProject = () => {
       </div>
 
 
-      {/* Bảng danh sách thành viên */}
+      {/* project table */}
       <Table 
       columns={columns} 
       dataSource={filteredProjects} 
