@@ -95,14 +95,6 @@ const login = async (username, password, res) => {
 };
 
 
-// const loginByGoogleCallback = () => {
-//     return passport.authenticate('google',{failureRedirect: "/auth/login"},(req, res) => {
-//         // tao cookie lu giu thong tin user
-//         res.cookie("user", JSON.stringify(req.user), {httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000});
-//         res.redirect(`http://localhost:3000/home123`);
-//     });
-// }
-
 const logout = async (userId) => {
     await redisUtils.deleteRefreshToken(userId);
     return {
@@ -118,6 +110,44 @@ const getRefreshToken = async (userId) => {
         throw new Error("Refresh token not found!");
     }
     return refreshToken;
+}
+
+const getUserByAccessToken = async (accessToken) => {
+    //decode access Token
+    const decodedAccessToken = jwtUtils.decode(accessToken);
+
+    // get user
+    const user = await User.findById(decodedAccessToken.id);
+
+    // Nếu tài khoản chưa kích hoạt, gửi token về FE để kích hoạt
+  if (user.status === "inactive") {
+    const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "10m" }
+    );
+    const error = new Error("Account not activated! Redirecting to activation page...");
+    error.status = 403; 
+    error.token = token;
+    throw error;
+
+    }
+    return {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        phoneNumber: user.phoneNumber,
+        dob: user.dob,
+        address: user.address,
+        roles: user.roles,
+        userAvatar: user.userAvatar,
+        status: user.status,
+        notifications: user.notifications,
+        activities: user.activities,
+        projects: user.projects,
+        teams: user.teams
+    };
 }
 
 const refreshAccessToken = async (req, res) => {
@@ -146,8 +176,8 @@ const refreshAccessToken = async (req, res) => {
 
 const authService = {
     login,
-    // loginByGoogleCallback,
     register,
+    getUserByAccessToken,
     getRefreshToken,
     refreshAccessToken,logout,
 }

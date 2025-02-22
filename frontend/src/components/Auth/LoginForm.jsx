@@ -18,7 +18,6 @@ const LoginForm = () => {
     const {setUser, authAPI} = useContext(AppContext);
 
     const loginAPI = `${authAPI}/login`;
-    const googleLoginAPI_ALT = `${authAPI}/loginByGoogleUsername`;
     const googleLoginAPI = `${authAPI}/loginByGoogle`;
 
 
@@ -26,19 +25,11 @@ const LoginForm = () => {
       const urlParams = new URLSearchParams(window.location.search);
       
       if(urlParams.get("isLoginByGoogle")){
-        axios.post(`${authAPI}/getGoogleUser`, {} ,{
-          withCredentials: true
-      })
+        axios.get(`${authAPI}/getUserByAccessToken`,{withCredentials: true})
           .then(res => {
-            console.log(res.data.user);
-            const googleEmail = res.data.user.email;
-            const googleUsername = res.data.user.username;
-            const googlePassword = res.data.user.password;
-            
-            const result = axios.post(googleLoginAPI_ALT, {username: googleUsername, password: googlePassword}, {withCredentials: true});
-            const loginResult = result.data;
-
-            switch(loginResult.user.status){
+            const {user, accessToken, accessTokenExp} = res.data;
+            //
+            switch(user.status){
               case 'inactive':
                   setTimeout(() => {
                       setLoading(false);
@@ -58,22 +49,20 @@ const LoginForm = () => {
                     }, 2000);
                     break;
              default:
-              if(loginResult.accessToken){
+              if(accessToken){
                   messageApi.open({
                       type: "success",
                       content: "Login successfully! Redirecting to homepage...",
                       duration: 2
                   }).then(() => {
-                      localStorage.setItem("accessToken", loginResult.accessToken);
-                      localStorage.setItem("accessTokenExp", loginResult.accessTokenExp);
-                      localStorage.setItem("userId", loginResult.user.id);
-                      setUser(loginResult.user);
-                      setLoading(false);
+                      localStorage.setItem("accessToken", accessToken);
+                      localStorage.setItem("accessTokenExp", accessTokenExp);
+                      localStorage.setItem("userId", user._id);
+                      setUser(user);
                       nav('/home')
                   });
               }else{
                   setTimeout(() => {
-                      setLoading(false);
                       messageApi.open({
                         type: "error",
                         content: "Token not found!",
@@ -82,59 +71,26 @@ const LoginForm = () => {
               }
               break;
           }
-
           })
-          .catch(err => console.log(err));
+          .catch(error => {
+            if (error.response?.status === 403) { 
+              localStorage.setItem("activationToken", error.response.data.token);
+              message.warning("Your account has not been activated. You need to activate it to access the system.");
+              setTimeout(() => {
+                  nav('/active-account'); 
+              }, 1000);
+            }else{
+              messageApi.open({
+                type: "error",
+                content: "Login by google failed!",
+                duration: 2
+              })
+              console.log(error.message)
+            }
 
-
-
-        messageApi.open({
-          type: "success",
-          content: "Login by Google successfully! Redirecting to homepage...",
-          duration: 3
-        });
-        
+          });
       }
-      // const token = urlParams.get("token");
-
-      // if(token){
-      //   const username = urlParams.get("username");
-      //   const email = urlParams.get("email");
-      //   const password = urlParams.get("password");
-      //   const status = urlParams.get("status");
-      //   console.log(token, username, email, password, status);
-      //   // xoa info tren thanh saerch
-      //   window.history.replaceState({}, document.title, "/auth/login");
-
-      //   if (status === 'deactivated') {
-      //     messageApi.open({
-      //       type: "warning",
-      //       content: "Your account is deactivated!",
-      //       duration: 3
-      //     })
-      //   } else if (status === 'inactive') {
-      //     messageApi.open({
-      //       type: "warning",
-      //       content: "Your account is not activated! Please active your account",
-      //       duration: 3
-      //     })
-      //   } else if(status === 'active'){
-      //     messageApi.open({
-      //       type: "success",
-      //       content: "Login by Google successfully! Redirecting to homepage...",
-      //       duration: 3
-      //     }).then(() => nav('/home'));
-      //   }else{
-      //     messageApi.open({
-      //       type: "error",
-      //       content: "Cancel google login!",
-      //       duration: 3
-      //     })
-      //   }
-
-      
-      // }
-    }, [messageApi, nav])
+    }, [messageApi, nav, authAPI])
 
   const handleLogin = async () => {
     try {
