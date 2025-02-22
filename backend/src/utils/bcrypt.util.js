@@ -2,19 +2,19 @@ const bcrypt = require("bcrypt");
 
 
 // salt: random text to password => more == stronger
-// deafault: 10
-const encryptPassword = async (password, saltNumber) => {
+// default: 10
+const encryptPassword = async (password, saltNumber = 10) => {
     const salt = await bcrypt.genSalt(saltNumber);
-    return await bcrypt.hash(password, salt);
+    return bcrypt.hash(password, salt);
 }
 
-const compareDecryptedPasswordToPassword = async (encryptedPassword, password) => {
-    return await bcrypt.compare(encryptedPassword, password);
+const comparePassword = async (encryptedPassword, password) => {
+    return bcrypt.compare(encryptedPassword, password);
 }
 
 const bcryptUtils = {
     encryptPassword,
-    compareDecryptedPasswordToPassword
+    comparePassword
 }
 
 module.exports = bcryptUtils;

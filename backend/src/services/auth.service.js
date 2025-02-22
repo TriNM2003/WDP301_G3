@@ -58,7 +58,8 @@ const login = async (username, password, res) => {
             message: "Username not found!"
         };
     }
-    const isMatch = bcryptUtils.compareDecryptedPasswordToPassword(password, user.password);
+    const isMatch = await bcryptUtils.comparePassword(password, user.password);
+    console.log(isMatch)
     if (!isMatch) {
         return {
             status: 400,
