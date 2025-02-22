@@ -27,8 +27,8 @@ const ViewListProject = () => {
 
   // member data
   const [projects, setProjects] = useState([
-    { key: "1", name: "SDN302", projectManager: "JohnSmith@gmail.com"},
-    { key: "2", name: "WDP301", projectManager: "TriNM@gmail.com"},
+    { key: "1", name: "SDN302", projectManager: "JohnSmith@gmail.com", createAt: "11/02/2004", updateAt: "13/2/2024"},
+    { key: "2", name: "WDP301", projectManager: "TriNM@gmail.com", createAt: "10/02/2004", updateAt: "15/2/2024"},
   ]);
 
   // search state
@@ -81,7 +81,7 @@ const ViewListProject = () => {
         </Space>
       ),
         sorter: (a, b) => a.name.localeCompare(b.name),
-      width: "40%"
+      width: "30%"
     },
     { title: "Project Manager",
         dataIndex: "projectManager",
@@ -93,7 +93,19 @@ const ViewListProject = () => {
           </Space>
         ),
         sorter: (a, b) => a.projectManager.localeCompare(b.projectManager),
-        width: "40%"
+        width: "30%"
+    },
+    { title: "Created date",
+      dataIndex: "createAt",
+       key: "createAt" ,
+      sorter: (a, b) => a.createAt - b.createAt,
+      width: "15%"
+    },
+    { title: "Updated date",
+      dataIndex: "updateAt",
+       key: "updateAt" ,
+      sorter: (a, b) => a.updateAt - b.updateAt,
+      width: "15%"
     },
     {
       title: <div style={{textAlign: "center"}}><span>Action</span></div>,
@@ -125,7 +137,7 @@ const ViewListProject = () => {
         </Dropdown>
       )
       ,
-      width: "20%"
+      width: "10%"
     },
   ];
 
