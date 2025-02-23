@@ -32,7 +32,7 @@ const ProjectTrash = () => {
             key: "1",
             name: "Test-1",
             removeBy: "Digger",
-            lead: { name: "Trigger", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
+            projectManager: { name: "Trigger", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
             movedOn: "Jan 07, 2025",
             deletedIn: "In 17 days"
         },
@@ -40,7 +40,7 @@ const ProjectTrash = () => {
             key: "2",
             name: "TestProject",
             removeBy: "Miner",
-            lead: { name: "Trigger", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
+            projectManager: { name: "Trigger", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
             movedOn: "Jan 13, 2025",
             deletedIn: "In 24 days"
         },
@@ -48,7 +48,7 @@ const ProjectTrash = () => {
             key: "3",
             name: "Go to market sample",
             removeBy: "Business",
-            lead: { name: "Slider", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
+            projectManager: { name: "Slider", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
             movedOn: "Jan 13, 2025",
             deletedIn: "In 24 days"
         },
@@ -56,7 +56,7 @@ const ProjectTrash = () => {
             key: "4",
             name: "WDP",
             removeBy: "Miner",
-            lead: { name: "Miner", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
+            projectManager: { name: "Miner", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
             movedOn: "Jan 13, 2025",
             deletedIn: "In 24 days"
         },
@@ -64,7 +64,7 @@ const ProjectTrash = () => {
             key: "5",
             name: "WDP301",
             removeBy: "Hamburger",
-            lead: { name: "Hamburger", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
+            projectManager: { name: "Hamburger", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
             movedOn: "Jan 13, 2025",
             deletedIn: "In 24 days"
         },
@@ -72,7 +72,7 @@ const ProjectTrash = () => {
             key: "6",
             name: "Project management",
             removeBy: "Business",
-            lead: { name: "Licker", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
+            projectManager: { name: "Licker", avatar: "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" },
             movedOn: "Feb 19, 2025",
             deletedIn: "In 60 days"
         }
@@ -98,9 +98,10 @@ const ProjectTrash = () => {
             sorter: (a, b) => a.type.localeCompare(b.type)
         },
         {
-            title: "Lead",
-            dataIndex: "lead",
-            key: "lead",
+            title: "Project Manager",
+            dataIndex: "projectManager",
+            key: "projectManager",
+            sorter: (a, b) => a.projectManager.name.localeCompare(b.projectManager.name),
             render: (lead) => (
                 <div style={{ display: "flex", alignItems: "center" }}>
                     <Avatar src={lead.avatar} style={{ marginRight: "8px" }} />
@@ -162,11 +163,6 @@ const ProjectTrash = () => {
             {/* Search & Filter */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <Input placeholder="Search" prefix={<SearchOutlined />} style={{ width: 250, marginRight: "10px" }} value={searchText} onChange={handleSearch} />
-                <Select placeholder="Filter by product" style={{ width: 200 }}>
-                    <Option value="all">All</Option>
-                    <Option value="software">Software</Option>
-                    <Option value="business">Business</Option>
-                </Select>
             </div>
 
             {/* Table */}
