@@ -1,16 +1,17 @@
 import React, { useState } from "react";
-import { Layout, Menu, Form, Input, Button, Card, Row, Col, Typography, Dropdown, Breadcrumb, Avatar, Upload, Select } from "antd";
-import { ProjectOutlined, EllipsisOutlined, UploadOutlined, UserSwitchOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { Form, Input, Button, Card, Row, Col, Typography, Dropdown, Breadcrumb, Avatar, Upload, Select, Modal, message } from "antd";
+import { EllipsisOutlined, UploadOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
-const { Content } = Layout;
 const { Title } = Typography;
 
 const EditProject = () => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [showDeactivate, setShowDeactivate] = useState(false);
-    const [selectedKey, setSelectedKey] = useState("1");
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [confirmProjectName, setConfirmProjectName] = useState("");
+    const [projectName, setProjectName] = useState("Example Project");
 
     const handleSubmit = (values) => {
         console.log("Form values:", values);
@@ -20,55 +21,34 @@ const EditProject = () => {
             console.log("Changes saved!");
         }, 2000);
     };
-    {/* <Sider
-                 width={270}
-                 style={{
-                  background: "#fff",
-                    padding: "20px",
-                     borderRight: "1px solid #ddd",
-                     borderTop: "1px solid #ddd",
-                     borderBottom: "1px solid #ddd"
-                 }}
-             >
-                <Title level={5} style={{ marginBottom: "20px", textAlign: "center", borderBottom: "1px solid #ddd" }}>
-                    <ArrowLeftOutlined /> Project Setting
-                </Title>
-                <Menu
-                    mode="inline"
-                     selectedKeys={[selectedKey]}
-                     style={{ borderRight: 0 }}
-                 >
-                     <Menu.Item key="1" icon={<ProjectOutlined />} style={{ textAlign: 'left' }}>
-                         <Link to="/project/project-setting">Project settings</Link>
-                </Menu.Item>
-                 <Menu.Item key="2" icon={<UserSwitchOutlined />} style={{ textAlign: 'left' }}>
-                         <Link to="/project/project-setting">Access</Link>
-                     </Menu.Item>
-                 </Menu>
-             </Sider> */}
 
+    const handleDeleteProject = () => {
+        setIsDeleteModalVisible(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (confirmProjectName === projectName) {
+            setIsDeleteModalVisible(false);
+            message.success(`Project "${projectName}" has been deleted.`);
+            setConfirmProjectName("");
+        } else {
+            message.error("Project name does not match!");
+        }
+    };
 
     return (
         <div style={{ padding: "24px", minHeight: "100vh", background: "#fafafa" }}>
-
-
-
-            {/* Main Content */}
-
-
-            <Row justify="space-between" align="middle" style={{ marginLeft: "150px", marginRight: "150px", marginBottom: "20px" }}>
+            <Row justify="space-between" align="middle" style={{ margin: "0 150px 20px" }}>
                 {/* Breadcrumb */}
                 <Col>
                     <Breadcrumb>
                         <Breadcrumb.Item><Link to="/projects">Projects</Link></Breadcrumb.Item>
                         <Breadcrumb.Item><Link to="/projects/project-setting">Project Setting</Link></Breadcrumb.Item>
                     </Breadcrumb>
-                    {/* Title */}
-                    <Row style={{ justifyContent: "left" }} >
+                    <Row>
                         <Title level={3}>Project Setting</Title>
                     </Row>
                 </Col>
-
 
                 {/* More Options Button */}
                 <Col>
@@ -85,7 +65,7 @@ const EditProject = () => {
                                     borderRadius: "6px",
                                     display: showDeactivate ? "block" : "none",
                                 }}
-                                onClick={() => alert("Delete Project")}
+                                onClick={handleDeleteProject}
                             >
                                 Delete Project
                             </Button>
@@ -93,88 +73,43 @@ const EditProject = () => {
                         trigger={["click"]}
                         onOpenChange={(visible) => setShowDeactivate(visible)}
                     >
-                        <Button
-                            shape="rectangle"
-                            icon={<EllipsisOutlined />}
-                            style={{ marginBottom: "10px" }}
-                        />
+                        <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
                     </Dropdown>
                 </Col>
             </Row>
 
-
-
-
-
             <Row justify="center">
                 <Col xs={24} sm={16} md={12}>
-                    <Card
-                        style={{
-                            padding: "0 200px",
-                            borderRadius: "8px",
-                            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                        }}
-                    >
+                    <Card style={{ padding: "0 200px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
                         <Row justify="center" style={{ marginBottom: '20px' }}>
-                            <Avatar size={100} style={{ borderRadius: '0' }} src={"https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/"} />
+                            <Avatar size={100} style={{ borderRadius: '0' }} src="https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" />
                         </Row>
                         <Form.Item>
-                            <Upload
-                                showUploadList={false}
-                                beforeUpload={() => false}
-                            >
+                            <Upload showUploadList={false} beforeUpload={() => false}>
                                 <Button icon={<UploadOutlined />}>Upload Image</Button>
                             </Upload>
                         </Form.Item>
-                        <Form
-                            layout="vertical"
-                            form={form}
-                            onFinish={handleSubmit}
-                        >
-
-
-                            <Form.Item
-                                label="Project Name"
-                                name="label3"
-                                rules={[
-                                    { required: true, message: "This field is required!" },
-                                ]}
-                            >
-                                <Input placeholder="Enter site name" />
+                        <Form layout="vertical" form={form} onFinish={handleSubmit}>
+                            <Form.Item label="Project Name" name="projectName" rules={[{ required: true, message: "This field is required!" }]}>
+                                <Input placeholder="Enter project name" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
                             </Form.Item>
 
-                            <Form.Item
-                                label="Project Manager"
-                            >
-                                <Select
-                                    defaultValue="lucy"
-                                    style={{ width: '100%' }}
-                                    options={[
-                                        { value: 'jack', label: 'Jack', disabled: true },
-                                        { value: 'lucy', label: 'Lucy', disabled: true },
-                                        { value: 'Yiminghe', label: 'yiminghe', disabled: true },
-                                        { value: 'disabled', label: 'Disabled', disabled: true },
-                                    ]}
-                                />
+                            <Form.Item label="Project Manager">
+                                <Select defaultValue="lucy" style={{ width: '100%' }} options={[
+                                    { value: 'jack', label: 'Jack', disabled: true },
+                                    { value: 'lucy', label: 'Lucy', disabled: true },
+                                    { value: 'Yiminghe', label: 'yiminghe', disabled: true },
+                                    { value: 'disabled', label: 'Disabled', disabled: true },
+                                ]} />
                             </Form.Item>
 
-
-
-
-
-                            {/* Save Change Button */}
                             <Form.Item style={{ textAlign: "left" }}>
-                                <Button
-                                    type="primary"
-                                    htmlType="submit"
-                                    loading={loading}
-                                    style={{
-                                        width: "30%",
-                                        borderRadius: "6px",
-                                        fontSize: "16px",
-                                        padding: "20px",
-                                    }}
-                                >
+                                <Button type="primary" htmlType="submit" loading={loading} style={{
+                                    width: "30%",
+                                    borderRadius: "6px",
+                                    fontSize: "16px",
+                                    padding: "10px",
+                                }}>
                                     Save Change
                                 </Button>
                             </Form.Item>
@@ -182,6 +117,25 @@ const EditProject = () => {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                title="Confirm Project Deletion"
+                open={isDeleteModalVisible}
+                onCancel={() => setIsDeleteModalVisible(false)}
+                footer={[
+                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
+                    <Button key="confirm" type="primary" danger onClick={handleConfirmDelete}>Delete</Button>
+                ]}
+            >
+                <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginBottom: "10px" }} />
+                <p>To confirm deletion, please type the project name: <strong>{projectName}</strong></p>
+                <Input
+                    placeholder="Enter project name"
+                    value={confirmProjectName}
+                    onChange={(e) => setConfirmProjectName(e.target.value)}
+                />
+            </Modal>
         </div>
     );
 };
