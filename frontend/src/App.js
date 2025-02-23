@@ -27,8 +27,8 @@ import RegisterForm from './components/Auth/RegisterForm';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
-import ProjectMembersManagements from './components/Project/ProjectMembersManagement';
-
+import ManageProjectMember from './pages/Projects/ManageProjectMember';
+import ProjectLayout from './pages/Projects/ProjectLayout';
 
 function App() {
 
@@ -71,7 +71,8 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
              
-                <Route path='/site/project/members' element={<ProjectMembersManagements />} />
+                <Route path='/site/project/members' element={<ManageProjectMember />} />
+                <Route path='/projectLayout' element={<ProjectLayout />} />
 
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>

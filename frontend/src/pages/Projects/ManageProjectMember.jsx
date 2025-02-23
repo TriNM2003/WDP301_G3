@@ -13,7 +13,9 @@ import {
   Modal,
   Avatar,
   Radio,
-  message
+  message,
+  Layout,
+  theme
 } from "antd";
 import {
   UserOutlined,
@@ -26,14 +28,48 @@ import {
   MailOutlined,
   CloseCircleOutlined,
   MoreOutlined,
+  ArrowLeftOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
 import { gold, gray, green } from "@ant-design/colors";
+import { useLocation, useNavigate } from "react-router-dom";
+import Sider from "antd/es/layout/Sider";
 
 const { Title } = Typography;
 const { confirm } = Modal;
 const { Option } = Select;
 
-const ProjectMembersManagements = () => {
+const ManageProjectMember = () => {
+  //sider
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentPath = location.pathname.split('/').pop();
+
+  const menuItems = [
+    { key: 'back', icon: <ArrowLeftOutlined />, label: 'Project members', path: '/site/project' },
+    { key: 'wdp', icon: <PictureOutlined style={{fontSize:"1.6rem"}}/>, label: <span style={{fontSize:"1.2rem", padding: 0}}>WDP301</span>, disabled: true },
+    // { key: 'details', label: 'Details', path: '/site/project/details' },
+    // { key: 'members', label: 'Members', path: '/site/project/members' },
+    // { key: 'setting-a', label: 'Setting A', path: '/site/project/setting-a' },
+    // { key: 'setting-b', label: 'Setting B', path: '/site/project/setting-b' },
+    // { key: 'setting-c', label: 'Setting C', path: '/site/project/setting-c' },
+  ];
+
+  const handleClick = ({ key }) => {
+    const clickedItem = menuItems.find(item => item.key === key);
+    if (clickedItem && clickedItem.path) {
+      navigate(clickedItem.path);
+    }
+  };
+
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
+
+
+
+  // content
   const [members, setMembers] = useState([
     { key: "1", name: "John", email: "John@gmail.com", role: "Project Manager" },
     { key: "2", name: "Alice", email: "Alice@gmail.com", role: "Project Member" },
@@ -43,6 +79,13 @@ const ProjectMembersManagements = () => {
     { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Project Member" },
     { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Project Member" },
   ]);
+  // State lưu role đang chọn
+const [selectedRoles, setSelectedRoles] = useState(
+  members.reduce((acc, member) => {
+    acc[member.key] = member.role;
+    return acc;
+  }, {})
+);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,10 +117,11 @@ const ProjectMembersManagements = () => {
   });
 
 
-  // Xử lý đổi vai trò
-  const handleRoleChange = (key, newRole) => {
-    setMembers(members.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
-  };
+ // Xử lý đổi vai trò
+const handleRoleChange = (key, newRole) => {
+  setSelectedRoles({ ...selectedRoles, [key]: newRole });
+  setMembers(members.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
+};
 
   // Xử lý xóa thành viên bằng Popconfirm
   const handleRemoveMember = (key) => {
@@ -85,23 +129,22 @@ const ProjectMembersManagements = () => {
   };
 
   // Hiển thị menu chọn vai trò
-  const roleMenu = (record) => (
-    <Menu>
-      <Menu.ItemGroup title="Select role">
-        <Radio.Group
-          value={record.role}
-          onChange={(e) => handleRoleChange(record.key, e.target.value)}
-          style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
-        >
-          {/* <Radio value="Owner">Owner</Radio> */}
-          <Radio value="projectManager" disabled>Project Manager</Radio>
-          <Radio value="projectMember">Project Member</Radio>
-        </Radio.Group>
-      </Menu.ItemGroup>
-    </Menu>
-  );
+const roleMenu = (record) => (
+  <Menu>
+    <Menu.ItemGroup title="Select role">
+      <Radio.Group
+        value={selectedRoles[record.key]}
+        onChange={(e) => handleRoleChange(record.key, e.target.value)}
+        style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
+      >
+        <Radio value="Project Manager" disabled>Project Manager</Radio>
+        <Radio value="Project Member">Project Member</Radio>
+      </Radio.Group>
+    </Menu.ItemGroup>
+  </Menu>
+);
 
-  // Cột của bảng
+  // columns
   const columns = [
     {
       title: "Name",
@@ -113,29 +156,29 @@ const ProjectMembersManagements = () => {
           {text}
         </Space>
       ),
-        sorter: (a, b) => a.name - b.name,
+        sorter: (a, b) => a.name.localeCompare(b.name),
       width: "35%"
     },
     { title: "Email",
         dataIndex: "email",
          key: "email" ,
-        sorter: (a, b) => a.email - b.email,
+        sorter: (a, b) => a.email.localeCompare(b.email),
         width: "35%"
     },
-      {
-          title: "Role",
-          dataIndex: "role",
-          key: "role",
-          render: (_, record) => (
-              <Dropdown overlay={roleMenu(record)} trigger={["click"]}>
-                  <Button style={{ width: "100%", textAlign: "left" }}>
-                      {record.role} <DownOutlined style={{ float: "right" }} />
-                  </Button>
-              </Dropdown>
-          ),
-          sorter: (a, b) => a.role - b.role,
-          width: "15%"
-      },
+    {
+      title: "Role",
+      dataIndex: "role",
+      key: "role",
+      render: (_, record) => (
+        <Dropdown overlay={roleMenu(record)} trigger={["click"]}>
+          <Button style={{ width: "100%", textAlign: "left" }}>
+            {selectedRoles[record.key]} <DownOutlined style={{ float: "right" }} />
+          </Button>
+        </Dropdown>
+      ),
+      sorter: (a, b) => a.role.localeCompare(b.role),
+      width: "15%",
+    },
     {
       title: <div style={{textAlign: "center"}}><span>Action</span></div>,
       key: "action",
@@ -168,7 +211,20 @@ const ProjectMembersManagements = () => {
   ];
 
   return (
-    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)"}}>
+    <Layout>
+      {/* sider */}
+      <Sider width={200} style={{ background: colorBgContainer }}>
+              <Menu
+                mode="inline"
+                selectedKeys={[currentPath]}
+                style={{ height: '100%', borderRight: 0 }}
+                items={menuItems}
+                onClick={handleClick}
+              />
+      </Sider>
+
+      {/* content */}
+      <div style={{ padding: "40px", paddingTop: '15px', textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)", width: "100%"}}>
       {/* hien thi message api */}
       {contexHolder}
 
@@ -258,7 +314,9 @@ const ProjectMembersManagements = () => {
 
       </Modal>
     </div>
+    </Layout>
+    
   );
 };
 
-export default ProjectMembersManagements;
+export default ManageProjectMember;
