@@ -1,16 +1,29 @@
-import { red } from '@ant-design/colors'
-import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, SyncOutlined, TableOutlined, UserAddOutlined } from '@ant-design/icons'
-import { Button, Col, Dropdown, Menu, Row, Space, Tabs } from 'antd'
 
 import TabPane from 'antd/es/tabs/TabPane'
-import React from 'react'
+import React, { useState } from 'react'
 import Summary from '../../components/Project/Detail/Summary'
 import Title from 'antd/es/typography/Title'
+import SprintBoard from '../../components/Project/Detail/SprintBoard'
+
+import { red } from '@ant-design/colors'
+import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, SyncOutlined, TableOutlined, UserAddOutlined } from '@ant-design/icons'
+import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 function _id() {
-  return (
-    <div>
-        <Row justify='space-around'>
+    const nav = useNavigate();
+    const location = useLocation();
+
+   
+    const getActiveKey = () => {
+        if (location.pathname.includes("summary")) return "summary";
+        if (location.pathname.includes("sprint")) return "sprint";
+        if (location.pathname.includes("board")) return "board";
+        return "summary"; 
+    };
+    return (
+        <Flex vertical  style={{ height: "100%"}}>
+            <Row justify='space-around'>
                 <Col span={6} align='start'>
                     <Title level={4}> Project name </Title>
                 </Col>
@@ -44,29 +57,21 @@ function _id() {
                     </Space>
                 </Col>
 
-        </Row>
-            <Row>
-                <Col span={24} >
-                    <Tabs  defaultActiveKey="1">
-                        <TabPane   key="0">
-                        </TabPane>
-                        <TabPane  tab="Summary" key="1" icon={<BarChartOutlined/>}>
-                            <Summary/>
-                        </TabPane>
-                        <TabPane tab="Your tasks" key="2">
-                            Nội dung Tab Your Tasks
-                        </TabPane>
-                        <TabPane tab="Sprint" key="3" icon={<SyncOutlined/>}>
-                            Nội dung Tab Sprint
-                        </TabPane>
-                        <TabPane tab="Board" key="4" icon={<TableOutlined/>}>
-                            Nội dung Tab Board
-                        </TabPane>
+            </Row>
+            <Row style={{flex:"1"}} >
+                <Col span={24} style={{height:"100%"}}>
+                    <Tabs activeKey={getActiveKey()} onChange={(key) => {nav(key); }}>
+                        <TabPane />
+                        <TabPane tab="Summary" key="summary" icon={<BarChartOutlined />}/>
+                        <TabPane tab="Sprint" key="sprint" icon={<SyncOutlined />} />
+                        <TabPane tab="Board" key="board" icon={<TableOutlined />}/>
+
                     </Tabs>
+                    <Outlet/>
                 </Col>
             </Row>
-    </div>
-  )
+        </Flex>
+    )
 }
 
 export default _id

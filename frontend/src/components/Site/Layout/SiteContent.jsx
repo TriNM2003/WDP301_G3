@@ -4,7 +4,8 @@ import { Outlet } from 'react-router-dom'
 function SiteContent() {
   return (
     <div style={{
-      overflow: 'auto',
+      overflowY: 'scroll',
+      overflowX: 'unset',
       height: '100%',
       border: "0",
       

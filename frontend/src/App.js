@@ -31,6 +31,9 @@ import RegisterForm from './components/Auth/RegisterForm';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
+import Summary from './components/Project/Detail/Summary';
+import SprintBoard from './components/Project/Detail/SprintBoard';
+import KanbanBoard from './components/Project/Detail/KanbanBoard';
 
 
 function App() {
@@ -49,7 +52,7 @@ function App() {
           <Routes>
             {!accessToken && <>
               <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Welcome />} />
+                <Route index element={<Welcome />} />
               </Route>
               <Route path='/auth' element={<Login />}>
                 <Route path="login" element={<LoginForm />} />
@@ -65,7 +68,7 @@ function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Home />} />
+                <Route index element={<Home />} />
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
@@ -74,7 +77,13 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
                 <Route path="site" element={<S_id/>} >
-                  <Route path='project' element={<P_id/>}></Route>
+                  <Route path='project' element={<P_id/>}>
+                  <Route index element={<Summary />} />
+                    <Route path='summary' element={<Summary/>}/>
+                    <Route path='sprint' element={<SprintBoard/>}/>
+                    <Route path='board' element={<KanbanBoard/>}/>
+
+                  </Route>
                 </Route>
              
               <Route path='*' element={<Navigate to="/home" />} />
