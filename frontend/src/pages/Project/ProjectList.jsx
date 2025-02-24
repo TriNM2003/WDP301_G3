@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Avatar, Badge, Button, List, Typography, Layout, Menu, Divider, Tooltip, Input, Empty, Dropdown } from "antd";
 import { ArrowRightOutlined, RightOutlined, UnorderedListOutlined, FilterOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import CreateProject from "../../components/Project/CreateProject";
 
 
 const { Text, Title } = Typography;
@@ -332,6 +333,7 @@ const ProjectList = () => {
             >
               Create Project
             </Button>
+            <CreateProject visible={showCreateModal} onCreate={handleCreateProject} onCancel={() => setShowCreateModal(false)} />
 
           </div>
 
