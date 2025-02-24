@@ -33,11 +33,11 @@ const { Title } = Typography;
 const { confirm } = Modal;
 const { Option } = Select;
 
-const MembersManagement = () => {
+const ManageSiteMembers = () => {
   const [members, setMembers] = useState([
     { key: "1", name: "John", email: "John@gmail.com", role: "Owner" },
     { key: "2", name: "Alice", email: "Alice@gmail.com", role: "Member" },
-    { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Site Admin" },
+    { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Access Admin" },
     { key: "4", name: "Bob", email: "Bob@gmail.com", role: "Member" },
     { key: "5", name: "Bob", email: "Bob@gmail.com", role: "Member" },
     { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Member" },
@@ -57,6 +57,7 @@ const MembersManagement = () => {
       content: "Invite members successfully",
       duration: 2
     });
+    console.log(selectedEmails);
   }
 
 
@@ -92,7 +93,8 @@ const MembersManagement = () => {
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
           {/* <Radio value="Owner">Owner</Radio> */}
-          <Radio value="Site" disabled>Site Admin</Radio>
+          <Radio value="Owner" disabled>Owner</Radio>
+          <Radio value="Access Admin">Access Admin</Radio>
           <Radio value="Member">Member</Radio>
         </Radio.Group>
       </Menu.ItemGroup>
@@ -111,13 +113,13 @@ const MembersManagement = () => {
           {text}
         </Space>
       ),
-        sorter: (a, b) => a.name - b.name,
+        sorter: (a, b) => a.name.localeCompare(b.name),
       width: "35%"
     },
     { title: "Email",
         dataIndex: "email",
          key: "email" ,
-        sorter: (a, b) => a.email - b.email,
+        sorter: (a, b) => a.email.localeCompare(b.email),
         width: "35%"
     },
       {
@@ -126,12 +128,18 @@ const MembersManagement = () => {
           key: "role",
           render: (_, record) => (
               <Dropdown overlay={roleMenu(record)} trigger={["click"]}>
+                {record.role === "Owner" ? 
+                <Button style={{ width: "100%", textAlign: "left" }} disabled>
+                      {record.role} <DownOutlined style={{ float: "right" }} />
+                  </Button>
+                  :
                   <Button style={{ width: "100%", textAlign: "left" }}>
                       {record.role} <DownOutlined style={{ float: "right" }} />
                   </Button>
+                }
               </Dropdown>
           ),
-          sorter: (a, b) => a.role - b.role,
+          sorter: (a, b) => a.role.localeCompare(b.role),
           width: "15%"
       },
     {
@@ -157,7 +165,7 @@ const MembersManagement = () => {
           }
           trigger={["click"]}
         >
-          <Button icon={<MoreOutlined />} type="text" />
+          {record.role !== "Owner" && <Button icon={<MoreOutlined />} type="text" />}
         </Dropdown>
       )
       ,
@@ -166,7 +174,7 @@ const MembersManagement = () => {
   ];
 
   return (
-    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)"}}>
+    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)", width: "100%"}}>
       {/* hien thi message api */}
       {contexHolder}
 
@@ -204,7 +212,7 @@ const MembersManagement = () => {
           >
             <Option value="All">All</Option>
             <Option value="Owner">Owner</Option>
-            <Option value="Admin">Admin</Option>
+            <Option value="Access Admin">Access Admin</Option>
             <Option value="Member">Member</Option>
           </Select>
       </div>
@@ -256,4 +264,4 @@ const MembersManagement = () => {
   );
 };
 
-export default MembersManagement;
+export default ManageSiteMembers;

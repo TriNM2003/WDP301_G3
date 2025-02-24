@@ -27,7 +27,7 @@ import RegisterForm from './components/Auth/RegisterForm';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
-import MembersManagement from './components/Site/MembersManagement';
+import ManageSiteMembers from './components/Site/ManageSiteMembers';
 
 
 function App() {
@@ -71,7 +71,7 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
              
-              <Route path='/site/members' element={<MembersManagement />} />
+              <Route path='/site/members' element={<ManageSiteMembers />} />
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
