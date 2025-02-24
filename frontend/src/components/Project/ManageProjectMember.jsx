@@ -40,35 +40,7 @@ const { confirm } = Modal;
 const { Option } = Select;
 
 const ManageProjectMember = () => {
-  //sider
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const currentPath = location.pathname.split('/').pop();
-
-  const menuItems = [
-    { key: 'back', icon: <ArrowLeftOutlined />, label: 'Project members', path: '/site/project' },
-    { key: 'wdp', icon: <PictureOutlined style={{fontSize:"1.6rem"}}/>, label: <span style={{fontSize:"1.2rem", padding: 0}}>WDP301</span>, disabled: true },
-    // { key: 'details', label: 'Details', path: '/site/project/details' },
-    // { key: 'members', label: 'Members', path: '/site/project/members' },
-    // { key: 'setting-a', label: 'Setting A', path: '/site/project/setting-a' },
-    // { key: 'setting-b', label: 'Setting B', path: '/site/project/setting-b' },
-    // { key: 'setting-c', label: 'Setting C', path: '/site/project/setting-c' },
-  ];
-
-  const handleClick = ({ key }) => {
-    const clickedItem = menuItems.find(item => item.key === key);
-    if (clickedItem && clickedItem.path) {
-      navigate(clickedItem.path);
-    }
-  };
-
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
-
-
-
+  
   // content
   const [members, setMembers] = useState([
     { key: "1", name: "John", email: "John@gmail.com", role: "Project Manager" },
@@ -101,12 +73,12 @@ const [selectedRoles, setSelectedRoles] = useState(
 
   const handleAddMember = () => {
     setAddMemberModalVisible(false);
-    setMembers([...members, { key: ""+members.length+1, name: "Bob", email: "Bob@gmail.com", role: "Project Member" }])
     messageApi.open({
       type: "success",
       content: "Add members successfully",
       duration: 2
     });
+    console.log(selectedEmails);
   }
 
   // filter by name and role
@@ -211,19 +183,6 @@ const roleMenu = (record) => (
   ];
 
   return (
-    <Layout>
-      {/* sider */}
-      <Sider width={200} style={{ background: colorBgContainer }}>
-              <Menu
-                mode="inline"
-                selectedKeys={[currentPath]}
-                style={{ height: '100%', borderRight: 0 }}
-                items={menuItems}
-                onClick={handleClick}
-              />
-      </Sider>
-
-      {/* content */}
       <div style={{ padding: "40px", paddingTop: '15px', textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)", width: "100%"}}>
       {/* hien thi message api */}
       {contexHolder}
@@ -314,8 +273,6 @@ const roleMenu = (record) => (
 
       </Modal>
     </div>
-    </Layout>
-    
   );
 };
 
