@@ -24,9 +24,11 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
+import ProjectList from './pages/Project/ProjectList';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+
 
 
 function App() {
@@ -69,7 +71,7 @@ function App() {
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
-             
+              <Route path="/project" element={<ProjectList />} />
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
