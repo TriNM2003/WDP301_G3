@@ -23,7 +23,7 @@ function _id() {
     };
     return (
         <Flex vertical  style={{ height: "100%"}}>
-            <Row justify='space-around'>
+            <Row justify='space-around' style={{ height: "10%"}}>
                 <Col span={6} align='start'>
                     <Title level={4}> Project name </Title>
                 </Col>
@@ -49,8 +49,6 @@ function _id() {
                             <Title style={{ margin: "0", height: "100%" }} level={5} onClick={(e) => e.preventDefault()}>
                                 <Space style={{ height: "100%" }}>
                                     <Button icon={<MoreOutlined />} />
-
-
                                 </Space>
                             </Title>
                         </Dropdown>
@@ -58,8 +56,8 @@ function _id() {
                 </Col>
 
             </Row>
-            <Row style={{flex:"1"}} >
-                <Col span={24} style={{height:"100%"}}>
+            <Row style={{ height: "90%"}} >
+                <Col span={24} style={{height:"90%"}}>
                     <Tabs activeKey={getActiveKey()} onChange={(key) => {nav(key); }}>
                         <TabPane />
                         <TabPane tab="Summary" key="summary" icon={<BarChartOutlined />}/>

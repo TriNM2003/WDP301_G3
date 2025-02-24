@@ -33,7 +33,7 @@ import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
 import Summary from './components/Project/Detail/Summary';
 import SprintBoard from './components/Project/Detail/SprintBoard';
-import KanbanBoard from './components/Project/Detail/KanbanBoard';
+import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 
 
 function App() {

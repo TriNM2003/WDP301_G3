@@ -18,7 +18,7 @@ function _id() {
             }}>
                 <SiteSider />
             </Sider>
-            <Content style={{ background: "white", overflowX: "unset" }} >
+            <Content style={{height: '100%', background: "white", overflowX: "unset" }} >
                 <SiteContent />
 
             </Content>
