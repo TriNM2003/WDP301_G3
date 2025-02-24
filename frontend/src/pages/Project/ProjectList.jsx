@@ -334,11 +334,7 @@ const ProjectList = () => {
             </Button>
 
           </div>
-          <CreateProject
-            visible={showCreateModal}
-            onCreate={handleCreateProject}
-            onCancel={() => setShowCreateModal(false)}
-          />
+
           {filteredProjects.length === 0 ? (
             <Empty description="No projects found" style={{ marginTop: "20px" }} />
           ) : (
