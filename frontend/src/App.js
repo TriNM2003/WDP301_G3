@@ -28,6 +28,7 @@ import ProjectList from './pages/Project/ProjectList';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+import SitePage from './pages/Site/SitePage';
 
 
 
@@ -72,6 +73,7 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
               <Route path="/project" element={<ProjectList />} />
+              <Route path="/site-page" element={<SitePage /> } />
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
