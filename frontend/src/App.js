@@ -12,6 +12,7 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
+import ConfirmDelete from './components/Users/ConfirmDelete';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Home from './components/Home/Home';
 import Welcome from './components/Home/Welcome';
@@ -43,7 +44,7 @@ function App() {
         </Header>
         <Content>
           <Routes>
-          {!accessToken && <>
+            {!accessToken && <>
               <Route path='/home' element={<HomePage />}>
                 <Route path='' element={<Welcome />} />
               </Route>
@@ -54,6 +55,7 @@ function App() {
               <Route path="/active-account" element={<ActiveAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              
               <Route element={<ErrorPage />}>
                 <Route path='*' element={<E404 />} />
               </Route>
@@ -65,14 +67,14 @@ function App() {
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
-              
-                  <Route path="change-password" element={<ChangePassword />} />
-                  <Route path="edit-profile" element={<EditProfile />} />
-                </Route>
-             
+                <Route path="change-password" element={<ChangePassword />} />
+                <Route path="edit-profile" element={<EditProfile />} />
+              </Route>
+              <Route path="/confirm-delete" element={<ConfirmDelete />} />
+
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
-        
+
           </Routes>
         </Content>
       </Layout>
