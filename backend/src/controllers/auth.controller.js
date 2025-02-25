@@ -5,8 +5,6 @@ const db = require("../models/index");
 const authService = require("../services/auth.service");
 const passport = require("passport");
 
-
-
 async function sendEmail(type, email, link) {
     const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -211,7 +209,6 @@ const verifyAccount = async (req, res) => {
 
 
 
-
 const register = async (req, res) => {
     try {
         const accountInfo = await authService.register(req);
@@ -225,16 +222,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { username, password } = req.body;
-        const accountInfo = await authService.login(username, password);
-
-        // Nếu tài khoản chưa kích hoạt, trả về thông báo và token để kích hoạt
-        if (accountInfo.status === 403) {
-            return res.status(403).json({
-                message: accountInfo.message,
-                token: accountInfo.token
-            });
-        }
-
+        const accountInfo = await authService.login(username, password, res);
         res.status(accountInfo.status).json(accountInfo);
     } catch (error) {
         res.status(400).json({
@@ -244,35 +232,108 @@ const login = async (req, res) => {
 };
 
 
+const loginByGoogle = passport.authenticate('google', { scope: ['email', 'profile'] });
+
+const loginByGoogleUsername = async (req, res) => {
+    try {
+        const { username} = req.body;
+        const accountInfo = await authService.loginByGoogleUsername(username, res);
+        res.status(accountInfo.status).json(accountInfo);
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        });
+    }
+}
+
 const loginByGoogleCallback = async (req, res, next) => {
-    passport.authenticate("google", { failureRedirect: "/auth/login" }, (err, user) => {
-        // if (err || !user) {
-        //     return res.redirect("/auth/login?error=Authentication Failed");
-        // }
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+    let password = "";
+    for (let i = 0; i < 10; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        password += charset[randomIndex];
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-        // // Kiểm tra trạng thái tài khoản
-        // if (user.status !== "active") {
-        //     return res.redirect("/auth/login?error=Please activate your account");
-        // }
+    const user = {
+        username: req.user.displayName,
+        email: req.user.emails[0].value,
+        password: hashedPassword,
+        userAvatar: req.user.photos[0].value
+    }
+    // console.log(user);
 
-        // Tạo JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const isExist = await db.User.findOne({ email: user.email });
 
-        // Chuyển hướng đến frontend với thông tin user
-        res.redirect(`http://localhost:3000/auth/login?username=${encodeURIComponent(user.username)}&email=${encodeURIComponent(user.email)}&password=${encodeURIComponent(user.password)}&status=${encodeURIComponent(user.status)}&token=${token}`);
-    })(req, res, next);
+    if (!isExist) {
+        const newUser = new db.User(user);
+        const newlyCreatedUser = await newUser.save();
+        res.cookie("GoogleUser", JSON.stringify(newlyCreatedUser), { httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000 });
+    }else{
+        res.cookie("GoogleUser", JSON.stringify(isExist), { httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000 });
+    }
+    // console.log(isExist);
+    res.redirect("http://localhost:3000/auth/login?isLoginByGoogle=true");
+};
+
+const getGoogleUser = async (req, res) => {
+    try {
+        const user = await authService.getGoogleUser(JSON.parse(req.cookies.GoogleUser));
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+}
+
+const getRefreshToken = async (req, res) => {
+    try {
+        // lay refresh token theo user id
+        const refreshToken = await authService.getRefreshToken(req.body.id);
+        res.status(200).json(refreshToken);
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
+}
+
+const refreshAccessToken = async (req, res) => {
+    try {
+        // lay access token moi dua tren refresh token va user id
+        const result = await authService.refreshAccessToken(req, res);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
+}
+
+const logout = async (req, res) => {
+    try {
+        // xoa refresh token trong redis
+        await authService.logout(req.body.id);
+        res.status(200).json({ message: "Logout successfully!" });
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
 }
 
 const AuthController = {
     sendEmail,
     forgotPassword,
-    resetPassword,
+    resetPassword, logout,
     sendActivationEmail,
     verifyAccount,
     login,
     register,
-    loginByGoogleCallback
-
+    loginByGoogleCallback, getGoogleUser, loginByGoogleUsername,
+    loginByGoogle,
+    getRefreshToken,
+    refreshAccessToken,
 }
 
 module.exports = AuthController
