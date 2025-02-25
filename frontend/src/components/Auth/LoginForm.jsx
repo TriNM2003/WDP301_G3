@@ -23,8 +23,10 @@ const LoginForm = () => {
 
     useEffect(() => {
       const urlParams = new URLSearchParams(window.location.search);
+      const isLoginByGoogle = urlParams.get("isLoginByGoogle");
+      const message = urlParams.get("message");
       
-      if(urlParams.get("isLoginByGoogle")){
+      if(isLoginByGoogle === 'true'){
         axios.get(`${authAPI}/getUserByAccessToken`,{withCredentials: true})
           .then(res => {
             const {user, accessToken, accessTokenExp} = res.data;
@@ -75,11 +77,12 @@ const LoginForm = () => {
           .catch(error => {
             if (error.response?.status === 403) { 
               localStorage.setItem("activationToken", error.response.data.token);
-              message.warning("Your account has not been activated. You need to activate it to access the system.");
+              messageApi.warning("Your account has not been activated. You need to activate it to access the system.");
               setTimeout(() => {
                   nav('/active-account'); 
               }, 1000);
-            }else{
+            }
+            else{
               messageApi.open({
                 type: "error",
                 content: "Login by google failed!",
@@ -89,6 +92,12 @@ const LoginForm = () => {
             }
 
           });
+      }else if(isLoginByGoogle === 'false' && message){
+        messageApi.open({
+          type: "error",
+          content: decodeURIComponent(message),
+          duration: 2
+        })
       }
     }, [messageApi, nav, authAPI])
 

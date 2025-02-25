@@ -246,7 +246,8 @@ const login = async (req, res) => {
 
 const loginByGoogle = passport.authenticate('google', { scope: ['email', 'profile'] });
 const loginByGoogleCallback = async (req, res, next) => {
-    const googleUser = req.user._json;
+    try {
+        const googleUser = req.user._json;
 
     // tao password random cho account dang ki bang Google
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
@@ -263,7 +264,8 @@ const loginByGoogleCallback = async (req, res, next) => {
         email: googleUser.email,
         password: hashedPassword,
         fullName: googleUser.given_name,
-        userAvatar: googleUser.picture
+        userAvatar: googleUser.picture,
+        googleId: googleUser.sub
     }
     console.log(googleUser);
 
@@ -287,6 +289,7 @@ const loginByGoogleCallback = async (req, res, next) => {
             activities: [],
             projects: [],
             teams: [],
+            googleId: googleUser.sub,
             status: "inactive",
         });
         const newlyCreatedUser = await newUser.save();
@@ -294,11 +297,18 @@ const loginByGoogleCallback = async (req, res, next) => {
         const refreshToken = jwtUtils.generateRefreshToken(newlyCreatedUser._id);
         await redisUtils.setRefreshToken(newlyCreatedUser._id, refreshToken, jwtUtils.refreshTokenExp);
     }else{
-         // user da ton tai
-        accessToken = jwtUtils.generateAccessToken(isUserExist._id);
-        const refreshToken = jwtUtils.generateRefreshToken(isUserExist._id);
-        await redisUtils.setRefreshToken(isUserExist._id, refreshToken, jwtUtils.refreshTokenExp);
+         // user da ton tai va la tk dang ki bang google -> dang nhap
+        if(isUserExist.googleId !== null){
+            accessToken = jwtUtils.generateAccessToken(isUserExist._id);
+            const refreshToken = jwtUtils.generateRefreshToken(isUserExist._id);
+            await redisUtils.setRefreshToken(isUserExist._id, refreshToken, jwtUtils.refreshTokenExp);
+        }else{
+            const newError =  new Error("Account already registred in system! Please login by username and password!")
+            newError.status = 403;
+            throw newError;
+        }
     }
+
 
     // gui thong tin len frontend qua http only cookie
     res.cookie("accessToken", accessToken, {
@@ -307,6 +317,11 @@ const loginByGoogleCallback = async (req, res, next) => {
         sameSite: "lax"
     })
     res.redirect("http://localhost:3000/auth/login?isLoginByGoogle=true");
+    } catch (error) {
+        console.log(error.message)
+        res.redirect("http://localhost:3000/auth/login?isLoginByGoogle=false&message="+ error.message);
+    }
+    
 };
 
 const getUserByAccessToken = async (req, res, next) => {

@@ -39,6 +39,7 @@ const register = async (req) => {
         activities: [],
         projects: [],
         teams: [],
+        googleId: null,
         status: "inactive",
     });
     await newUser.save();
@@ -58,6 +59,16 @@ const login = async (username, password, res) => {
             message: "Username not found!"
         };
     }
+
+    // check co phai account dk bang google
+    if (user.googleId !== null) {
+        return {
+            status: 400,
+            message: "Please login by Google!"
+        };
+    }
+
+
     const isMatch = await bcryptUtils.comparePassword(password, user.password);
     console.log(isMatch)
     if (!isMatch) {
@@ -146,7 +157,8 @@ const getUserByAccessToken = async (accessToken) => {
         notifications: user.notifications,
         activities: user.activities,
         projects: user.projects,
-        teams: user.teams
+        teams: user.teams,
+        googleId: user.googleId
     };
 }
 

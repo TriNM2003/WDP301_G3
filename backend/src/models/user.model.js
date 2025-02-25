@@ -93,7 +93,12 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "team",
       },
-    ]
+    ],
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true
+    }
   },
   { timestamps: true }
 );
