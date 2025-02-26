@@ -33,6 +33,7 @@ const register = async (req) => {
         phoneNumber: null,
         dob: null,
         address: null,
+
         roles: [],
         userAvatar: "https://static.thenounproject.com/png/5100711-200.png",
         notifications: [],
@@ -40,6 +41,7 @@ const register = async (req) => {
         projects: [],
         teams: [],
         googleId: null,
+
         status: "inactive",
     });
     await newUser.save();

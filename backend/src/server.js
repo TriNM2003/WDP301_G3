@@ -5,8 +5,12 @@ const httpsErrors = require("http-errors");
 const cors = require("cors"); 
 require("dotenv").config();
 const session = require("express-session");
+
+const path = require("path");
+
 const passport = require("./configs/passport.config");
 const cookieParser = require("cookie-parser");
+
 
 const app = express();
 const db = require("./models/index");
@@ -44,6 +48,7 @@ app.use("/systemRoles", systemRoleRouter);
 
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.use(async (req, res, next) => {
