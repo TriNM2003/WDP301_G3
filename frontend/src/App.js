@@ -12,7 +12,10 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
+
 import EditSite from './components/Sites/EditSite';
+import ConfirmDelete from './components/Users/ConfirmDelete';
+import EditProject from './components/Projects/EditProject';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Home from './components/Home/Home';
 import Welcome from './components/Home/Welcome';
@@ -25,10 +28,22 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
+import ProjectList from './pages/Projects/ProjectList';
+import TeamList from './pages/Teams/TeamList';
+import S_id from './pages/Sites/_id';
+import P_id from './pages/Projects/_id';
+import { cyan } from '@ant-design/colors';
+import Summary from './components/Project/Detail/Summary';
+import SprintBoard from './components/Project/Detail/SprintBoard';
+import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
-
+import ManageProjectMember from './components/Project/ManageProjectMember';
+import ManageSiteMembers from './components/Site/ManageSiteMembers';
+import SitePage from './pages/Sites/SitePage';
+import ManageProjects from './components/Site/ManageProjects';
+import ProjectLayout from './components/Project/Layout/ProjectLayout';
 
 function App() {
 
@@ -39,14 +54,14 @@ function App() {
   return (
     <div className="App">
       <Layout>
-        <Header style={{ padding: "0" }}>
+        <Header style={{ padding: "0", borderBottom: `solid 1px ${cyan[`1`]}` }}>
           <AppHeader />
         </Header>
         <Content>
           <Routes>
             {!accessToken && <>
               <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Welcome />} />
+                <Route index element={<Welcome />} />
               </Route>
               <Route path='/auth' element={<Login />}>
                 <Route path="login" element={<LoginForm />} />
@@ -55,6 +70,7 @@ function App() {
               <Route path="/active-account" element={<ActiveAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              
               <Route element={<ErrorPage />}>
                 <Route path='*' element={<E404 />} />
               </Route>
@@ -62,15 +78,40 @@ function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Home />} />
+                <Route index element={<Home />} />
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
                 <Route path="change-password" element={<ChangePassword />} />
                 <Route path="edit-profile" element={<EditProfile />} />
+                <Route path="confirm-delete" element={<ConfirmDelete />} />
               </Route>
 
-              <Route path="/site" element={<EditSite />} />
+              
+
+                
+
+              
+              <Route path="site" element={<S_id />} >
+                <Route index element={<SitePage />} />
+                <Route path="site-page" element={<SitePage />} />
+                <Route path='manage-projects' element={<ManageProjects />} />
+                <Route path='manage-members' element={<ManageSiteMembers />} />
+                <Route path="site-setting" element={<EditSite />} />
+                <Route path="projects" element={<ProjectList />} />
+                <Route path="teams" element={<TeamList />} />
+                <Route path='project' element={<P_id />}>
+                  <Route path='' element={<ProjectLayout />}  >
+                    <Route index element={<Summary />} />
+                    <Route path='summary' element={<Summary />} />
+                    <Route path='sprint' element={<SprintBoard />} />
+                    <Route path='board' element={<KanbanBoard />} />
+                  </Route>
+                  <Route path='manage-members' element={<ManageProjectMember />} />
+                  <Route path="project-setting" element={<EditProject />} />
+                </Route>
+              </Route>
+
 
 
               <Route path='*' element={<Navigate to="/home" />} />
