@@ -35,13 +35,10 @@ import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+import ManageProjectMember from './components/Project/ManageProjectMember';
 import ManageSiteMembers from './components/Site/ManageSiteMembers';
-
 import SitePage from './pages/Site/SitePage';
 import ManageProjects from './components/Site/ManageProjects';
-
-
-
 
 function App() {
 
@@ -83,7 +80,7 @@ function App() {
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
-
+         
                 <Route path="site" element={<S_id/>} >
                   <Route index element={<SitePage />} />
                   <Route path="site-page" element={<SitePage /> } />
@@ -96,6 +93,8 @@ function App() {
                     <Route path='summary' element={<Summary/>}/>
                     <Route path='sprint' element={<SprintBoard/>}/>
                     <Route path='board' element={<KanbanBoard/>}/>
+                    <Route path='members' element={<ManageProjectMember />} />
+                    
 
                   </Route>
                 </Route>
