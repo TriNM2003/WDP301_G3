@@ -11,6 +11,7 @@ import {
     PieChartOutlined,
     CalendarOutlined,
     FileTextOutlined,
+    DoubleRightOutlined,
 } from "@ant-design/icons";
 import {
     Avatar,
@@ -38,6 +39,7 @@ import { AppContext } from "../../../../context/AppContext";
 import Title from "antd/es/typography/Title";
 import { Option } from "antd/es/mentions";
 import TextArea from "antd/es/input/TextArea";
+import ActivityDetail from "../../../Activity/ActivityDetail";
 
 function KanbanBody() {
     const { showNotification } = useContext(AppContext);
@@ -129,7 +131,7 @@ function KanbanBody() {
                             <Col span={8} align="start" style={{ display: "flex", alignItems: "center" }}>
                                 <Tag color="red" bordered={false}>
                                     <strong>
-                                        <FireOutlined /> Highest
+                                        <DoubleRightOutlined rotate="-90" /> Highest
                                     </strong>
                                 </Tag>
                             </Col>
@@ -216,87 +218,7 @@ function KanbanBody() {
                 )}
                 centered
             >
-                <Row justify="space-between" style={{ padding: "1% 2%", borderBottom: `solid 1px ${cyan[`1`]}` }}>
-                    <Col></Col>
-                    <Col>
-                        <Space style={{ padding: 0 }}>
-                            <Button style={{ borderRadius: 0 }}><EllipsisOutlined /></Button>
-                            <Button style={{ borderRadius: 0 }} color="danger"><CloseOutlined /></Button>
-                        </Space>
-                    </Col>
-                </Row>
-                <Row justify="space-between" style={{ height: "80vh", padding: "0 2%", overflow: "auto", flexWrap: "wrap" }}>
-                    <Col span={16} style={{ height: "100%", borderRight: `solid 1px ${cyan[`1`]}` }}>
-                        <Row justify="space-between" style={{ padding: "1% 0" }}>
-                            <Col span={15} style={{ padding: "0 1%" }}>
-                                <Title level={5} style={{ margin: "0" }} ><FormOutlined style={{ color: blue[6] }} /> Task name</Title>
-                                <Space direction="vertical" style={{ width: "60%", textAlign: "center", padding: "2% 0" }}>
-                                    <Flex justify="space-between" align="center" style={{ width: "100%" }}>
-                                        <small style={{ fontWeight: "bolder", color: gray[4] }}><PieChartOutlined /> Progress </small>
-                                        <text ><Progress type="circle" percent={100} size={15} showInfo={false} /> 100%</text>
-                                    </Flex>
-
-                                    <Flex justify="space-between" align="center" style={{ width: "100%" }}>
-                                        <small style={{ fontWeight: "bolder", color: gray[4] }}><UserOutlined /> Assignee </small>
-                                        <Avatar.Group max={{ count: 2 }} size={25}>
-                                            <Tooltip title="Ant User" placement="top">
-                                                <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
-                                            </Tooltip>
-                                            <Tooltip title="Ant User" placement="top">
-                                                <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
-                                            </Tooltip>
-                                            <Tooltip title="Ant User" placement="top">
-                                                <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
-                                            </Tooltip>
-                                        </Avatar.Group>
-                                    </Flex>
-                                    <Flex justify="space-between" align="center" style={{ width: "100%" }}>
-                                        <small style={{ fontWeight: "bolder", color: gray[4] }}><CalendarOutlined /> Start date </small>
-                                        <DatePicker variant="underlined" />
-                                    </Flex>
-                                    <Flex justify="space-between" align="center" style={{ width: "100%" }}>
-                                        <small style={{ fontWeight: "bolder", color: gray[4] }}><CalendarOutlined /> Due date </small>
-                                        <DatePicker variant="underlined" />
-                                    </Flex>
-
-
-                                </Space>
-                            </Col>
-                            <Col span={5} align="center" style={{ padding: "0 1%" }}>
-                                <Select
-
-                                    value="Todo"
-                                    onChange="{setMoveTo}"
-                                    style={{ width: "60%", borderRadius: "0" }}
-                                    dropdownStyle={{ borderRadius: 0 }}
-
-                                >
-                                    <Option value="Todo">Todo</Option>
-                                    <Option value="Doing">Doing</Option>
-                                    <Option value="Done">Done</Option>
-                                </Select>
-                            </Col>
-                            <Col span={22} style={{ padding: "0 1%" }}>
-                                <Space direction="vertical" style={{ width: "100%", textAlign: "center", padding: "2% 0" }}>
-                                    <Flex justify="space-between" align="center" wrap={true} style={{ width: "100%" }}>
-                                        <text style={{ fontWeight: "bolder", marginBottom: "2%" }}> Description </text>
-                                        <Flex wrap={true} style={{ width: "100%" }}>
-                                            <TextArea rows={5} style={{ borderRadius: "2px", marginBottom: "2%" }} placeholder="Add a description" />
-                                            <Flex justify="end" style={{ width: "100%", marginBottom: "2%" }}>
-                                                <Space>
-                                                    <Button style={{ borderRadius: "0" }}>Close</Button>
-                                                    <Button style={{ borderRadius: "0" }} variant="solid" color="primary">Save</Button>
-                                                </Space>
-                                            </Flex>
-                                        </Flex>
-                                    </Flex>
-                                </Space>
-                            </Col>
-                        </Row>
-
-                    </Col>
-                    <Col span={7} style={{ height: "80vh", padding: "0 2%", overflow: "auto" }}>Comment</Col>
-                </Row>
+                <ActivityDetail/>
 
             </Modal>
         </Col>
