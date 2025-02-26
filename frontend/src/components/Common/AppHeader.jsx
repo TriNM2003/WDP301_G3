@@ -78,9 +78,7 @@ function AppHeader() {
                 >
                     <Title style={{margin:"0",height:"100%"}} level={5} onClick={(e) => e.preventDefault()}>
                         <Space style={{height:"100%"}}>
-                            <Avatar src={<img src={user?.avatar} alt="avatar" />} />
-                            {user?.username}
-                        
+                            <Avatar src={<img src={user?.userAvatar} alt="avatar" />} />
                         </Space>    
                     </Title>
                 </Dropdown>
