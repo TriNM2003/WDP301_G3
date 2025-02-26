@@ -10,7 +10,8 @@ import {
   Typography,
   Breadcrumb,
   Avatar,
-  message
+  message,
+  Image
 } from "antd";
 import {
   UserOutlined,
@@ -23,12 +24,12 @@ import {
 const { Title } = Typography;
 
 // component
-const ViewListProject = () => {
+const ManageProjects = () => {
 
   // member data
   const [projects, setProjects] = useState([
-    { key: "1", name: "SDN302", projectManager: "JohnSmith@gmail.com", createAt: "11/02/2004", updateAt: "13/2/2024"},
-    { key: "2", name: "WDP301", projectManager: "TriNM@gmail.com", createAt: "10/02/2004", updateAt: "15/2/2024"},
+    { key: "1", name: "SDN302", projectAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s", projectManager: "JohnSmith@gmail.com", projectManagerAvatar: "https://api.dicebear.com/7.x/miniavs/svg?seed=1", createAt: "11/02/2004", updateAt: "13/02/2024"},
+    { key: "2", name: "WDP301", projectAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s", projectManager: "TriNM@gmail.com", projectManagerAvatar: "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png", createAt: "10/02/2004", updateAt: "15/02/2024"},
   ]);
 
   // search state
@@ -43,6 +44,13 @@ const ViewListProject = () => {
       duration: messageDuration
    })
   }
+
+  // dung de sort date string
+  const parseDate = (dateStr) => {
+    const [day, month, year] = dateStr.split("/").map(Number);
+    console.log(new Date(year, month - 1, day))
+    return new Date(year, month - 1, day);
+  };
 
 
   const handleAddProject = () => {
@@ -60,12 +68,12 @@ const ViewListProject = () => {
 
 
   // handle remove project
-  const handleRemoveProject = (key) => {
+  const handleRemoveProject = (key, name) => {
     // update database
     
     // update fe state
     setProjects(projects.filter((member) => member.key !== key));
-    showingMessage("success", "Project is moved to trashcan successfull", 2);
+    showingMessage("success", `Project ${name} moved to trashcan successfull`, 2);
   };
 
 
@@ -75,9 +83,9 @@ const ViewListProject = () => {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (text) => (
+      render: (text, record) => (
         <Space>
-          <FileImageOutlined style={{fontSize: "1.6rem"}}/>{text}
+          <Image src={record.projectAvatar} style={{width: '3vw', height: '3vw'}}/>{text}
         </Space>
       ),
         sorter: (a, b) => a.name.localeCompare(b.name),
@@ -86,9 +94,9 @@ const ViewListProject = () => {
     { title: "Project Manager",
         dataIndex: "projectManager",
          key: "projectManager" ,
-         render: (text) => (
+         render: (text, record) => (
           <Space>
-            <Avatar icon={<UserOutlined />} style={{ fontSize: "16px" }} />
+            <Avatar src={record.projectManagerAvatar} style={{ fontSize: "16px" }} />
             {text}
           </Space>
         ),
@@ -98,13 +106,13 @@ const ViewListProject = () => {
     { title: "Created date",
       dataIndex: "createAt",
        key: "createAt" ,
-      sorter: (a, b) => a.createAt - b.createAt,
+      sorter: (a, b) => parseDate(a.createAt) - parseDate(b.createAt),
       width: "15%"
     },
-    { title: "Updated date",
+    { title: "Last updated",
       dataIndex: "updateAt",
        key: "updateAt" ,
-      sorter: (a, b) => a.updateAt - b.updateAt,
+      sorter: (a, b) => parseDate(a.updateAt) - parseDate(b.updateAt),
       width: "15%"
     },
     {
@@ -119,7 +127,7 @@ const ViewListProject = () => {
                 <Popconfirm
                   title="Are you sure to remove this project?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleRemoveProject(record.key)}
+                  onConfirm={() => handleRemoveProject(record.key, record.name)}
                   okText="Yes"
                   cancelText="No"
                 >
@@ -127,7 +135,7 @@ const ViewListProject = () => {
                 </Popconfirm>
               </Menu.Item>
               <Menu.Item key="projectSettings">
-                <Button type="text" onClick={() => showingMessage("success", "project setting clicked", 1)}>Project settings</Button>
+                <Button type="text" onClick={() => showingMessage("success", `project ${record.name} setting clicked`, 1)}>Project settings</Button>
               </Menu.Item>
             </Menu>
           }
@@ -182,7 +190,7 @@ const ViewListProject = () => {
       scroll={{ x: "max-content" }}
       style={{
         width: "100%",
-        borderRadius: "15px"
+        borderRadius: "5%"
       }}
       />
 
@@ -190,4 +198,4 @@ const ViewListProject = () => {
   );
 };
 
-export default ViewListProject;
+export default ManageProjects;
