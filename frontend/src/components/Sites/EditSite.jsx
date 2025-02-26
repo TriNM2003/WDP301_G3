@@ -37,7 +37,7 @@ const EditSite = () => {
     };
 
     return (
-        <div style={{ padding: "24px", minHeight: "100vh", background: "#fafafa" }}>
+        <div style={{ padding: "24px", minHeight: "100%" }}>
             <Row justify="space-between" align="middle" style={{ margin: "0 150px 20px" }}>
                 {/* Breadcrumb */}
                 <Col>
@@ -46,7 +46,7 @@ const EditSite = () => {
                         <Breadcrumb.Item><Link to="/site/site-setting">Site Setting</Link></Breadcrumb.Item>
                     </Breadcrumb>
                     <Row>
-                        <Title level={3}>Site Setting</Title>
+                        <Title level={2}>Site Setting</Title>
                     </Row>
                 </Col>
 
@@ -80,7 +80,7 @@ const EditSite = () => {
 
             <Row justify="center">
                 <Col xs={24} sm={16} md={12}>
-                    <Card style={{ borderRadius: "5px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)", padding: "0 200px" }}>
+                    <Card style={{ borderRadius: "5px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)", padding: "0 100px" }}>
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} style={{ borderRadius: '0' }} src="https://via.placeholder.com/100" />
                         </Row>
@@ -103,8 +103,8 @@ const EditSite = () => {
                             {/* Save Change Button */}
                             <Form.Item style={{ textAlign: "left" }}>
                                 <Button type="primary" htmlType="submit" loading={loading} style={{
-                                    width: "35%",
-                                    borderRadius: "6px",
+                                    width: "100%",
+                                    borderRadius: "0",
                                     fontSize: "16px",
                                     padding: "10px",
                                 }}>
@@ -118,7 +118,12 @@ const EditSite = () => {
 
             {/* Deactivate Confirmation Modal */}
             <Modal
-                title="Confirm Site Deactivation"
+                title={
+                    <span>
+                        <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginRight: "10px" }} />
+                        Confirm Site Deactivation
+                    </span>
+                }
                 open={isDeactivateModalVisible}
                 onCancel={() => setIsDeactivateModalVisible(false)}
                 footer={[
@@ -126,7 +131,7 @@ const EditSite = () => {
                     <Button key="confirm" type="primary" danger onClick={handleConfirmDeactivate}>Deactivate</Button>
                 ]}
             >
-                <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginBottom: "10px" }} />
+                
                 <p>To confirm deactivation, please type the site name: <strong>{siteName}</strong></p>
                 <Input
                     placeholder="Enter site name"
