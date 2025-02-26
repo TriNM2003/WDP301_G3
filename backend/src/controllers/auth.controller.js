@@ -4,6 +4,7 @@ const nodemailer = require("nodemailer");
 const db = require("../models/index");
 const authService = require("../services/auth.service");
 const passport = require("passport");
+const { bcryptUtils, jwtUtils, redisUtils } = require("../utils");
 
 async function sendEmail(type, email, link) {
     const transporter = nodemailer.createTransport({
@@ -189,11 +190,22 @@ const verifyAccount = async (req, res) => {
         res.json({
             message: "Account activated successfully!",
             accessToken,
+            accessTokenExp: jwtUtils.accessTokenExp,
             user: {
-                id: user._id,
+                _id: user._id,
                 username: user.username,
                 email: user.email,
+                fullName: user.fullName,
+                phoneNumber: user.phoneNumber,
+                dob: user.dob,
+                address: user.address,
+                roles: user.roles,
+                userAvatar: user.userAvatar,
                 status: "active",
+                notifications: user.notifications,
+                activities: user.activities,
+                projects: user.projects,
+                teams: user.teams
             }
         });
 
@@ -233,58 +245,103 @@ const login = async (req, res) => {
 
 
 const loginByGoogle = passport.authenticate('google', { scope: ['email', 'profile'] });
-
-const loginByGoogleUsername = async (req, res) => {
+const loginByGoogleCallback = async (req, res, next) => {
     try {
-        const { username} = req.body;
-        const accountInfo = await authService.loginByGoogleUsername(username, res);
-        res.status(accountInfo.status).json(accountInfo);
+        const googleUser = req.user._json;
+
+    // tao password random cho account dang ki bang Google
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+    let randomPassword = "";
+    for (let i = 0; i < 10; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        randomPassword += charset[randomIndex];
+    }
+    const hashedPassword = await bcryptUtils.encryptPassword(randomPassword, 10);
+
+    // du lieu user
+    const user = {
+        username: googleUser.name,
+        email: googleUser.email,
+        password: hashedPassword,
+        fullName: googleUser.given_name,
+        userAvatar: googleUser.picture,
+        googleId: googleUser.sub
+    }
+    console.log(googleUser);
+
+    // check user co ton tai trong database
+    const isUserExist = await db.User.findOne({ email: user.email });
+    // user de gui len frontend
+    let accessToken;
+    if (!isUserExist) {
+        // user chua ton tai -> tao account moi trong database
+        const newUser = new db.User({
+            username: user.username,
+            email: user.email,
+            password: hashedPassword,
+            fullName: user.fullName,
+            phoneNumber: null,
+            dob: null,
+            address: null,
+            roles: [],
+            userAvatar: user.userAvatar,
+            notifications: [],
+            activities: [],
+            projects: [],
+            teams: [],
+            googleId: googleUser.sub,
+            status: "inactive",
+        });
+        const newlyCreatedUser = await newUser.save();
+        accessToken = jwtUtils.generateAccessToken(newlyCreatedUser._id);
+        const refreshToken = jwtUtils.generateRefreshToken(newlyCreatedUser._id);
+        await redisUtils.setRefreshToken(newlyCreatedUser._id, refreshToken, jwtUtils.refreshTokenExp);
+    }else{
+         // user da ton tai va la tk dang ki bang google -> dang nhap
+        if(isUserExist.googleId !== null){
+            accessToken = jwtUtils.generateAccessToken(isUserExist._id);
+            const refreshToken = jwtUtils.generateRefreshToken(isUserExist._id);
+            await redisUtils.setRefreshToken(isUserExist._id, refreshToken, jwtUtils.refreshTokenExp);
+        }else{
+            const newError =  new Error("Account already registred in system! Please login by username and password!")
+            newError.status = 403;
+            throw newError;
+        }
+    }
+
+
+    // gui thong tin len frontend qua http only cookie
+    res.cookie("accessToken", accessToken, {
+        maxAge: jwtUtils.accessTokenExp*1000,
+        httpOnly: true,
+        sameSite: "lax"
+    })
+    res.redirect("http://localhost:3000/auth/login?isLoginByGoogle=true");
     } catch (error) {
-        res.status(400).json({
-            message: error.message
+        console.log(error.message)
+        res.redirect("http://localhost:3000/auth/login?isLoginByGoogle=false&message="+ error.message);
+    }
+    
+};
+
+const getUserByAccessToken = async (req, res, next) => {
+    try {
+        const user = await authService.getUserByAccessToken(req.cookies.accessToken);
+        res.status(200).json({
+            message: "Get user by access token successfully !",
+            user: user,
+            accessToken: req.cookies.accessToken,
+            accessTokenExp: jwtUtils.accessTokenExp
+        })
+    } catch (error) {
+        res.status(error.status).json({
+            message: error.message,
+            status: error.status,
+            token: error.token
         });
     }
 }
 
-const loginByGoogleCallback = async (req, res, next) => {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
-    let password = "";
-    for (let i = 0; i < 10; i++) {
-        const randomIndex = Math.floor(Math.random() * charset.length);
-        password += charset[randomIndex];
-    }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = {
-        username: req.user.displayName,
-        email: req.user.emails[0].value,
-        password: hashedPassword,
-        userAvatar: req.user.photos[0].value
-    }
-    // console.log(user);
-
-    const isExist = await db.User.findOne({ email: user.email });
-
-    if (!isExist) {
-        const newUser = new db.User(user);
-        const newlyCreatedUser = await newUser.save();
-        res.cookie("GoogleUser", JSON.stringify(newlyCreatedUser), { httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000 });
-    }else{
-        res.cookie("GoogleUser", JSON.stringify(isExist), { httpOnly: true, secure: true, sameSite: "none", maxAge: 60 * 60 * 1000 });
-    }
-    // console.log(isExist);
-    res.redirect("http://localhost:3000/auth/login?isLoginByGoogle=true");
-};
-
-const getGoogleUser = async (req, res) => {
-    try {
-        const user = await authService.getGoogleUser(JSON.parse(req.cookies.GoogleUser));
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-}
 
 const getRefreshToken = async (req, res) => {
     try {
@@ -330,7 +387,8 @@ const AuthController = {
     verifyAccount,
     login,
     register,
-    loginByGoogleCallback, getGoogleUser, loginByGoogleUsername,
+    loginByGoogleCallback,
+    getUserByAccessToken,
     loginByGoogle,
     getRefreshToken,
     refreshAccessToken,
