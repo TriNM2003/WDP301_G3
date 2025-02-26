@@ -12,6 +12,8 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
+
+import EditProject from './components/Projects/EditProject';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Home from './components/Home/Home';
 import Welcome from './components/Home/Welcome';
@@ -77,10 +79,13 @@ function App() {
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
-
-                <Route path="change-password" element={<ChangePassword />} />
+              <Route path="change-password" element={<ChangePassword />} />
                 <Route path="edit-profile" element={<EditProfile />} />
               </Route>
+
+
+              
+
 
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
@@ -96,9 +101,11 @@ function App() {
                     <Route path='sprint' element={<SprintBoard />} />
                     <Route path='board' element={<KanbanBoard />} />
                   </Route>
-                  <Route path='members' element={<ManageProjectMember />} />
+                  <Route path='/manage-members' element={<ManageProjectMember />} />
+                  <Route path="/project-setting" element={<EditProject />} />
                 </Route>
               </Route>
+
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 
