@@ -30,8 +30,9 @@ function SiteSider() {
         {/* Projects */}
         <SubMenu key="project" icon={<ProjectTwoTone />} title="Projects">
           <Menu.ItemGroup style={{"text-align":"start"}} key="p">
-            <Menu.Item icon={<ProjectOutlined style={{color:magenta[4]}}/>} key="p1">Project 1</Menu.Item>
-            <Menu.Item icon={<ProjectOutlined style={{color:magenta[4]}}/>} key="p2">Project 2</Menu.Item>
+            <Menu.Item icon={<ProjectOutlined style={{color:magenta[4]}}/>} key="p1" onClick={()=>navigate("project")}>Project 1</Menu.Item>
+            <Menu.Item icon={<ProjectOutlined style={{color:magenta[4]}}/>} key="p2" onClick={()=>navigate("project")}>Project 2</Menu.Item>
+            <Menu.Item  key="p2" >View all projects</Menu.Item>
           </Menu.ItemGroup>
         </SubMenu>
 
@@ -40,6 +41,8 @@ function SiteSider() {
           <Menu.ItemGroup style={{"text-align":"start"}} key="t" >
             <Menu.Item icon={<GroupOutlined style={{color:cyan[4]}}/>} key="t1">Team 1</Menu.Item>
             <Menu.Item icon={<GroupOutlined style={{color:cyan[4]}}/>} key="t2">Team 2</Menu.Item>
+            <Menu.Item  key="p2" >View all teams</Menu.Item>
+
           </Menu.ItemGroup>
         </SubMenu>
 

@@ -2,10 +2,11 @@ import React, { useContext } from 'react'
 import { Button, Card, Carousel, Col, Collapse, Row, Space } from 'antd'
 import Title from 'antd/es/typography/Title'
 import { ArrowRightOutlined, GoogleCircleFilled, GoogleOutlined, GooglePlusCircleFilled, GooglePlusOutlined, MailOutlined } from '@ant-design/icons'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 function Home() {
   const {user} = useContext(AppContext);
+  const navigate = useNavigate();
   return (
     <Row  justify="space-around"  style={{height:"55vh", margin: "0 0 5% 0" , background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/homepage/wellcome-bg.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}>
         <Col span={15} align="start">
@@ -17,7 +18,7 @@ function Home() {
                   <p style={{color:"white", margin:"0"}}>Sitename</p>
               </Col>
               <Col align="end" span={4} >
-                  <Button icon={<ArrowRightOutlined />} iconPosition='end' color='cyan' variant='solid' style={{border:"0"}}>Go to site</Button>
+                  <Button onClick={()=>{navigate("/site")}} icon={<ArrowRightOutlined />} iconPosition='end' color='cyan' variant='solid' style={{border:"0"}}>Go to site</Button>
               </Col>
           </Row>
         </Col>

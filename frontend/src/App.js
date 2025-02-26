@@ -77,7 +77,6 @@ function App() {
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
-
                 <Route path="change-password" element={<ChangePassword />} />
                 <Route path="edit-profile" element={<EditProfile />} />
               </Route>
@@ -85,10 +84,24 @@ function App() {
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
                 <Route path="site-page" element={<SitePage />} />
-                <Route path='manage-projects' element={<ManageProjects />} />
-                <Route path='manage-members' element={<ManageSiteMembers />} />
-                <Route path="projects" element={<ProjectList />} />
-                <Route path="teams" element={<TeamList />} />
+
+                <Route path='manage' >
+                  <Route index element={<ManageProjects />} />
+
+                  <Route path='projects' element={<ManageProjects />} />
+                  <Route path='members' element={<ManageSiteMembers />} />
+                </Route>
+
+                <Route path='list'>
+                  <Route index element={<ProjectList />} />
+                  <Route path="projects" element={<ProjctList />} />
+                  <Route path="teams" element={<TeamList />} />
+                </Route>
+
+                <Route path='team'>
+                    
+                </Route>
+
                 <Route path='project' element={<P_id />}>
                   <Route path='' element={<ProjectLayout />}  >
                     <Route index element={<Summary />} />
