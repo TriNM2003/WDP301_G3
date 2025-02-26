@@ -24,16 +24,17 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
+import ProjectList from './pages/Project/ProjectList';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
 import Summary from './components/Project/Detail/Summary';
 import SprintBoard from './components/Project/Detail/SprintBoard';
 import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
-
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+
 
 
 function App() {
@@ -76,9 +77,13 @@ function App() {
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
+
+              
+
                 <Route path="site" element={<S_id/>} >
+                  <Route path="projects" element={<ProjectList />} />
                   <Route path='project' element={<P_id/>}>
-                  <Route index element={<Summary />} />
+                    <Route index element={<Summary />} />
                     <Route path='summary' element={<Summary/>}/>
                     <Route path='sprint' element={<SprintBoard/>}/>
                     <Route path='board' element={<KanbanBoard/>}/>
@@ -86,6 +91,7 @@ function App() {
                   </Route>
                 </Route>
              
+
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
