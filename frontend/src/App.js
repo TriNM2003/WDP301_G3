@@ -12,6 +12,11 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
+import RestoreProject from './components/Projects/ProjectTrash';
+import TeamMemberManagement from './components/Teams/TeamMemberManagement';
+import EditSite from './components/Sites/EditSite';
+import ConfirmDelete from './components/Users/ConfirmDelete';
+import EditProject from './components/Projects/EditProject';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Home from './components/Home/Home';
 import Welcome from './components/Home/Welcome';
@@ -66,6 +71,7 @@ function App() {
               <Route path="/active-account" element={<ActiveAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+
               <Route element={<ErrorPage />}>
                 <Route path='*' element={<E404 />} />
               </Route>
@@ -79,27 +85,28 @@ function App() {
                 <Route path="profile-info" element={<ViewProfile />} />
                 <Route path="change-password" element={<ChangePassword />} />
                 <Route path="edit-profile" element={<EditProfile />} />
+                <Route path="confirm-delete" element={<ConfirmDelete />} />
               </Route>
-
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
                 <Route path="site-page" element={<SitePage />} />
-
+                <Route path='recycle' element={<RestoreProject />} />
+                <Route path="site-setting" element={<EditSite />} />
                 <Route path='manage' >
                   <Route index element={<ManageProjects />} />
-
                   <Route path='projects' element={<ManageProjects />} />
                   <Route path='members' element={<ManageSiteMembers />} />
                 </Route>
 
                 <Route path='list'>
                   <Route index element={<ProjectList />} />
-                  <Route path="projects" element={<ProjctList />} />
+                  <Route path="projects" element={<ProjectList />} />
                   <Route path="teams" element={<TeamList />} />
                 </Route>
 
                 <Route path='team'>
-                    
+                  <Route path="manage-member" element={<TeamMemberManagement />} />
+
                 </Route>
 
                 <Route path='project' element={<P_id />}>
@@ -109,9 +116,12 @@ function App() {
                     <Route path='sprint' element={<SprintBoard />} />
                     <Route path='board' element={<KanbanBoard />} />
                   </Route>
-                  <Route path='members' element={<ManageProjectMember />} />
+                  <Route path='manage-members' element={<ManageProjectMember />} />
+                  <Route path="project-setting" element={<EditProject />} />
                 </Route>
               </Route>
+
+
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 

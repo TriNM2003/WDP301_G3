@@ -13,6 +13,7 @@ const ActiveAccount = () => {
   const [isWaiting, setIsWaiting] = useState(false);
   const [tempAccessToken, setTempAccessToken] = useState(null);
   const [tempUser, setTempUser] = useState(null);
+  const [tempAccessTokenExp, setTempAccessTokenExp] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,9 +48,10 @@ const ActiveAccount = () => {
           message.success({ content: "Account activated successfully!", key: "activate" });
         }
         // Lưu token và user vào state tạm thời, nhưng không đăng nhập ngay
-        const { accessToken, user } = response.data;
+        const { accessToken, user, accessTokenExp } = response.data;
         if (accessToken && user) {
           setTempAccessToken(accessToken);
+          setTempAccessTokenExp(accessTokenExp)
           setTempUser(user);
         }
         setCurrent(2);
@@ -92,6 +94,8 @@ const ActiveAccount = () => {
     if (tempAccessToken && tempUser) {
       localStorage.setItem("accessToken", tempAccessToken);
       localStorage.removeItem("activationToken");
+      localStorage.setItem("accessTokenExp", tempAccessTokenExp);
+      localStorage.setItem("userId", tempUser._id)
       
       setUser(tempUser);
     }

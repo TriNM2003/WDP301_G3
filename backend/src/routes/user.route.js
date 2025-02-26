@@ -22,9 +22,16 @@ userRouter.put("/edit-profile",
     UserController.editProfile
 );
 
-userRouter.delete("/delete-user", 
+
+userRouter.post("/send-delete-email", 
     authMiddleware.verifyAccessToken, 
-    UserController.deleteUser
+    UserController.sendDeleteAccountEmail
+);
+
+
+userRouter.delete("/confirm-delete", 
+    authMiddleware.verifyAccessToken, 
+    UserController.confirmDeleteAccount
 );
 
 module.exports = userRouter
