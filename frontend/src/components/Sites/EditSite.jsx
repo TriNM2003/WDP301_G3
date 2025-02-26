@@ -38,7 +38,7 @@ const EditSite = () => {
 
     return (
         <div style={{ padding: "24px", minHeight: "100%" }}>
-            <Row justify="space-between" align="middle" style={{ margin: "0 150px 20px" }}>
+            <Row justify="space-between" align="middle" style={{ margin: "0 100px 20px" }}>
                 {/* Breadcrumb */}
                 <Col>
                     <Breadcrumb style={{ marginBottom: '16px' }}>
@@ -46,7 +46,7 @@ const EditSite = () => {
                         <Breadcrumb.Item><Link to="/site/site-setting">Site Setting</Link></Breadcrumb.Item>
                     </Breadcrumb>
                     <Row>
-                        <Title level={2}>Site Setting</Title>
+                        <Title level={2 }>Site Setting</Title>
                     </Row>
                 </Col>
 
