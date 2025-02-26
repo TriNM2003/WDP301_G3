@@ -24,8 +24,8 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
-import ProjectList from './pages/Project/ProjectList';
-import TeamList from './pages/Team/TeamList';
+import ProjectList from './pages/Projects/ProjectList';
+import TeamList from './pages/Teams/TeamList';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
@@ -37,8 +37,9 @@ import axios from 'axios';
 import authAxios from './utils/authAxios';
 import ManageProjectMember from './components/Project/ManageProjectMember';
 import ManageSiteMembers from './components/Site/ManageSiteMembers';
-import SitePage from './pages/Site/SitePage';
+import SitePage from './pages/Sites/SitePage';
 import ManageProjects from './components/Site/ManageProjects';
+import ProjectLayout from './components/Project/Layout/ProjectLayout';
 
 function App() {
 
@@ -49,12 +50,12 @@ function App() {
   return (
     <div className="App">
       <Layout>
-        <Header style={{ padding: "0", borderBottom:`solid 1px ${cyan[`1`]}` }}>
+        <Header style={{ padding: "0", borderBottom: `solid 1px ${cyan[`1`]}` }}>
           <AppHeader />
         </Header>
         <Content>
           <Routes>
-          {!accessToken && <>
+            {!accessToken && <>
               <Route path='/home' element={<HomePage />}>
                 <Route index element={<Welcome />} />
               </Route>
@@ -76,31 +77,31 @@ function App() {
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
-              
-                  <Route path="change-password" element={<ChangePassword />} />
-                  <Route path="edit-profile" element={<EditProfile />} />
-                </Route>
-         
-                <Route path="site" element={<S_id/>} >
-                  <Route index element={<SitePage />} />
-                  <Route path="site-page" element={<SitePage /> } />
-                  <Route path='manage-projects' element={<ManageProjects />} />
-                  <Route path='manage-members' element={<ManageSiteMembers />} />
-                  <Route path="projects" element={<ProjectList />} />
-                  <Route path="teams" element={<TeamList />} />              
-                  <Route path='project' element={<P_id/>}>
-                    <Route index element={<Summary />} />
-                    <Route path='summary' element={<Summary/>}/>
-                    <Route path='sprint' element={<SprintBoard/>}/>
-                    <Route path='board' element={<KanbanBoard/>}/>
-                    <Route path='members' element={<ManageProjectMember />} />
-                    
 
+                <Route path="change-password" element={<ChangePassword />} />
+                <Route path="edit-profile" element={<EditProfile />} />
+              </Route>
+
+              <Route path="site" element={<S_id />} >
+                <Route index element={<SitePage />} />
+                <Route path="site-page" element={<SitePage />} />
+                <Route path='manage-projects' element={<ManageProjects />} />
+                <Route path='manage-members' element={<ManageSiteMembers />} />
+                <Route path="projects" element={<ProjectList />} />
+                <Route path="teams" element={<TeamList />} />
+                <Route path='project' element={<P_id />}>
+                  <Route path='' element={<ProjectLayout />}  >
+                    <Route index element={<Summary />} />
+                    <Route path='summary' element={<Summary />} />
+                    <Route path='sprint' element={<SprintBoard />} />
+                    <Route path='board' element={<KanbanBoard />} />
                   </Route>
+                  <Route path='members' element={<ManageProjectMember />} />
                 </Route>
+              </Route>
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
-        
+
           </Routes>
         </Content>
       </Layout>
