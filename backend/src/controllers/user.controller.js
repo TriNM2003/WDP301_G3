@@ -142,7 +142,7 @@ const sendDeleteAccountEmail = async (req, res) => {
         }
 
         // Tạo link xác nhận xóa tài khoản (dùng accessToken thay vì tạo mới)
-        const deleteLink = `http://localhost:3000/confirm-delete`;
+        const deleteLink = `http://localhost:3000/profile/confirm-deletee`;
 
         // Cấu hình email gửi xác nhận
         const transporter = nodemailer.createTransport({
