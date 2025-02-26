@@ -12,6 +12,7 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
+import RestoreProject from './components/Projects/ProjectTrash';
 import TeamMemberManagement from './components/Teams/TeamMemberManagement';
 import EditSite from './components/Sites/EditSite';
 import ConfirmDelete from './components/Users/ConfirmDelete';
@@ -87,10 +88,10 @@ function App() {
                 <Route path="confirm-delete" element={<ConfirmDelete />} />
               </Route>
               <Route path="/manage-team-member" element={<TeamMemberManagement />} />
-              
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
                 <Route path="site-page" element={<SitePage />} />
+                <Route path='recycle' element={<RestoreProject/>}/>
                 <Route path='manage-projects' element={<ManageProjects />} />
                 <Route path='manage-members' element={<ManageSiteMembers />} />
                 <Route path="site-setting" element={<EditSite />} />
