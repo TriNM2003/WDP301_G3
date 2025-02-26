@@ -34,6 +34,7 @@ import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+import ManageProjects from './components/Site/ManageProjects';
 
 
 
@@ -78,9 +79,12 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
 
+                
+
               
 
                 <Route path="site" element={<S_id/>} >
+                  <Route path='manage-projects' element={<ManageProjects />} />
                   <Route path="projects" element={<ProjectList />} />
                   <Route path='project' element={<P_id/>}>
                     <Route index element={<Summary />} />
@@ -90,6 +94,7 @@ function App() {
 
                   </Route>
                 </Route>
+
              
 
               <Route path='*' element={<Navigate to="/home" />} />
