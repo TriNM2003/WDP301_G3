@@ -25,6 +25,7 @@ import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import ProjectList from './pages/Project/ProjectList';
+import TeamList from './pages/Team/TeamList';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
@@ -83,20 +84,13 @@ function App() {
                   <Route path="edit-profile" element={<EditProfile />} />
                 </Route>
 
-              
-              
-
-
-                
-
-              
-
                 <Route path="site" element={<S_id/>} >
                   <Route index element={<SitePage />} />
                   <Route path="/site-page" element={<SitePage /> } />
                   <Route path='manage-projects' element={<ManageProjects />} />
                   <Route path='manage-members' element={<ManageSiteMembers />} />
                   <Route path="projects" element={<ProjectList />} />
+                  <Route path="/teams" element={<TeamList />} />              
                   <Route path='project' element={<P_id/>}>
                     <Route index element={<Summary />} />
                     <Route path='summary' element={<Summary/>}/>
@@ -105,13 +99,6 @@ function App() {
 
                   </Route>
                 </Route>
-
-             
-
-              
-
-
-
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
