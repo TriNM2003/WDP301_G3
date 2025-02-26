@@ -26,6 +26,9 @@ import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import ProjectList from './pages/Project/ProjectList';
 import TeamList from './pages/Team/TeamList';
+import TeamPerformance from './pages/Team/TeamPerformance';
+import TeamMemberPerformance from './pages/Team/TeamMemberPerformance';
+
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
@@ -74,6 +77,9 @@ function App() {
                 </Route>
               <Route path="/project" element={<ProjectList />} />
               <Route path="/team" element={<TeamList />} />
+              <Route path="/team-performance" element={<TeamPerformance />} />
+              <Route path="/team-member-performance" element={<TeamMemberPerformance />} />
+          
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
         
