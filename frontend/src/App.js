@@ -86,11 +86,11 @@ function App() {
 
                 <Route path="site" element={<S_id/>} >
                   <Route index element={<SitePage />} />
-                  <Route path="/site-page" element={<SitePage /> } />
+                  <Route path="site-page" element={<SitePage /> } />
                   <Route path='manage-projects' element={<ManageProjects />} />
                   <Route path='manage-members' element={<ManageSiteMembers />} />
                   <Route path="projects" element={<ProjectList />} />
-                  <Route path="/teams" element={<TeamList />} />              
+                  <Route path="teams" element={<TeamList />} />              
                   <Route path='project' element={<P_id/>}>
                     <Route index element={<Summary />} />
                     <Route path='summary' element={<Summary/>}/>
