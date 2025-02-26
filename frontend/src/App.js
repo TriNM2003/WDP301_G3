@@ -12,7 +12,7 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
-
+import TeamMemberManagement from './components/Teams/TeamMemberManagement';
 import EditSite from './components/Sites/EditSite';
 import ConfirmDelete from './components/Users/ConfirmDelete';
 import EditProject from './components/Projects/EditProject';
@@ -86,11 +86,7 @@ function App() {
                 <Route path="edit-profile" element={<EditProfile />} />
                 <Route path="confirm-delete" element={<ConfirmDelete />} />
               </Route>
-
-              
-
-                
-
+              <Route path="/manage-team-member" element={<TeamMemberManagement />} />
               
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
@@ -111,7 +107,6 @@ function App() {
                   <Route path="project-setting" element={<EditProject />} />
                 </Route>
               </Route>
-
 
 
               <Route path='*' element={<Navigate to="/home" />} />
