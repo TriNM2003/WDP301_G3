@@ -127,14 +127,14 @@ const ProjectTrash = () => {
                 <Dropdown
                     overlay={
                         <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
-                            <div style={{borderBottom: "1px solid #f0f0f0"}}>
-                            <Button type="link" onClick={() => showModal(record, "Restore")}>Restore Project</Button>
+                            <div style={{ borderBottom: "1px solid #f0f0f0" }}>
+                                <Button type="link" onClick={() => showModal(record, "Restore")}>Restore Project</Button>
                             </div>
                             <div>
-                            <Button type="link" danger onClick={() => showModal(record, "Delete")}>Delete Project</Button>
+                                <Button type="link" danger onClick={() => showModal(record, "Delete")}>Delete Project</Button>
                             </div>
                         </div>
-                        
+
                     }
                     trigger={["click"]}
                 >
@@ -145,7 +145,7 @@ const ProjectTrash = () => {
     ];
 
     return (
-        <div style={{ padding: "24px", minHeight: "100vh", background: "#fafafa" }}>
+        <div style={{ padding: "24px", minHeight: "100%", background: "white" }}>
             {/* Header */}
             <Breadcrumb>
                 <Breadcrumb.Item><Link>Project</Link></Breadcrumb.Item>
@@ -155,7 +155,7 @@ const ProjectTrash = () => {
             <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
                 <Col>
                     <Title level={3}>
-                        <ArrowLeftOutlined style={{ marginRight: 8 }} /> Project Trash
+                         Project Trash
                     </Title>
                 </Col>
             </Row>
@@ -166,11 +166,16 @@ const ProjectTrash = () => {
             </div>
 
             {/* Table */}
-            <Table dataSource={data} columns={columns} pagination={{ pageSize: 6 }} />
+            <Table style={{ border: '1px solid #d9d9d9', borderRadius: '5px', boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }} dataSource={data} columns={columns} pagination={{ pageSize: 6 }} />
 
             {/* Modal Confirm Restore/Delete */}
             <Modal
-                title={`${modalType} Project`}
+                title={
+                    <span>
+                        <ExclamationCircleOutlined style={{ color: modalType === "Delete" ? "red" : "#1890ff", fontSize: "24px", marginBottom: "10px",  marginRight: "10px" }} /> 
+                        {modalType} Project
+                    </span>
+                }
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={[
@@ -180,7 +185,7 @@ const ProjectTrash = () => {
                     </Button>
                 ]}
             >
-                <ExclamationCircleOutlined style={{ color: modalType === "Delete" ? "red" : "#1890ff", fontSize: "24px", marginBottom: "10px" }} />
+
                 <p>Are you sure you want to {modalType.toLowerCase()} <strong>{selectedProject?.name}</strong>?</p>
             </Modal>
         </div>
