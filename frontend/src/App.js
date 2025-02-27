@@ -71,7 +71,7 @@ function App() {
               <Route path="/active-account" element={<ActiveAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              
+
               <Route element={<ErrorPage />}>
                 <Route path='*' element={<E404 />} />
               </Route>
@@ -87,16 +87,28 @@ function App() {
                 <Route path="edit-profile" element={<EditProfile />} />
                 <Route path="confirm-delete" element={<ConfirmDelete />} />
               </Route>
-              <Route path="/manage-team-member" element={<TeamMemberManagement />} />
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
                 <Route path="site-page" element={<SitePage />} />
-                <Route path='recycle' element={<RestoreProject/>}/>
-                <Route path='manage-projects' element={<ManageProjects />} />
-                <Route path='manage-members' element={<ManageSiteMembers />} />
+                <Route path='recycle' element={<RestoreProject />} />
                 <Route path="site-setting" element={<EditSite />} />
-                <Route path="projects" element={<ProjectList />} />
-                <Route path="teams" element={<TeamList />} />
+                <Route path='manage' >
+                  <Route index element={<ManageProjects />} />
+                  <Route path='projects' element={<ManageProjects />} />
+                  <Route path='members' element={<ManageSiteMembers />} />
+                </Route>
+
+                <Route path='list'>
+                  <Route index element={<ProjectList />} />
+                  <Route path="projects" element={<ProjectList />} />
+                  <Route path="teams" element={<TeamList />} />
+                </Route>
+
+                <Route path='team'>
+                  <Route path="manage-member" element={<TeamMemberManagement />} />
+
+                </Route>
+
                 <Route path='project' element={<P_id />}>
                   <Route path='' element={<ProjectLayout />}  >
                     <Route index element={<Summary />} />
