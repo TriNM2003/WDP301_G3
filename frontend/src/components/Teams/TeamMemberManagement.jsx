@@ -38,7 +38,7 @@ const UserManagement = () => {
     ];
 
     return (
-        <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fafafa" }}>
+        <Layout style={{ padding: "24px", minHeight: "100%", background: "white" }}>
              <Breadcrumb>
                 <Breadcrumb.Item><Link>Team</Link></Breadcrumb.Item>
                 <Breadcrumb.Item><Link>Team member</Link></Breadcrumb.Item>
@@ -46,8 +46,9 @@ const UserManagement = () => {
 
             <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
                 <Col>
-                    <Title level={3}>
-                        <ArrowLeftOutlined style={{ marginRight: 8 }} onClick={() => nav("/site/manage/teams")}/> Team Member{" "}
+
+                    <Title level={3}> Team Member{" "}
+
                     </Title>
                 </Col>
             </Row>
@@ -73,12 +74,12 @@ const UserManagement = () => {
                 dataSource={data}
                 pagination={3}
                 rowClassName={() => "custom-table-row"}
-                style={{ borderRadius: "8px", overflow: "hidden" }}
+                style={{ borderRadius: "8px", overflow: "hidden", border: "1px solid #d9d9d9", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
             >
                 <Column
                     title="Member"
                     key="username"
-                    sorter={(a, b) => a.name.localeCompare(b.username)}
+                    sorter={(a, b) => a.username.localeCompare(b.username)}
                     render={(text, record) => (
                         <Row align="middle">
                             <Avatar src={record.avatar} size={40} style={{ marginRight: "10px" }} />
@@ -91,7 +92,7 @@ const UserManagement = () => {
                 />
                 <Column title="Full Name" dataIndex="fullName" key="fullName" sorter={(a, b) => a.fullName.localeCompare(b.fullName)} />
                 <Column
-                    title="Access"
+                    title="Role"
                     key="access"
                     render={(text, record) => (
                         <>
@@ -134,15 +135,20 @@ const UserManagement = () => {
                 <div style={{ marginBottom: "10px" }}>Names or emails</div>
                 <Input placeholder="example" style={{ marginBottom: "15px" }} />
                 <div style={{ marginBottom: "10px" }}>Role</div>
-                <Select defaultValue="Admin" style={{ width: "100%" }}>
-                    <Option value="Admin">Admin</Option>
+                <Select defaultValue="Member" style={{ width: "100%" }}>
+                    <Option value="Leader" disabled >Leader</Option>
                     <Option value="Member">Member</Option>
                 </Select>
             </Modal>
 
             {/* Modal: Kick Member */}
             <Modal
-                title="Confirm Kick Member"
+                title={
+                    <span>
+                        <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginRight: "10px" }} />
+                        Confirm Kick Member
+                    </span>
+                }
                 open={isKickMemberModalVisible}
                 onCancel={() => setIsKickMemberModalVisible(false)}
                 footer={[
@@ -150,7 +156,6 @@ const UserManagement = () => {
                     <Button key="confirm" type="primary" danger onClick={handleKickMember}>Confirm</Button>
                 ]}
             >
-                <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginBottom: "10px" }} />
                 <p>Are you sure you want to remove {selectedUser?.name} from the team?</p>
             </Modal>
         </Layout>
