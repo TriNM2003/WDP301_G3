@@ -22,13 +22,13 @@ const UserProfile = () => {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ minHeight: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Profile Cover */}
       <div style={{ width: '100%' }}>
         <img
-          src="https://static.vecteezy.com/system/resources/previews/004/243/021/non_2x/abstract-template-background-white-and-bright-blue-squares-overlapping-with-halftone-and-texture-free-vector.jpg"
+          src="https://images.hdqwalls.com/wallpapers/geometry-blue-abstract-4k-3y.jpg"
           alt="profile-cover"
-          style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+          style={{ width: '100%', height: '250px', objectFit: 'cover' }}
         />
       </div>
 

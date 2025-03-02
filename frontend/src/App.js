@@ -85,8 +85,8 @@ function App() {
                 <Route path="profile-info" element={<ViewProfile />} />
                 <Route path="change-password" element={<ChangePassword />} />
                 <Route path="edit-profile" element={<EditProfile />} />
-                <Route path="confirm-delete" element={<ConfirmDelete />} />
               </Route>
+              <Route path="/profile/confirm-delete" element={<ConfirmDelete />} />
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
                 <Route path="site-page" element={<SitePage />} />

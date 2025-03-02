@@ -3,22 +3,35 @@ const mongoose = require('mongoose');
 const teamSchema = new mongoose.Schema({
     teamName: {
         type: String,
-        required: true
-        //require co tren 3 ki tu
+        required: true,
+        minlength: 3,
     },
-    teamLeader: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
-        required: true
+    teamDescription: {
+        type: String,
     },
+    teamRoles: [{
+        type: String,
+        enum: ['teamLeader', 'teamMember'],
+        default: 'teamMember'
+    }],
     teamMembers: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'user'
+        },
+        roles: [{
+            type: String,
+            enum: ['teamLeader', 'teamMember'],
+        }]
     }],
     site: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'site',
         required: true
+    },
+    teamAvatar: {
+        type: String,
+        default: 'default.jpg'
     },
 },{timestamps: true});
 
