@@ -397,7 +397,7 @@ const TeamPerformance = () => {
               {/* Biểu đồ hiệu suất làm việc theo thời gian */}
               <Card
                 title="Member Performance Over Time"
-                style={{ marginBottom: "15px" , paddingLeft: "0px", textAlign: "left" }}
+                style={{ marginBottom: "15px" , paddingLeft: "0px", textAlign: "left"  }}
                 extra={
                   <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                     {/* Lựa chọn thời gian nhanh */}
