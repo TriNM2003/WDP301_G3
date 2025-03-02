@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Table,
   Button,
@@ -11,7 +11,9 @@ import {
   Breadcrumb,
   Avatar,
   message,
-  Image
+  Image,
+  Modal,
+  Select
 } from "antd";
 import {
   UserOutlined,
@@ -20,17 +22,37 @@ import {
   MoreOutlined,
   FileImageOutlined,
 } from "@ant-design/icons";
+import {useNavigate} from "react-router-dom"
+import { green } from "@ant-design/colors";
+import CreateProject from "../Project/CreateProject";
+import { AppContext } from "../../context/AppContext";
 
 const { Title } = Typography;
 
+
 // component
 const ManageProjects = () => {
+  const nav = useNavigate();
+  const [createProjectModal, setCreateProjectModal] = useState(false);
+  const {showNotification} = useContext(AppContext);
 
   // member data
   const [projects, setProjects] = useState([
     { key: "1", name: "SDN302", projectAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s", projectManager: "JohnSmith@gmail.com", projectManagerAvatar: "https://api.dicebear.com/7.x/miniavs/svg?seed=1", createAt: "11/02/2004", updateAt: "13/02/2024"},
     { key: "2", name: "WDP301", projectAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s", projectManager: "TriNM@gmail.com", projectManagerAvatar: "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png", createAt: "10/02/2004", updateAt: "15/02/2024"},
   ]);
+
+  const breadCrumbItems = [
+    {
+      title: <a href="/home">Home</a>
+    },
+    {
+      title: <a href="/site">Site</a>
+    },
+    {
+      title: "Manage projects"
+    }
+  ]
 
   // search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,9 +75,14 @@ const ManageProjects = () => {
   };
 
 
-  const handleAddProject = () => {
-    // navigate to add project page
-    showingMessage("success", "clicked!", 1);
+  const handleCreateProject = (values) => {
+    //show success message
+    messageApi.open({
+      type: "success",
+      content: `Create project successfully`,
+      duration: 2
+   })
+   showNotification(`📑 Project ${values.projectName} has been created by John Smith 👋`)
   }
 
   // filter by search
@@ -65,6 +92,14 @@ const ManageProjects = () => {
     return matchesSearch;
   });
 
+  // handle go to project setting
+  const handleProjectSetting = (projectName) => {
+    messageApi.open({
+      type: "success",
+      content: `Go to project ${projectName} setting`,
+      duration: ``
+   }).then(res => nav("/site/project/project-setting"))
+  }
 
 
   // handle remove project
@@ -73,7 +108,12 @@ const ManageProjects = () => {
     
     // update fe state
     setProjects(projects.filter((member) => member.key !== key));
-    showingMessage("success", `Project ${name} moved to trashcan successfull`, 2);
+    messageApi.open({
+      type: "success",
+      content: `Project ${name} moved to trashcan successfully`,
+      duration: 2
+   })
+   showNotification(`📑 Project ${name} has been moved to trashcan 🗑 by John Smith 👋`)
   };
 
 
@@ -135,7 +175,7 @@ const ManageProjects = () => {
                 </Popconfirm>
               </Menu.Item>
               <Menu.Item key="projectSettings">
-                <Button type="text" onClick={() => showingMessage("success", `project ${record.name} setting clicked`, 1)}>Project settings</Button>
+                <Button type="text" onClick={() => nav("/site/project/project-setting")}>Project settings</Button>
               </Menu.Item>
             </Menu>
           }
@@ -156,16 +196,12 @@ const ManageProjects = () => {
       {contexHolder}
 
       {/* Breadcrumb */}
-      <Breadcrumb style={{ marginBottom: "20px" }}>
-        <Breadcrumb.Item>Home</Breadcrumb.Item>
-        <Breadcrumb.Item>MySite</Breadcrumb.Item>
-        <Breadcrumb.Item>View list projects</Breadcrumb.Item>
-      </Breadcrumb>
+      <Breadcrumb style={{ marginBottom: "20px" }} items={breadCrumbItems} />
 
       {/* title and button */}
       <div style={{ display: "flex", gap: "10px",  marginRight: "20px", justifyContent: "space-between" }}>
           <Title level={2}>Projects</Title>
-          <Button type="primary" style={{marginTop: "35px"}} onClick={() => handleAddProject()}>Create project</Button>
+          <Button type="primary" style={{marginTop: "35px"}} onClick={() => setCreateProjectModal(true)}>Create project</Button>
       </div>
 
       <div style={{ display: "flex", marginBottom: "20px"}}>
@@ -193,6 +229,8 @@ const ManageProjects = () => {
         borderRadius: "5%"
       }}
       />
+
+      <CreateProject visible={createProjectModal} onCreate={handleCreateProject} onCancel={() => setCreateProjectModal(false)}  />
 
     </div>
   );

@@ -15,6 +15,9 @@ const teamSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
     }],
+    teamAvatar: [{
+        type: String
+    }],
     site: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'site',

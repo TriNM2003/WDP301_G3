@@ -40,7 +40,7 @@ const register = async (req) => {
         activities: [],
         projects: [],
         teams: [],
-        googleId: null,
+        // googleId: null,
 
         status: "inactive",
     });
@@ -63,7 +63,7 @@ const login = async (username, password, res) => {
     }
 
     // check co phai account dk bang google
-    if (user.googleId !== null) {
+    if (user.googleId !== undefined) {
         return {
             status: 400,
             message: "Please login by Google!"

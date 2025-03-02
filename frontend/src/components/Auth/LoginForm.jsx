@@ -58,7 +58,8 @@ const LoginForm = () => {
                       duration: 2
                   }).then(() => {
                       localStorage.setItem("accessToken", accessToken);
-                      localStorage.setItem("accessTokenExp", accessTokenExp);
+                      // luu thoi gian unix
+                      localStorage.setItem("accessTokenExp",Math.floor(Date.now() / 1000) + accessTokenExp);
                       localStorage.setItem("userId", user._id);
                       setUser(user);
                       nav('/home')
@@ -167,7 +168,7 @@ const LoginForm = () => {
                         duration: 2
                     }).then(() => {
                         localStorage.setItem("accessToken", loginResult.accessToken);
-                        localStorage.setItem("accessTokenExp", loginResult.accessTokenExp);
+                        localStorage.setItem("accessTokenExp", Math.floor(Date.now() / 1000) + loginResult.accessTokenExp);
                         localStorage.setItem("userId", loginResult.user.id);
                         setUser(loginResult.user);
                         setLoading(false);

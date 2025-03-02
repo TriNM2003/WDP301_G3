@@ -53,7 +53,8 @@ function SiteSider() {
           <Menu.ItemGroup style={{"text-align":"start"}} key="s" >
             <Menu.Item icon={<SettingOutlined style={{color:grey[6]}}/>} key="s1" onClick={()=>{navigate("site-setting")}}>Setting</Menu.Item>
             <Menu.Item icon={<UserOutlined style={{color:blue[3]}}/>} key="s2" onClick={()=>{navigate("manage/members")}}>Manage Access</Menu.Item>
-            <Menu.Item icon={<UserOutlined style={{color:blue[3]}}/>} key="s3" onClick={()=>{navigate("manage/projects")}}>Manage Project</Menu.Item>
+            <Menu.Item icon={<ProjectOutlined style={{color:blue[3]}}/>} key="s3" onClick={()=>{navigate("manage/projects")}}>Manage Projects</Menu.Item>
+            <Menu.Item icon={<TeamOutlined style={{color:blue[3]}}/>} key="s4" onClick={()=>{navigate("manage/teams")}}>Manage Teams</Menu.Item>
           </Menu.ItemGroup>
         </SubMenu>
       </Menu>
