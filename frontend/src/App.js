@@ -29,13 +29,14 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
-import ProjectList from './pages/Projects/ProjectList';
-import TeamList from './pages/Teams/TeamList';
+import ProjectList from './pages/Project/ProjectList';
+import TeamList from './pages/Team/TeamList';
+import TeamPerformance from './pages/Team/TeamPerformance';
+import TeamMemberPerformance from './pages/Team/TeamMemberPerformance';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
 import Summary from './components/Project/Detail/Summary';
-
 import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
@@ -100,16 +101,19 @@ function App() {
                   <Route path='projects' element={<ManageProjects />} />
                   <Route path='members' element={<ManageSiteMembers />} />
                 </Route>
+              
+
 
                 <Route path='list'>
                   <Route index element={<ProjectList />} />
                   <Route path="projects" element={<ProjectList />} />
                   <Route path="teams" element={<TeamList />} />
                 </Route>
-
+        
                 <Route path='team'>
                   <Route path="manage-member" element={<TeamMemberManagement />} />
-
+                  <Route path="performance" element={<TeamPerformance />} />
+                  <Route path="member-performance" element={<TeamMemberPerformance />} />
                 </Route>
 
                 <Route path='project' element={<P_id />}>
@@ -125,8 +129,6 @@ function App() {
               </Route>
              
               <Route path='/create-site' element={<CreateSite />} />
-
-
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 
