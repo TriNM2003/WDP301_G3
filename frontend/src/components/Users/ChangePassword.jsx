@@ -13,9 +13,10 @@ const ChangePassword = () => {
     });
     const [selectedKey, setSelectedKey] = useState('2');
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-    const [isConfirmDeleteModalVisible, setIsConfirmDeleteModalVisible] = useState(false);
     const [errors, setErrors] = useState({});
-    const [modalSuccess, setModalSuccess] = useState(false);
+    const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [loading, setLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
 
     const handleChange = (e) => {
@@ -24,7 +25,7 @@ const ChangePassword = () => {
 
     const validateForm = () => {
         let newErrors = {};
-        
+
         if (!form.oldPassword) newErrors.oldPassword = 'Old password is required';
         if (!form.newPassword) {
             newErrors.newPassword = 'New password is required';
@@ -32,13 +33,13 @@ const ChangePassword = () => {
             if (form.newPassword.length < 8) newErrors.newPassword = 'Password must be at least 8 characters';
             if (form.newPassword.includes(" ")) newErrors.newPassword = 'Password must not contain spaces';
         }
-    
+
         if (!form.confirmPassword) {
             newErrors.confirmPassword = 'Please confirm your new password';
         } else if (form.newPassword !== form.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
-    
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -76,20 +77,26 @@ const ChangePassword = () => {
         setErrors({});
     };
 
-    const handleDeleteAccount = async () => {
-        axios.delete('http://localhost:9999/users/delete-user', {
+    const handleDeleteRequest = async () => {
+        if (!email) {
+            setEmailError("Please enter your email");
+            return;
+        }
+
+        setLoading(true);
+        axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
             .then(() => {
-                localStorage.removeItem('accessToken');
-                messageApi.success('Account deleted successfully!', 2);
-                window.location.reload();
-                window.location.href = '/auth/login';
+                message.success("A confirmation email has been sent to your email address.");
+                setIsDeleteModalVisible(false);
+                setEmail('');
+                setEmailError('');
             })
-            .catch(error => messageApi.error(error.response?.data?.message));
-
-        setIsConfirmDeleteModalVisible(false);
-        setIsDeleteModalVisible(false);
+            .catch(error => {
+                setEmailError(error.response?.data?.message);
+            })
+            .finally(() => setLoading(false));
     };
 
     const handleMenuClick = (e) => {
@@ -108,7 +115,7 @@ const ChangePassword = () => {
     return (
         <>
             {contextHolder}
-            <Row gutter={[16, 16]} justify="center" style={{ minHeight: '100vh', padding: '20px' }}>
+            <Row gutter={[16, 16]} justify="center" style={{ minHeight: '100%', padding: '20px' }}>
                 <Col xs={24} sm={8} md={6} lg={4}>
                     <Breadcrumb style={{ marginBottom: '16px' }}>
                         <Breadcrumb.Item><Link to="/profile/profile-info">Profile</Link></Breadcrumb.Item>
@@ -159,30 +166,16 @@ const ChangePassword = () => {
 
             <Modal
                 title="Confirm Account Deletion"
-                visible={isDeleteModalVisible}
+                open={isDeleteModalVisible}
                 onCancel={() => setIsDeleteModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="delete" type="primary" danger onClick={() => setIsConfirmDeleteModalVisible(true)}>Delete Account</Button>
+                    <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
-                <p><b>Full Name:</b> {form.fullName}</p>
-                <p><b>Email:</b> {form.email}</p>
-                <p><b>Phone Number:</b> {form.phoneNumber}</p>
-                <p><b>Address:</b> {form.address}</p>
-            </Modal>
-
-            <Modal
-                title="Are you sure?"
-                visible={isConfirmDeleteModalVisible}
-                onCancel={() => setIsConfirmDeleteModalVisible(false)}
-                footer={[
-                    <Button key="cancel" onClick={() => setIsConfirmDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="confirmDelete" type="primary" danger onClick={handleDeleteAccount}>Confirm Delete</Button>
-                ]}
-            >
-                <ExclamationCircleOutlined style={{ color: 'red', fontSize: '24px', marginBottom: '10px' }} />
-                <p>Are you sure you want to delete your account? This action is irreversible.</p>
+                <p>Please enter your email to proceed with account deletion.</p>
+                <Input value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(''); }} placeholder="Enter your email" />
+                {emailError && <p style={{ color: "red", marginTop: "5px" }}>{emailError}</p>}
             </Modal>
         </>
     );

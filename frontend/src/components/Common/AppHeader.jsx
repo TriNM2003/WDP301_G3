@@ -67,8 +67,9 @@ function AppHeader() {
                             <Menu.Item key="2" extra="⌘P"  onClick={() => navigate('/profile/profile-info')}>Profile</Menu.Item>
                             <Menu.Item key="3" extra="⌘B"  onClick={() => navigate('/profile/edit-profile')}>Edit profile</Menu.Item>
                             <Menu.Item key="4" extra="⌘B"  onClick={() => navigate('/profile/change-password')}>Change password</Menu.Item>
+                            <Menu.Item key="5" extra="⌘B"  onClick={() => navigate('/create-site')}>Create site</Menu.Item>
                             <Menu.Divider />
-                            <Menu.Item key="5" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S"
+                            <Menu.Item key="6" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S"
                             onClick={() => handleLogout()}>
                                 Logout
                             </Menu.Item>
@@ -78,9 +79,7 @@ function AppHeader() {
                 >
                     <Title style={{margin:"0",height:"100%"}} level={5} onClick={(e) => e.preventDefault()}>
                         <Space style={{height:"100%"}}>
-                            <Avatar src={<img src={user?.avatar} alt="avatar" />} />
-                            {user?.username}
-                        
+                            <Avatar src={<img src={user?.userAvatar} alt="avatar" />} />
                         </Space>    
                     </Title>
                 </Dropdown>

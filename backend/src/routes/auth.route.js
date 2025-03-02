@@ -26,15 +26,17 @@ authRouter.post("/verify-account",
 authRouter.post("/register", authController.register);
 // Endpoint đăng nhập
 authRouter.post("/login", authController.login);
-// scope
-authRouter.get("/loginByGoogle", authController.loginByGoogle);
-// thong tin tra ve
-authRouter.get("/loginByGoogle/callback", verifyGoogleCallback, authController.loginByGoogleCallback);
 
+// login, register bang google
+authRouter.get("/loginByGoogle", authController.loginByGoogle);
+authRouter.get("/loginByGoogle/callback", verifyGoogleCallback, authController.loginByGoogleCallback);
+authRouter.get("/getUserByAccessToken", authController.getUserByAccessToken);  
+
+// refresh access token
 authRouter.post("/refresh", authController.refreshAccessToken);
 authRouter.post("/getRefreshToken", authController.getRefreshToken);
-authRouter.post("/getGoogleUser", authController.getGoogleUser);  
-authRouter.post("/loginByGoogleUsername", authController.loginByGoogleUsername);
+
+authRouter.get("/checkLoginStatus", authController.checkLoginStatus);
 
 authRouter.post("/logout", authController.logout);
 
