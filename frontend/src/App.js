@@ -29,10 +29,10 @@ import E404 from './components/Error/E404';
 import E403 from './components/Error/E403';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
-import ProjectList from './pages/Project/ProjectList';
-import TeamList from './pages/Team/TeamList';
-import TeamPerformance from './pages/Team/TeamPerformance';
-import TeamMemberPerformance from './pages/Team/TeamMemberPerformance';
+import ProjectList from './pages/Projects/ProjectList';
+import TeamList from './pages/Teams/TeamList';
+import TeamPerformance from './pages/Teams/TeamPerformance';
+import TeamMemberPerformance from './pages/Teams/TeamMemberPerformance';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
@@ -111,6 +111,7 @@ function App() {
                 </Route>
         
                 <Route path='team'>
+                  <Route index element={<TeamPerformance />} />
                   <Route path="manage-member" element={<TeamMemberManagement />} />
                   <Route path="performance" element={<TeamPerformance />} />
                   <Route path="member-performance" element={<TeamMemberPerformance />} />
