@@ -15,7 +15,7 @@ function Welcome() {
 
           <Space direction="vertical" style={{ width: "50%", margin: "3% 0" }}>
             <Button type="primary" size="large" block style={{ margin: "2% 0" }}  >
-              <Title level={4} style={{ color: "white", margin: "0" }}>Sign up</Title>
+              <Link to={'/auth/register'}><Title level={4} style={{ color: "white", margin: "0" }}>Sign up</Title></Link>
             </Button>
 
             <Button color="danger" variant="outlined" size="large" block>

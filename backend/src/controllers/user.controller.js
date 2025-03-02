@@ -110,24 +110,11 @@ const editProfile = async (req, res) => {
     }
 };
 
-const deleteUser = async (req, res, next) => {
-    try {
-        const userId = req.payload.id;
-        const user = await db.User.findById(userId);
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
-        await db.User.findByIdAndDelete(userId);
-        res.status(200).json({ message: 'User deleted successfully' });
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-}
 
 const sendDeleteAccountEmail = async (req, res) => {
     try {
         const userId = req.payload.id; // Lấy ID từ accessToken
-        const { password } = req.body;
+        const { email } = req.body;
 
         // Tìm user trong database
         const user = await db.User.findById(userId);
@@ -135,11 +122,16 @@ const sendDeleteAccountEmail = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Xác thực mật khẩu nhập vào
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-        if (!isPasswordMatch) {
-            return res.status(400).json({ message: "Incorrect password" });
+        // // Kiểm tra email nhập vào có trùng với email trong database không
+        if (email !== user.email) {
+            return res.status(400).json({ message: "Incorrect email" });
         }
+
+        // // Xác thực mật khẩu nhập vào
+        // const isPasswordMatch = await bcrypt.compare(password, user.password);
+        // if (!isPasswordMatch) {
+        //     return res.status(400).json({ message: "Incorrect password" });
+        // }
 
         // Tạo link xác nhận xóa tài khoản (dùng accessToken thay vì tạo mới)
         const deleteLink = `http://localhost:3000/profile/confirm-delete`;
@@ -204,7 +196,6 @@ const confirmDeleteAccount = async (req, res) => {
 };
 
 const UserControllers = {
-    deleteUser,
     editProfile,
     getUserById,
   changePassword,

@@ -1,20 +1,13 @@
 const mongoose = require('mongoose');
 
-const activityType = new mongoose.Schema({
+const activityTypeSchema = new mongoose.Schema({
     typeName:{
         type:String,
         required: true,
         unique: true,
         enum:['task','bug','subtask']
     },
-    project:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'project',
-        required: true
-    },
-}, {
-    timestamps: true
 });
 
-const ActivityType = mongoose.model('activityType', activityType);
+const ActivityType = mongoose.model('activityType', activityTypeSchema);
 module.exports = ActivityType;

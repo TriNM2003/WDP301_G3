@@ -1,13 +1,18 @@
 const mongoose = require('mongoose');
-const { create } = require('./user.model');
+const { create, validate } = require('./user.model');
 
 const activitySchema = new mongoose.Schema({
     activityTitle: {
         type: String,
-        required: true
+        required: true,
+        minlength: 3,
     },
     description: {
         type: String
+    },
+    parent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'activity'
     },
     project: {
         type: mongoose.Schema.Types.ObjectId,
@@ -28,7 +33,7 @@ const activitySchema = new mongoose.Schema({
         ref: 'activityType',
         required: true
     },
-    reviewer: {
+    createBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
         required: true
@@ -59,12 +64,44 @@ const activitySchema = new mongoose.Schema({
             default: Date.now
         }   
     }],
+
+    attachments: [
+        {
+            fileName: {
+                type: String
+            },
+            url: {
+                type: String
+            },
+            size: {
+                type: Number
+            },
+            mimeType: {
+                type: String
+            },
+            uploadedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'user'
+            },
+            uploadedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ],
     startDate: {
         type: Date
     },
     dueDate: {
-        type: Date
+        type: Date,
         // lon hon hoac bang startDate 
+        validate: {
+            validator: function(v) {
+                return v >= this.startDate;
+            },
+            message: 'Due date must be greater than or equal to start date'
+        }
+
     }
 }, { timestamps: true });
 

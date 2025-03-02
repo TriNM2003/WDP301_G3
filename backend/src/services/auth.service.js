@@ -35,7 +35,7 @@ const register = async (req) => {
         address: null,
 
         roles: [],
-        userAvatar: "https://static.thenounproject.com/png/5100711-200.png",
+        userAvatar: "https://i.pinimg.com/736x/2e/9b/34/2e9b3443e8afa8d383c132c7b3745d47.jpg",
         notifications: [],
         activities: [],
         projects: [],

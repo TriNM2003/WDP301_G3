@@ -14,8 +14,8 @@ const ChangePassword = () => {
     const [selectedKey, setSelectedKey] = useState('2');
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [errors, setErrors] = useState({});
-    const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
+    const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -78,23 +78,23 @@ const ChangePassword = () => {
     };
 
     const handleDeleteRequest = async () => {
-        if (!password) {
-            setPasswordError("Please enter your password");
+        if (!email) {
+            setEmailError("Please enter your email");
             return;
         }
 
         setLoading(true);
-        axios.post('http://localhost:9999/users/send-delete-email', { password }, {
+        axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
             .then(() => {
                 message.success("A confirmation email has been sent to your email address.");
                 setIsDeleteModalVisible(false);
-                setPassword('');
-                setPasswordError('');
+                setEmail('');
+                setEmailError('');
             })
             .catch(error => {
-                setPasswordError(error.response?.data?.message);
+                setEmailError(error.response?.data?.message);
             })
             .finally(() => setLoading(false));
     };
@@ -115,7 +115,7 @@ const ChangePassword = () => {
     return (
         <>
             {contextHolder}
-            <Row gutter={[16, 16]} justify="center" style={{ minHeight: '100vh', padding: '20px' }}>
+            <Row gutter={[16, 16]} justify="center" style={{ minHeight: '100%', padding: '20px' }}>
                 <Col xs={24} sm={8} md={6} lg={4}>
                     <Breadcrumb style={{ marginBottom: '16px' }}>
                         <Breadcrumb.Item><Link to="/profile/profile-info">Profile</Link></Breadcrumb.Item>
@@ -173,9 +173,9 @@ const ChangePassword = () => {
                     <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
-                <p>Please enter your password to proceed with account deletion.</p>
-                <Input.Password value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }} placeholder="Enter your password" />
-                {passwordError && <p style={{ color: "red", marginTop: "5px" }}>{passwordError}</p>}
+                <p>Please enter your email to proceed with account deletion.</p>
+                <Input value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(''); }} placeholder="Enter your email" />
+                {emailError && <p style={{ color: "red", marginTop: "5px" }}>{emailError}</p>}
             </Modal>
         </>
     );
