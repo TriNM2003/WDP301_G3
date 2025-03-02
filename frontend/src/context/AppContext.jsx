@@ -2,7 +2,7 @@ import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
-import { notification } from 'antd';
+import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
@@ -13,13 +13,11 @@ const AppProvider = ({ children }) => {
   // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
-  //token
-  // useEffect(()=>{
-  //     const token =localStorage.getItem("accessToken")|| null;
-  //     if(token != null){
-  //         setAccessToken(token);
-  //     }
-  // },[])
+  // Task
+  const [deleteTask, setDeleteTask] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState("");
+  const [confirmTask, setConfirmTask] = useState("");
+  const [taskModal, setTaskModal] = useState({ visible: false, taskName: "" });
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
@@ -73,6 +71,35 @@ const AppProvider = ({ children }) => {
     });
   };
 
+  // delete Task
+  const showDeleteTask = (taskName) => {
+    setTaskToDelete(taskName);
+    setDeleteTask(true);
+  };
+
+  const handleCloseDeleteTaskModal = () => {
+    setDeleteTask(false);
+    setConfirmTask(""); // Xóa input khi đóng modal
+  };
+
+  const handleDelete = () => {
+    if (confirmTask === taskToDelete) {
+      message.success(`Task "${taskToDelete}" has been deleted successfully!`);
+      showNotification(`Project update`, `User1 just deleted task ${taskToDelete}.`);
+      handleCloseDeleteTaskModal();
+      closeTask();
+    } else {
+      message.error("Task name does not match. Please try again!");
+    }
+  };
+  // hien thi Task
+  const showTask = (taskName) => {
+    setTaskModal({ visible: true, taskName });
+  };
+
+  const closeTask = () => {
+    setTaskModal({ visible: false, taskName: "" });
+  };
   return (
     <AppContext.Provider value={{
       accessToken,
@@ -81,7 +108,9 @@ const AppProvider = ({ children }) => {
       user, setUser,
       //    setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,
-      showNotification
+      showNotification,
+      showDeleteTask, handleDelete, handleCloseDeleteTaskModal, deleteTask, setDeleteTask, taskToDelete, setTaskToDelete, confirmTask, setConfirmTask,
+      taskModal, setTaskModal,showTask,closeTask,
     }}>
       {children}
     </AppContext.Provider>
