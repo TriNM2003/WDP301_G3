@@ -1,19 +1,20 @@
 import React, { useContext } from "react";
-import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input } from "antd";
+import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal } from "antd";
 import { CheckOutlined, DoubleRightOutlined, EllipsisOutlined, FieldTimeOutlined, FormOutlined, PlusOutlined } from "@ant-design/icons";
 import { blue, cyan, gray, grey, red } from "@ant-design/colors";
 import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
 import { AppContext } from "../../../../context/AppContext";
 import CompleteSprintModal from "./CompleteSprintModal";
+import ActivityDetail from "../../../Activity/ActivityDetail";
 
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   return (
     <div style={{ padding: " 2%", overflow: "auto", maxHeight: "100%" }}>
-      
+
       <Collapse defaultActiveKey={["0"]} bordered={false} style={{ background: "white", borderRadius: 0 }}>
         {/* Sprint */}
         <Panel style={{ background: "#F5F5F5", margin: "0 0 2% 0", borderRadius: 0 }} header={
@@ -36,7 +37,7 @@ const SprintBoard = () => {
               >
                 <CheckOutlined /> Complete sprint
               </Button>
-              
+
               <Dropdown
                 overlay={
                   <Menu onClick={(e) => e.domEvent.stopPropagation()}>
@@ -60,7 +61,7 @@ const SprintBoard = () => {
             </Space>
           </Flex>
         } key="1">
-          <Flex justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%" }}>
+          <Flex onClick={() => showActivity(`Activity`)} justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" }}>
             <Space>
               <text><FormOutlined style={{ color: blue[6] }} /> Activity 1</text>
             </Space>
@@ -71,7 +72,7 @@ const SprintBoard = () => {
               </Tooltip>
               <Button size="small" variant="outlined" color="default" style={{ borderRadius: 0 }}>Todo</Button>
               <Button size="small" variant="outlined" color="red" style={{ borderRadius: 0 }}><FieldTimeOutlined />25/11/2025</Button>
-              <DoubleRightOutlined rotate="-90" onClick={(e) => e.preventDefault()} style={{ color: red[6] }} />
+              <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />
               <Avatar.Group max={{ count: 2 }} size={25}>
                 <Tooltip title="Ant User" placement="top">
                   <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
@@ -86,6 +87,8 @@ const SprintBoard = () => {
               <Dropdown
                 overlay={
                   <Menu onClick={(e) => e.domEvent.stopPropagation()}>
+                    <Menu.Item onClick={() => { showActivity(`Activity`) }}>Show activity detail</Menu.Item>
+                    <Menu.Item >Edit activity</Menu.Item>
                     <Menu.Item danger>Delete activity</Menu.Item>
                   </Menu>
                 }
@@ -103,6 +106,53 @@ const SprintBoard = () => {
               </Dropdown>
             </Space>
           </Flex>
+          <Flex onClick={() => showActivity(`Activity`)} justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" }}>
+            <Space>
+              <text><FormOutlined style={{ color: blue[6] }} /> Activity 1</text>
+            </Space>
+            <Space align="center">
+              <Tooltip title={`38 of 38 activity completed`} placement="top">
+                <Progress type="circle" percent={100} size={15} showInfo={false} />
+
+              </Tooltip>
+              <Button size="small" variant="outlined" color="default" style={{ borderRadius: 0 }}>Todo</Button>
+              <Button size="small" variant="outlined" color="red" style={{ borderRadius: 0 }}><FieldTimeOutlined />25/11/2025</Button>
+              <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />
+              <Avatar.Group max={{ count: 2 }} size={25}>
+                <Tooltip title="Ant User" placement="top">
+                  <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
+                </Tooltip>
+                <Tooltip title="Ant User" placement="top">
+                  <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
+                </Tooltip>
+                <Tooltip title="Ant User" placement="top">
+                  <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
+                </Tooltip>
+              </Avatar.Group>
+              <Dropdown
+                overlay={
+                  <Menu onClick={(e) => e.domEvent.stopPropagation()}>
+                    <Menu.Item onClick={() => { showActivity(`Activity`) }}>Show activity detail</Menu.Item>
+                    <Menu.Item >Edit activity</Menu.Item>
+                    <Menu.Item danger>Delete activity</Menu.Item>
+                  </Menu>
+                }
+                trigger={["click"]}
+              >
+                <Button
+                  size="small"
+                  variant="text"
+                  color="default"
+                  style={{ borderRadius: "0%" }}
+                  onClick={(e) => e.stopPropagation()} // Ngăn sự kiện click lan ra ngoài
+                >
+                  <EllipsisOutlined />
+                </Button>
+              </Dropdown>
+            </Space>
+          </Flex>
+          
+
         </Panel>
 
         {/* Backlog */}
@@ -118,7 +168,7 @@ const SprintBoard = () => {
           </Flex>
         } key="0">
           {/* Activity */}
-          <Flex justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%" }}>
+          <Flex onClick={() => showActivity(`Activity`)} justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" }}>
             <Space>
               <text><FormOutlined style={{ color: blue[6] }} /> Activity 1</text>
             </Space>
@@ -129,7 +179,7 @@ const SprintBoard = () => {
               </Tooltip>
               <Button size="small" variant="outlined" color="default" style={{ borderRadius: 0 }}>Todo</Button>
               <Button size="small" variant="outlined" color="red" style={{ borderRadius: 0 }}><FieldTimeOutlined />25/11/2025</Button>
-              <DoubleRightOutlined rotate="-90" onClick={(e) => e.preventDefault()} style={{ color: red[6] }} />
+              <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />
               <Avatar.Group max={{ count: 2 }} size={25}>
                 <Tooltip title="Ant User" placement="top">
                   <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
@@ -144,6 +194,8 @@ const SprintBoard = () => {
               <Dropdown
                 overlay={
                   <Menu onClick={(e) => e.domEvent.stopPropagation()}>
+                    <Menu.Item onClick={() => { showActivity(`Activity`) }}>Show activity detail</Menu.Item>
+                    <Menu.Item >Edit activity</Menu.Item>
                     <Menu.Item danger>Delete activity</Menu.Item>
                   </Menu>
                 }
@@ -179,11 +231,39 @@ const SprintBoard = () => {
             </Button>
           )}
         </Panel>
-
-
+        
       </Collapse>
       {/* Complete modal */}
-      <CompleteSprintModal/>
+      <CompleteSprintModal />
+      {/* Activity modal */}
+      <Modal
+          width={{
+            xs: '100%',
+            sm: '95%',
+            md: '90%',
+            lg: '85%',
+            xl: '80%',
+            xxl: '75%',
+          }}
+
+          open={activityModal.visible}
+          footer={[]}
+          onClose={closeActivity}
+          closeIcon={null}
+          style={{ borderRadius: "0" }}
+          modalRender={(node) => (
+            <div>
+              {React.cloneElement(node, {
+                style: { padding: 0, borderRadius: "2px" },
+              })}
+            </div>
+          )}
+          centered
+        >
+          <ActivityDetail closeActivity={closeActivity} />
+
+        </Modal>
+
     </div>
   );
 };
