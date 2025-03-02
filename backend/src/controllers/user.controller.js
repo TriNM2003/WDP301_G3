@@ -142,7 +142,7 @@ const sendDeleteAccountEmail = async (req, res) => {
         }
 
         // Tạo link xác nhận xóa tài khoản (dùng accessToken thay vì tạo mới)
-        const deleteLink = `http://localhost:3000/profile/confirm-deletee`;
+        const deleteLink = `http://localhost:3000/profile/confirm-delete`;
 
         // Cấu hình email gửi xác nhận
         const transporter = nodemailer.createTransport({
@@ -164,7 +164,6 @@ const sendDeleteAccountEmail = async (req, res) => {
                    style="padding: 10px 20px; background: red; color: #fff; text-decoration: none; border-radius: 5px;">
                     Confirm Delete
                 </a>
-                <p>This link is valid for 1 hour.</p>
             `,
         };
 
