@@ -9,38 +9,17 @@ import KanbanTitle from "./KanbanTitle";
 import Search from "antd/es/input/Search";
 import { Option } from "antd/es/mentions";
 import { AppContext } from "../../../../context/AppContext";
+import CompleteSprintModal from "../Sprint/CompleteSprintModal";
 
 const { Title } = Typography;
 
 const KanbanBoard = () => {
-    const {showNotification} =useContext(AppContext)
+    const { showNotification, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
 
     const columns = ["To Do", "In Progress", "Review", "Done", "Done 2"];
-    const [completedModal, setCompletedModal] = useState(false);
 
-    const showCompletedModal = () => {
-        setCompletedModal(true);
-    };
 
-    const handleCompletedCancel = () => {
-        setCompletedModal(false);
-    };
 
-    const handleCompletedSprint = () => {
-        message.success({
-            content: `🎯 (Sprint name) has been completed successfully! 🚀 
-                      - ✅ 10 (tasks) completed 
-                      - ⚠️ 3 (uncompleted bugs) moved to {sprint}`,
-            duration: 4, // Thời gian hiển thị message (4 giây)
-
-        });
-        showNotification(`Project update`, `🎯 (Sprint name) has been completed successfully! 🚀 
-        - ✅ 10 (tasks) completed 
-        - ⚠️ 3 (uncompleted bugs) moved to  {sprint}`)
-
-        setCompletedModal(false);
-
-    };
     const [filters, setFilters] = useState({
         assigned: false,
         reviewed: false,
@@ -91,46 +70,9 @@ const KanbanBoard = () => {
                                 Filter   <DownOutlined />
                             </Button>
                         </Dropdown>
-                        <Button variant="solid" color="green" style={{ borderRadius: "0%" }} onClick={showCompletedModal}><CheckOutlined /> Complete sprint</Button>
-                        <Modal
-                            title={
-                                <div style={{ textAlign: "center" }}>
-                                    <img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" alt="Medal" width={50} />
-                                    <Title level={3} style={{ marginTop: 10 }}>
-                                        Complete "Sprint name"
-                                    </Title>
-                                </div>
-                            }
-                            open={completedModal}
-                            onOk={handleCompletedSprint}
-                            onCancel={handleCompletedCancel}
-                            footer={[
-                                <Button key="cancel" onClick={handleCompletedCancel}>
-                                    Cancel
-                                </Button>,
-                                <Button key="complete" variant="solid" color="green" style={{ borderRadius: "0%" }} onClick={handleCompletedSprint}>
-                                    Complete
-                                </Button>,
-                            ]}
-                        >
-                            <strong>This sprint contains:</strong>
-                            <ul>
-                                <li><CheckSquareFilled style={{ color: green[6] }} /> 0 completed activities</li>
-                                <li><WarningFilled style={{ color: orange[4] }} /> 7 uncompleted activities</li>
-                            </ul>
+                        <Button variant="solid" color="green" style={{ borderRadius: "0%" }} onClick={showCompletedSprint}><CheckOutlined /> Complete sprint</Button>
+                        <CompleteSprintModal />
 
-                            <Divider />
-
-                            <strong strong>Complete or move uncompleted activities to:</strong>
-                            <Select
-                                value="{moveTo}"
-                                onChange="{setMoveTo}"
-                                style={{ width: "100%", marginTop: 5, marginBottom: 15 }}
-                            >
-                                <Option value="New sprint">New sprint</Option>
-                                <Option value="Backlog">Backlog</Option>
-                            </Select>
-                        </Modal>
                     </Flex>
                 </Col>
 
