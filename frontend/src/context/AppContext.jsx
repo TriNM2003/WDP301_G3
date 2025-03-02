@@ -1,7 +1,8 @@
 import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import authAxios from '../utils/authAxios';
 import { message, notification } from 'antd';
 
 export const AppContext = createContext();
@@ -13,6 +14,10 @@ const AppProvider = ({ children }) => {
   // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
+
+  const location = useLocation();
+  const nav = useNavigate();
+
   // Activity
   const [deleteActivity, setDeleteActivity] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState("");
@@ -22,6 +27,7 @@ const AppProvider = ({ children }) => {
   const [activityName, setActivityName] = useState("");
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
+
 
   // api
   const authAPI = "http://localhost:9999/auth";
@@ -41,6 +47,9 @@ const AppProvider = ({ children }) => {
 
   //call api
   useEffect(() => {
+    localStorage.setItem("lastVisitedUrl", location.pathname);
+    checkLoginStatus();
+
     axios.get(`${userApi}/user-profile`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -52,7 +61,7 @@ const AppProvider = ({ children }) => {
       .catch(error => {
         console.log(error.response?.data?.message);
       });
-  }, []);
+  }, [location.pathname]);
 
   //fuction
   const changePassword = async (userId, oldPassword, newPassword) => {
@@ -94,6 +103,23 @@ const AppProvider = ({ children }) => {
     setDeleteActivity(false);
     setConfirmActivity(""); // Xóa input khi đóng modal
   };
+
+  const checkLoginStatus = () => {
+    authAxios.get(`${authAPI}/checkLoginStatus`)
+    .then(() => {
+      console.log("check login...");
+    })
+    .catch(err => {
+      // khong co refresh token hoac loi lay refresh token
+      console.log(err.response.data.message);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("accessTokenExp");
+      localStorage.removeItem("userId");
+      setUser({});
+      nav('/auth/login');
+    })
+  }
+
 
   const handleDelete = () => {
     if (confirmActivity === activityToDelete) {
@@ -138,6 +164,7 @@ const handleCompletedSprint = () => {
     setCompletedSprint(false);
 
 };
+
   return (
     <AppContext.Provider value={{
       accessToken,

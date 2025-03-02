@@ -47,7 +47,12 @@ import ManageSiteMembers from './components/Site/ManageSiteMembers';
 import SitePage from './pages/Sites/SitePage';
 import ManageProjects from './components/Site/ManageProjects';
 import ProjectLayout from './components/Project/Layout/ProjectLayout';
+import ManageProjectLayout from './components/Project/Layout/ManageProjectLayout';
+import ManageTeams from './components/Team/ManageTeams';
+import ManageSites from './pages/Sites/ManageSites';
+import ManageInvitations from './components/Site/ManageInvitations';
 import SprintBoard from './components/Project/Detail/Sprint/SprintBoard';
+
 
 
 function App() {
@@ -99,7 +104,9 @@ function App() {
                 <Route path='manage' >
                   <Route index element={<ManageProjects />} />
                   <Route path='projects' element={<ManageProjects />} />
+                  <Route path='invitations' element={<ManageInvitations />} />
                   <Route path='members' element={<ManageSiteMembers />} />
+                  <Route path='teams' element={<ManageTeams />} />
                 </Route>
               
 
@@ -124,12 +131,17 @@ function App() {
                     <Route path='sprint' element={<SprintBoard />} />
                     <Route path='board' element={<KanbanBoard />} />
                   </Route>
-                  <Route path='manage-members' element={<ManageProjectMember />} />
+                  <Route path='manage' element={<ManageProjectLayout />}>
+                    <Route path='members' element={<ManageProjectMember />} />
+                  </Route>
                   <Route path="project-setting" element={<EditProject />} />
                 </Route>
               </Route>
              
               <Route path='/create-site' element={<CreateSite />} />
+
+              <Route path='/manage-sites' element={<ManageSites />} />
+
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 

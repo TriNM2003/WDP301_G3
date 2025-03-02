@@ -36,6 +36,7 @@ authRouter.get("/getUserByAccessToken", authController.getUserByAccessToken);
 authRouter.post("/refresh", authController.refreshAccessToken);
 authRouter.post("/getRefreshToken", authController.getRefreshToken);
 
+authRouter.get("/checkLoginStatus", authController.checkLoginStatus);
 
 authRouter.post("/logout", authController.logout);
 
