@@ -37,13 +37,13 @@ const EditProject = () => {
     };
 
     return (
-        <div style={{ padding: "24px", minHeight: "100vh", background: "#fafafa" }}>
-            <Row justify="space-between" align="middle" style={{ margin: "0 150px 20px" }}>
+        <div style={{ padding: "24px", minHeight: "100%" }}>
+            <Row justify="space-between" align="middle" style={{ margin: "0 100px 20px" }}>
                 {/* Breadcrumb */}
                 <Col>
                     <Breadcrumb>
-                        <Breadcrumb.Item><Link to="/projects">Projects</Link></Breadcrumb.Item>
-                        <Breadcrumb.Item><Link to="/projects/project-setting">Project Setting</Link></Breadcrumb.Item>
+                        <Breadcrumb.Item><Link to="/site/project">Projects</Link></Breadcrumb.Item>
+                        <Breadcrumb.Item><Link to="/site/project/project-setting">Project Setting</Link></Breadcrumb.Item>
                     </Breadcrumb>
                     <Row>
                         <Title level={3}>Project Setting</Title>
@@ -80,7 +80,7 @@ const EditProject = () => {
 
             <Row justify="center">
                 <Col xs={24} sm={16} md={12}>
-                    <Card style={{ padding: "0 200px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+                    <Card style={{ padding: "0 100px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} style={{ borderRadius: '0' }} src="https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" />
                         </Row>
@@ -95,7 +95,7 @@ const EditProject = () => {
                             </Form.Item>
 
                             <Form.Item label="Project Manager">
-                                <Select defaultValue="lucy" style={{ width: '100%' }} options={[
+                                <Select defaultValue="lucy" style={{ width: '100%', textAlign: 'left' }} options={[
                                     { value: 'jack', label: 'Jack', disabled: true },
                                     { value: 'lucy', label: 'Lucy', disabled: true },
                                     { value: 'Yiminghe', label: 'yiminghe', disabled: true },
@@ -105,8 +105,8 @@ const EditProject = () => {
 
                             <Form.Item style={{ textAlign: "left" }}>
                                 <Button type="primary" htmlType="submit" loading={loading} style={{
-                                    width: "30%",
-                                    borderRadius: "6px",
+                                    width: "100%",
+                                    borderRadius: "0",
                                     fontSize: "16px",
                                     padding: "10px",
                                 }}>
@@ -120,7 +120,12 @@ const EditProject = () => {
 
             {/* Delete Confirmation Modal */}
             <Modal
-                title="Confirm Project Deletion"
+                title={
+                    <span>
+                        <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginRight: "10px" }} />
+                        Confirm Site Deactivation
+                    </span>
+                }
                 open={isDeleteModalVisible}
                 onCancel={() => setIsDeleteModalVisible(false)}
                 footer={[
@@ -128,7 +133,6 @@ const EditProject = () => {
                     <Button key="confirm" type="primary" danger onClick={handleConfirmDelete}>Delete</Button>
                 ]}
             >
-                <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginBottom: "10px" }} />
                 <p>To confirm deletion, please type the project name: <strong>{projectName}</strong></p>
                 <Input
                     placeholder="Enter project name"

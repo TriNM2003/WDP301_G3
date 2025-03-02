@@ -379,6 +379,16 @@ const logout = async (req, res) => {
     }
 }
 
+const checkLoginStatus = async (req, res) => {
+    try {
+        res.status(200).json({ message: "Checked!" });
+    } catch (error) {
+        res.status(400).json({ 
+            message: error.message 
+        });
+    }
+}
+
 const AuthController = {
     sendEmail,
     forgotPassword,
@@ -392,6 +402,7 @@ const AuthController = {
     loginByGoogle,
     getRefreshToken,
     refreshAccessToken,
+    checkLoginStatus,
 }
 
 module.exports = AuthController

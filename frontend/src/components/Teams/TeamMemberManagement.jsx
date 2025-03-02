@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const { Column } = Table;
 const { Title } = Typography;
@@ -12,6 +12,7 @@ const UserManagement = () => {
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const nav = useNavigate();
 
     const handleSearch = (e) => {
         setSearchText(e.target.value);
@@ -45,7 +46,9 @@ const UserManagement = () => {
 
             <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
                 <Col>
+
                     <Title level={3}> Team Member{" "}
+
                     </Title>
                 </Col>
             </Row>

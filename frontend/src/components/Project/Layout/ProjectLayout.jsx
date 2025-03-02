@@ -36,7 +36,7 @@ function ProjectLayout() {
                             overlay={
                                 <Menu>
                                     <Menu.Item key="1" icon={<SettingOutlined />} > Project settings</Menu.Item>
-                                    <Menu.Item key="2" icon={<GroupOutlined />} > Manage members</Menu.Item>
+                                    <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav("/site/project/manage/members")}> Manage members</Menu.Item>
                                     <Menu.Item key="3" icon={<DeleteOutlined style={{ color: red[6] }} />} > Delete project</Menu.Item>
 
                                 </Menu>

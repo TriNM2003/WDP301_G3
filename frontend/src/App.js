@@ -31,20 +31,29 @@ import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import ProjectList from './pages/Projects/ProjectList';
 import TeamList from './pages/Teams/TeamList';
+import TeamPerformance from './pages/Teams/TeamPerformance';
+import TeamMemberPerformance from './pages/Teams/TeamMemberPerformance';
 import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
 import Summary from './components/Project/Detail/Summary';
-import SprintBoard from './components/Project/Detail/SprintBoard';
 import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
+import CreateSite from './pages/Sites/CreateSite';
 import ManageProjectMember from './components/Project/ManageProjectMember';
 import ManageSiteMembers from './components/Site/ManageSiteMembers';
 import SitePage from './pages/Sites/SitePage';
 import ManageProjects from './components/Site/ManageProjects';
 import ProjectLayout from './components/Project/Layout/ProjectLayout';
+import ManageProjectLayout from './components/Project/Layout/ManageProjectLayout';
+import ManageTeams from './components/Team/ManageTeams';
+import ManageSites from './pages/Sites/ManageSites';
+import ManageInvitations from './components/Site/ManageInvitations';
+import SprintBoard from './components/Project/Detail/Sprint/SprintBoard';
+
+
 
 function App() {
 
@@ -95,18 +104,24 @@ function App() {
                 <Route path='manage' >
                   <Route index element={<ManageProjects />} />
                   <Route path='projects' element={<ManageProjects />} />
+                  <Route path='invitations' element={<ManageInvitations />} />
                   <Route path='members' element={<ManageSiteMembers />} />
+                  <Route path='teams' element={<ManageTeams />} />
                 </Route>
+              
+
 
                 <Route path='list'>
                   <Route index element={<ProjectList />} />
                   <Route path="projects" element={<ProjectList />} />
                   <Route path="teams" element={<TeamList />} />
                 </Route>
-
+        
                 <Route path='team'>
+                  <Route index element={<TeamPerformance />} />
                   <Route path="manage-member" element={<TeamMemberManagement />} />
-
+                  <Route path="performance" element={<TeamPerformance />} />
+                  <Route path="member-performance" element={<TeamMemberPerformance />} />
                 </Route>
 
                 <Route path='project' element={<P_id />}>
@@ -116,11 +131,16 @@ function App() {
                     <Route path='sprint' element={<SprintBoard />} />
                     <Route path='board' element={<KanbanBoard />} />
                   </Route>
-                  <Route path='manage-members' element={<ManageProjectMember />} />
+                  <Route path='manage' element={<ManageProjectLayout />}>
+                    <Route path='members' element={<ManageProjectMember />} />
+                  </Route>
                   <Route path="project-setting" element={<EditProject />} />
                 </Route>
               </Route>
+             
+              <Route path='/create-site' element={<CreateSite />} />
 
+              <Route path='/manage-sites' element={<ManageSites />} />
 
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>

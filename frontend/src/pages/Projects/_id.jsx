@@ -3,7 +3,7 @@ import TabPane from 'antd/es/tabs/TabPane'
 import React, { useState } from 'react'
 import Summary from '../../components/Project/Detail/Summary'
 import Title from 'antd/es/typography/Title'
-import SprintBoard from '../../components/Project/Detail/SprintBoard'
+
 
 import { red } from '@ant-design/colors'
 import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, SyncOutlined, TableOutlined, UserAddOutlined } from '@ant-design/icons'
