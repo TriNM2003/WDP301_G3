@@ -12,6 +12,11 @@ import ChangePassword from './components/Users/ChangePassword';
 import EditProfile from './components/Users/EditProfile';
 import ManageProfile from './components/Users/ManageProfile';
 import ViewProfile from './components/Users/ViewProfile';
+import RestoreProject from './components/Projects/ProjectTrash';
+import TeamMemberManagement from './components/Teams/TeamMemberManagement';
+import EditSite from './components/Sites/EditSite';
+import ConfirmDelete from './components/Users/ConfirmDelete';
+import EditProject from './components/Projects/EditProject';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Home from './components/Home/Home';
 import Welcome from './components/Home/Welcome';
@@ -28,11 +33,21 @@ import ProjectList from './pages/Project/ProjectList';
 import TeamList from './pages/Team/TeamList';
 import TeamPerformance from './pages/Team/TeamPerformance';
 import TeamMemberPerformance from './pages/Team/TeamMemberPerformance';
-
+import S_id from './pages/Sites/_id';
+import P_id from './pages/Projects/_id';
+import { cyan } from '@ant-design/colors';
+import Summary from './components/Project/Detail/Summary';
+import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
 import authAxios from './utils/authAxios';
-
+import CreateSite from './pages/Sites/CreateSite';
+import ManageProjectMember from './components/Project/ManageProjectMember';
+import ManageSiteMembers from './components/Site/ManageSiteMembers';
+import SitePage from './pages/Sites/SitePage';
+import ManageProjects from './components/Site/ManageProjects';
+import ProjectLayout from './components/Project/Layout/ProjectLayout';
+import SprintBoard from './components/Project/Detail/Sprint/SprintBoard';
 
 
 function App() {
@@ -44,14 +59,14 @@ function App() {
   return (
     <div className="App">
       <Layout>
-        <Header style={{ padding: "0" }}>
+        <Header style={{ padding: "0", borderBottom: `solid 1px ${cyan[`1`]}` }}>
           <AppHeader />
         </Header>
         <Content>
           <Routes>
-          {!accessToken && <>
+            {!accessToken && <>
               <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Welcome />} />
+                <Route index element={<Welcome />} />
               </Route>
               <Route path='/auth' element={<Login />}>
                 <Route path="login" element={<LoginForm />} />
@@ -60,6 +75,7 @@ function App() {
               <Route path="/active-account" element={<ActiveAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+
               <Route element={<ErrorPage />}>
                 <Route path='*' element={<E404 />} />
               </Route>
@@ -67,22 +83,55 @@ function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path='/home' element={<HomePage />}>
-                <Route path='' element={<Home />} />
+                <Route index element={<Home />} />
               </Route>
               <Route path="/profile" element={<UserProfile />} >
                 <Route path="profile-info" element={<ViewProfile />} />
-              
-                  <Route path="change-password" element={<ChangePassword />} />
-                  <Route path="edit-profile" element={<EditProfile />} />
+                <Route path="change-password" element={<ChangePassword />} />
+                <Route path="edit-profile" element={<EditProfile />} />
+                <Route path="confirm-delete" element={<ConfirmDelete />} />
+              </Route>
+              <Route path="site" element={<S_id />} >
+                <Route index element={<SitePage />} />
+                <Route path="site-page" element={<SitePage />} />
+                <Route path='recycle' element={<RestoreProject />} />
+                <Route path="site-setting" element={<EditSite />} />
+                <Route path='manage' >
+                  <Route index element={<ManageProjects />} />
+                  <Route path='projects' element={<ManageProjects />} />
+                  <Route path='members' element={<ManageSiteMembers />} />
                 </Route>
-              <Route path="/project" element={<ProjectList />} />
-              <Route path="/team" element={<TeamList />} />
-              <Route path="/team-performance" element={<TeamPerformance />} />
-              <Route path="/team-member-performance" element={<TeamMemberPerformance />} />
-          
+              
+
+
+                <Route path='list'>
+                  <Route index element={<ProjectList />} />
+                  <Route path="projects" element={<ProjectList />} />
+                  <Route path="teams" element={<TeamList />} />
+                </Route>
+        
+                <Route path='team'>
+                  <Route path="manage-member" element={<TeamMemberManagement />} />
+                  <Route path="performance" element={<TeamPerformance />} />
+                  <Route path="member-performance" element={<TeamMemberPerformance />} />
+                </Route>
+
+                <Route path='project' element={<P_id />}>
+                  <Route path='' element={<ProjectLayout />}  >
+                    <Route index element={<Summary />} />
+                    <Route path='summary' element={<Summary />} />
+                    <Route path='sprint' element={<SprintBoard />} />
+                    <Route path='board' element={<KanbanBoard />} />
+                  </Route>
+                  <Route path='manage-members' element={<ManageProjectMember />} />
+                  <Route path="project-setting" element={<EditProject />} />
+                </Route>
+              </Route>
+             
+              <Route path='/create-site' element={<CreateSite />} />
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
-        
+
           </Routes>
         </Content>
       </Layout>

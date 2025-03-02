@@ -20,6 +20,10 @@ const RegisterForm = () => {
 
     const registerAPI = `${authAPI}/register`;
 
+    const googleLoginAPI = `${authAPI}/loginByGoogle`;
+    const handleRegisterByGoogle = async () => {
+        window.open(googleLoginAPI, "_self");
+      }
 
     const handleRegister = async () => {
         try {
@@ -59,6 +63,8 @@ const RegisterForm = () => {
                     }).then(() =>  nav("/auth/login"));
                    
                 }
+            }else{
+                handleRegisterByGoogle();
             }
              
         } catch (error) {
@@ -233,7 +239,7 @@ const RegisterForm = () => {
                                     boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
                                 }}
                                 icon={<GoogleOutlined style={{ fontSize: "20px", marginRight: "10px", color: "#FF0000" }} />}
-                                onClick={() => alert("Google Signup Clicked")}
+                                onClick={() => submitForm('google')}
                             >
                                 Sign up with Google
                             </Button>
