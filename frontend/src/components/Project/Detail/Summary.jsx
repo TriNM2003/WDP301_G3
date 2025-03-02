@@ -22,7 +22,7 @@ function Summary() {
     { name: "Done", value: 113, icon: <ExclamationCircleOutlined /> },
   ];
   return (
-    <div style={{ padding: "2% 5%" }}>
+    <div style={{ padding: "2% 5%", overflow:"auto", maxHeight:"100%" }}>
 
       <Row style={{ padding: "2% 0" }} justify="space-between">
         <Col span={5}>
@@ -189,8 +189,8 @@ function Summary() {
       <Row style={{ padding: "2% 0" }} justify="space-between">
         <Col span={11}>
           <Card style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", overflow: "auto", height: "400px", paddingBottom: "5%", textAlign: "start" }}   >
-            <Title level={5} style={{ margin: 0 }} >Task Prioritization Overview</Title>
-            <small style={{ color: grey[4] }}><em>Gain insight into how tasks are being ranked in importance.</em></small>
+            <Title level={5} style={{ margin: 0 }} >Activity Prioritization Overview</Title>
+            <small style={{ color: grey[4] }}><em>Gain insight into how activitys are being ranked in importance.</em></small>
 
             <ResponsiveContainer width="100%" height={250} style={{ marginTop: "2%" }}>
               <BarChart data={data} >
@@ -235,7 +235,7 @@ function Summary() {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       display: "inline-block"
-                    }}>Task
+                    }}>Activity
                     </text>
                   </Space>
                 </Col>
@@ -264,7 +264,7 @@ function Summary() {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       display: "inline-block"
-                    }}>Subtask
+                    }}>Subactivity
                     </text>
                   </Space>
                 </Col>
