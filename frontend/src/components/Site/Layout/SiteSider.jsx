@@ -55,6 +55,7 @@ function SiteSider() {
             <Menu.Item icon={<UserOutlined style={{color:blue[3]}}/>} key="s2" onClick={()=>{navigate("manage/members")}}>Manage Access</Menu.Item>
             <Menu.Item icon={<ProjectOutlined style={{color:blue[3]}}/>} key="s3" onClick={()=>{navigate("manage/projects")}}>Manage Projects</Menu.Item>
             <Menu.Item icon={<TeamOutlined style={{color:blue[3]}}/>} key="s4" onClick={()=>{navigate("manage/teams")}}>Manage Teams</Menu.Item>
+            <Menu.Item icon={<MailOutlined style={{color:blue[3]}}/>} key="s5" onClick={()=>{navigate("manage/invitations")}}>Manage Invitations</Menu.Item>
           </Menu.ItemGroup>
         </SubMenu>
       </Menu>

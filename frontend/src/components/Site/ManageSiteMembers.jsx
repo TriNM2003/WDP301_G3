@@ -27,7 +27,7 @@ import {
   CloseCircleOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-import { gold, gray, green } from "@ant-design/colors";
+import { green, red } from "@ant-design/colors";
 import { AppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 
@@ -45,6 +45,54 @@ const ManageSiteMembers = () => {
     { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Member" },
     { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Member" },
   ]);
+
+  const [invitationModalVisible, setInvitationModalVisible] = useState(false);
+const [invitations, setInvitations] = useState([
+  { key: "1", email: "invite1@example.com", status: "pending" },
+  { key: "2", email: "invite2@example.com", status: "accept" },
+  { key: "3", email: "invite3@example.com", status: "decline" },
+  { key: "4", email: "invite4@example.com", status: "accept" },
+  { key: "5", email: "invite5@example.com", status: "accept" },
+  { key: "6", email: "invite6@example.com", status: "accept" },
+]);
+const invitationColumns = [
+  { title: "Email", dataIndex: "email", key: "email" },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (text) => (
+      <span style={{ color: text === "accept" ? green[6] : text === "decline" ? red[6] : "inherit" }}>
+        {text}
+      </span>
+    ),
+  },  
+  {
+    title: "Action",
+    key: "action",
+    render: (_, record) =>
+      record.status === "pending" ? (
+        <Popconfirm
+          title="Are you sure to delete this invitation?"
+          onConfirm={() => handleDeleteInvitation(record.key)}
+          okText="Yes"
+          cancelText="No"
+        >
+          <Button danger>Delete</Button>
+        </Popconfirm>
+      ) : null,
+  },
+];
+
+const [searchEmail, setSearchEmail] = useState("");
+const [filterStatus, setFilterStatus] = useState(null);
+
+const filteredInvitations = invitations.filter((invite) =>
+  invite.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
+  (!filterStatus || invite.status === filterStatus)
+);
+
+
   const breadCrumbItems = [
     {
       title: <a href="/home">Home</a>
@@ -87,6 +135,11 @@ const ManageSiteMembers = () => {
     showNotification(`👋 Invitation have been sent to ${selectedEmails.toString()} ✉`);
   }
 
+  const handleDeleteInvitation = (key) => {
+    setInvitations(invitations.filter((invite) => invite.key !== key));
+    messageApi.success("Pending invitation deleted successfully!");
+  };
+  
 
   // Xử lý tìm kiếm
   let filteredMembers;
@@ -230,6 +283,11 @@ const ManageSiteMembers = () => {
         <Button type="primary" icon={<UserAddOutlined />} onClick={() => setInviteModalVisible(true)}>
           Invite more
         </Button>
+        {/* <Button icon={<MailOutlined />} danger onClick={() => setInvitationModalVisible(true)}
+        style={{marginLeft: "20px"}}>
+        Manage Invitations
+        </Button> */}
+
       </div>
 
       <div style={{ display: "flex", marginBottom: "20px" }}>
@@ -290,6 +348,36 @@ const ManageSiteMembers = () => {
         </Select>
 
       </Modal>
+
+      <Modal
+  title="Manage Invitations"
+  visible={invitationModalVisible}
+  onCancel={() => setInvitationModalVisible(false)}
+  footer={null}
+  bodyStyle={{ height: "400px", overflowY: "auto" }}
+>
+<Input
+  prefix={<SearchOutlined />}
+  placeholder="Search by email"
+  value={searchEmail}
+  onChange={(e) => setSearchEmail(e.target.value)}
+  style={{ marginBottom: 10 }}
+/>
+
+<Select
+  placeholder="Filter by status"
+  style={{ width: "100%", marginBottom: 10 }}
+  allowClear
+  onChange={(value) => setFilterStatus(value)}
+>
+  <Select.Option value="pending">Pending</Select.Option>
+  <Select.Option value="accept">Accept</Select.Option>
+  <Select.Option value="decline">Decline</Select.Option>
+</Select>
+
+  <Table columns={invitationColumns} dataSource={filteredInvitations} pagination={false} />
+</Modal>
+
     </div>
   );
 };

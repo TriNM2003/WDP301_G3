@@ -83,7 +83,6 @@ const AppProvider = ({ children }) => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
     .then(() => {
       console.log("check login...");
-      nav("/home");
     })
     .catch(err => {
       // khong co refresh token hoac loi lay refresh token

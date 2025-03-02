@@ -48,6 +48,8 @@ import ManageProjects from './components/Site/ManageProjects';
 import ProjectLayout from './components/Project/Layout/ProjectLayout';
 import ManageProjectLayout from './components/Project/Layout/ManageProjectLayout';
 import ManageTeams from './components/Team/ManageTeams';
+import ManageSites from './pages/Sites/ManageSites';
+import ManageInvitations from './components/Site/ManageInvitations';
 
 
 function App() {
@@ -99,6 +101,7 @@ function App() {
                 <Route path='manage' >
                   <Route index element={<ManageProjects />} />
                   <Route path='projects' element={<ManageProjects />} />
+                  <Route path='invitations' element={<ManageInvitations />} />
                   <Route path='members' element={<ManageSiteMembers />} />
                   <Route path='teams' element={<ManageTeams />} />
                 </Route>
@@ -130,6 +133,7 @@ function App() {
              
               <Route path='/create-site' element={<CreateSite />} />
 
+              <Route path='/manage-sites' element={<ManageSites />} />
 
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>

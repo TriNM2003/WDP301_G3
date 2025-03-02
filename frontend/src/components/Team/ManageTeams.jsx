@@ -314,8 +314,8 @@ const roleMenu = (record) => (
                   </Form.Item>
 
                   <Form.Item
-                      name="Team Avatar"
-                      label="teamAvatar"
+                      name="teamAvatar"
+                      label="Team avatar"
                       valuePropName="fileList"
                       //   getValueFromEvent={normFile}
                       extra="Select a picture to represent your team"
