@@ -46,6 +46,7 @@ import ManageSiteMembers from './components/Site/ManageSiteMembers';
 import SitePage from './pages/Sites/SitePage';
 import ManageProjects from './components/Site/ManageProjects';
 import ProjectLayout from './components/Project/Layout/ProjectLayout';
+import Stage from './pages/Stage/Stage';
 
 
 function App() {
@@ -120,8 +121,10 @@ function App() {
                   </Route>
                   <Route path='manage-members' element={<ManageProjectMember />} />
                   <Route path="project-setting" element={<EditProject />} />
+                  
                 </Route>
               </Route>
+              <Route path="stage" element={<Stage />} />
              
               <Route path='/create-site' element={<CreateSite />} />
 
