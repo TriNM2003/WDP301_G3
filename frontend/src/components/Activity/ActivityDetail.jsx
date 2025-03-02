@@ -8,8 +8,8 @@ import React, { useContext, useState } from 'react'
 import moment from "moment";
 import { AppContext } from '../../context/AppContext'
 
-function ActivityDetail({ closeTask }) {
-  const {showDeleteTask, handleDelete, handleCloseDeleteTaskModal, deleteTask, setDeleteTask, taskToDelete, setTaskToDelete, confirmTask, setConfirmTask}= useContext(AppContext)
+function ActivityDetail({ closeActivity }) {
+  const {showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity}= useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
@@ -23,30 +23,30 @@ function ActivityDetail({ closeTask }) {
     { id: 10, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
     { id: 11, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
   ]);
-  const [createSubTask, setCreateSubTask] = useState(false);
-  const [newSubTask, setNewSubTask] = useState("");
+  const [createSubActivity, setCreateSubActivity] = useState(false);
+  const [newSubActivity, setNewSubActivity] = useState("");
   const [newComment, setNewComment] = useState("");
   const [editComment, setEditComment] = useState(false);
   const [currentComment, setCurrentComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
 
-  //Subtask
-  const handleCreateSubTaskCancel = () => {
-    setCreateSubTask(false);
+  //Subactivity
+  const handleCreateSubActivityCancel = () => {
+    setCreateSubActivity(false);
   };
 
-  const showCreateSubtask = () => {
-    setCreateSubTask(true);
+  const showCreateSubactivity = () => {
+    setCreateSubActivity(true);
   };
 
-  const handleCreateSubtaskOk = () => {
-    console.log("New Task Created:", newSubTask);
-    setCreateSubTask(false);
-    setNewSubTask("");
+  const handleCreateSubactivityOk = () => {
+    console.log("New Activity Created:", newSubActivity);
+    setCreateSubActivity(false);
+    setNewSubActivity("");
   };
 
-  const handleCreateSubtaskCancel = () => {
-    setCreateSubTask(false);
+  const handleCreateSubactivityCancel = () => {
+    setCreateSubActivity(false);
   };
   //Comment
   const addComment = () => {
@@ -95,8 +95,8 @@ function ActivityDetail({ closeTask }) {
             <Dropdown
               overlay={
                 <Menu>
-                  <Menu.Item key="1" style={{ color: red[6] }} onClick={()=>showDeleteTask()} >
-                    Remove task
+                  <Menu.Item key="1" style={{ color: red[6] }} onClick={()=>showDeleteActivity()} >
+                    Remove activity
                   </Menu.Item>
                 </Menu>
               }
@@ -104,7 +104,7 @@ function ActivityDetail({ closeTask }) {
               <Button style={{ borderRadius: 0 }}><EllipsisOutlined /></Button>
 
             </Dropdown>
-            <Button style={{ borderRadius: 0 }} color="danger" onClick={closeTask}><CloseOutlined /></Button>
+            <Button style={{ borderRadius: 0 }} color="danger" onClick={closeActivity}><CloseOutlined /></Button>
           </Space>
         </Col>
       </Row>
@@ -116,7 +116,7 @@ function ActivityDetail({ closeTask }) {
         <Col span={16} style={{ height: "100%", borderRight: `solid 1px ${cyan[`1`]}`, overflow: "auto" }}>
           <Row justify="space-between" style={{ padding: "1% 0" }}>
             <Col span={15} style={{ padding: "0 1%" }}>
-              <Title level={5} style={{ margin: "0" }} ><FormOutlined style={{ color: blue[6] }} /> Task name</Title>
+              <Title level={5} style={{ margin: "0" }} ><FormOutlined style={{ color: blue[6] }} /> Activity name</Title>
               <Space direction="vertical" style={{ width: "60%", textAlign: "center", padding: "2% 0" }}>
                 <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                   <small style={{ fontWeight: "bolder", color: gray[4] }}><PieChartOutlined /> Progress </small>
@@ -207,20 +207,20 @@ function ActivityDetail({ closeTask }) {
                 </Flex>
 
                 <Flex justify="space-between" align="start" wrap={true} style={{ width: "100%" }}>
-                  <text style={{ fontWeight: "bolder", marginBottom: "2%" }}> Subtask </text>
+                  <text style={{ fontWeight: "bolder", marginBottom: "2%" }}> Subactivity </text>
                   <Space>
                     <Select style={{ width: "12vh" }} size='small'>
                       <Option>okok</Option>
                       <Option>okkookok</Option>
                     </Select>
-                    <PlusOutlined onClick={showCreateSubtask} />
+                    <PlusOutlined onClick={showCreateSubactivity} />
                   </Space>
                   <List bordered style={{ maxHeight: "30vh", width: "100%", borderRadius: "0", overflowY: "auto" }} size='small'>
                     <List.Item style={{ width: "100%", }} >
                       <Row style={{ width: "100%" }}>
                         <Col span={12} align="start">
                           <PaperClipOutlined style={{ color: blue[6] }} />
-                          <Typography.Text> Subtask1</Typography.Text>
+                          <Typography.Text> Subactivity1</Typography.Text>
                         </Col>
                         <Col span={12} align="end">
 
@@ -276,7 +276,7 @@ function ActivityDetail({ closeTask }) {
                               overlay={
                                 <Menu>
                                   <Menu.Item key="1" icon={<DeleteOutlined />} danger >
-                                    Remove subtask
+                                    Remove subactivity
                                   </Menu.Item>
                                 </Menu>
                               }
@@ -292,7 +292,7 @@ function ActivityDetail({ closeTask }) {
                       <Row style={{ width: "100%" }}>
                         <Col span={12} align="start">
                           <PaperClipOutlined style={{ color: blue[6] }} />
-                          <Typography.Text> Subtask1</Typography.Text>
+                          <Typography.Text> Subactivity1</Typography.Text>
                         </Col>
                         <Col span={12} align="end">
 
@@ -348,7 +348,7 @@ function ActivityDetail({ closeTask }) {
                               overlay={
                                 <Menu>
                                   <Menu.Item key="1" icon={<DeleteOutlined />} danger >
-                                    Remove subtask
+                                    Remove subactivity
                                   </Menu.Item>
                                 </Menu>
                               }
@@ -432,21 +432,21 @@ function ActivityDetail({ closeTask }) {
             />
           </Modal>
 
-          {/* Modal for Creating New Task */}
+          {/* Modal for Creating New Activity */}
           <Modal
-            title="Create subtask"
-            visible={createSubTask}
-            onOk={handleCreateSubtaskOk}
-            onCancel={handleCreateSubTaskCancel}
+            title="Create subactivity"
+            visible={createSubActivity}
+            onOk={handleCreateSubactivityOk}
+            onCancel={handleCreateSubActivityCancel}
             footer={[
-              <Button key="cancel" onClick={handleCreateSubTaskCancel}>Cancel</Button>,
-              <Button key="submit" type="primary" onClick={handleCreateSubtaskOk}>Create</Button>
+              <Button key="cancel" onClick={handleCreateSubActivityCancel}>Cancel</Button>,
+              <Button key="submit" type="primary" onClick={handleCreateSubactivityOk}>Create</Button>
             ]}
           >
             <Input
-              placeholder="Enter task title"
-              value={newSubTask}
-              onChange={(e) => setNewSubTask(e.target.value)}
+              placeholder="Enter activity title"
+              value={newSubActivity}
+              onChange={(e) => setNewSubActivity(e.target.value)}
             />
           </Modal>
         </Col>

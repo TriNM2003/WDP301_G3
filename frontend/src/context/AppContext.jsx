@@ -13,11 +13,16 @@ const AppProvider = ({ children }) => {
   // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
-  // Task
-  const [deleteTask, setDeleteTask] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState("");
-  const [confirmTask, setConfirmTask] = useState("");
-  const [taskModal, setTaskModal] = useState({ visible: false, taskName: "" });
+  // Activity
+  const [deleteActivity, setDeleteActivity] = useState(false);
+  const [activityToDelete, setActivityToDelete] = useState("");
+  const [confirmActivity, setConfirmActivity] = useState("");
+  const [activityModal, setActivityModal] = useState({ visible: false, activityName: "" });
+  const [createActivityModal, setCreateActivityModal] = useState(false);
+  const [activityName, setActivityName] = useState("");
+  //Sprint
+  const [completedSprint, setCompletedSprint] = useState(false);
+
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
@@ -70,36 +75,69 @@ const AppProvider = ({ children }) => {
       placement: "bottomRight",
     });
   };
-
-  // delete Task
-  const showDeleteTask = (taskName) => {
-    setTaskToDelete(taskName);
-    setDeleteTask(true);
+  //create activity
+  const handleActivityCreate = () => {
+    if (activityName.trim()) {
+      message.success(`Activity "${activityName}" created successfully!`);
+      showNotification(`Project update`, `User1 just created activity "${activityName}".`);
+      setActivityName("");
+      setCreateActivityModal(false);
+    }
+  };
+  // delete Activity
+  const showDeleteActivity = (activityName) => {
+    setActivityToDelete(activityName);
+    setDeleteActivity(true);
   };
 
-  const handleCloseDeleteTaskModal = () => {
-    setDeleteTask(false);
-    setConfirmTask(""); // Xóa input khi đóng modal
+  const handleCloseDeleteActivityModal = () => {
+    setDeleteActivity(false);
+    setConfirmActivity(""); // Xóa input khi đóng modal
   };
 
   const handleDelete = () => {
-    if (confirmTask === taskToDelete) {
-      message.success(`Task "${taskToDelete}" has been deleted successfully!`);
-      showNotification(`Project update`, `User1 just deleted task ${taskToDelete}.`);
-      handleCloseDeleteTaskModal();
-      closeTask();
+    if (confirmActivity === activityToDelete) {
+      message.success(`Activity "${activityToDelete}" has been deleted successfully!`);
+      showNotification(`Project update`, `User1 just deleted activity ${activityToDelete}.`);
+      handleCloseDeleteActivityModal();
+      closeActivity();
     } else {
-      message.error("Task name does not match. Please try again!");
+      message.error("Activity name does not match. Please try again!");
     }
   };
-  // hien thi Task
-  const showTask = (taskName) => {
-    setTaskModal({ visible: true, taskName });
+  // hien thi Activity
+  const showActivity = (activityName) => {
+    setActivityModal({ visible: true, activityName });
   };
 
-  const closeTask = () => {
-    setTaskModal({ visible: false, taskName: "" });
+  const closeActivity = () => {
+    setActivityModal({ visible: false, activityName: "" });
   };
+
+  //Complete sprint
+  const showCompletedSprint = () => {
+    setCompletedSprint(true);
+};
+
+const handleCompletedCancel = () => {
+    setCompletedSprint(false);
+};
+
+const handleCompletedSprint = () => {
+    message.success({
+        content: `🎯 (Sprint name) has been completed successfully! 🚀 
+                  - ✅ 10 (activitys) completed 
+                  - ⚠️ 3 (uncompleted bugs) moved to {sprint}`,
+        duration: 4, // Thời gian hiển thị message (4 giây)
+
+    });
+    showNotification(`Project update`, `🎯 (Sprint name) has been completed successfully! 🚀 
+    - ✅ 10 (activitys) completed 
+    - ⚠️ 3 (uncompleted bugs) moved to  {sprint}`)
+
+    setCompletedSprint(false);
+
+};
   return (
     <AppContext.Provider value={{
       accessToken,
@@ -109,8 +147,10 @@ const AppProvider = ({ children }) => {
       //    setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,
       showNotification,
-      showDeleteTask, handleDelete, handleCloseDeleteTaskModal, deleteTask, setDeleteTask, taskToDelete, setTaskToDelete, confirmTask, setConfirmTask,
-      taskModal, setTaskModal,showTask,closeTask,
+      showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
+      activityModal, setActivityModal, showActivity, closeActivity,
+      handleActivityCreate,createActivityModal, setCreateActivityModal,activityName, setActivityName,
+      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint,handleCompletedCancel
     }}>
       {children}
     </AppContext.Provider>

@@ -35,7 +35,7 @@ import S_id from './pages/Sites/_id';
 import P_id from './pages/Projects/_id';
 import { cyan } from '@ant-design/colors';
 import Summary from './components/Project/Detail/Summary';
-import SprintBoard from './components/Project/Detail/SprintBoard';
+
 import KanbanBoard from './components/Project/Detail/Kanban/KanbanBoard';
 import { Button } from 'antd';
 import axios from 'axios';
@@ -45,6 +45,7 @@ import ManageSiteMembers from './components/Site/ManageSiteMembers';
 import SitePage from './pages/Sites/SitePage';
 import ManageProjects from './components/Site/ManageProjects';
 import ProjectLayout from './components/Project/Layout/ProjectLayout';
+import SprintBoard from './components/Project/Detail/Sprint/SprintBoard';
 
 function App() {
 
