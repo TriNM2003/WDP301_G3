@@ -1,12 +1,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const db = require("../models/index");
-const { ProjectController } = require("../controllers");
+const { projectController } = require("../controllers");
+
+const projectRouter = express.Router();
 
 
 projectRouter.use(bodyParser.json());
-projectRouter.get("/getById",
-    ProjectController.getProjectById
+projectRouter.get("/get-by-id/:projectId",
+    projectController.getProjectById
 )
 
-module.exports = projectRouter
+module.exports = projectRouter;

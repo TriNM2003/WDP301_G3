@@ -1,5 +1,11 @@
-const userService = require("./user.service");
+const activityService = require("./activity.service");
+const projectService = require("./project.service");
+const siteService = require("./site.service");
+
 
 module.exports = {
-    userService,
+    
+    projectService,
+    activityService,
+    siteService
 }

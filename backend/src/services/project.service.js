@@ -6,7 +6,16 @@ const createHttpErrors = require("http-errors");
 
 const getProjectById = async(projectId)=>{
     try {
-        return 
+        const project = await db.Project.findById(projectId)
+        return project;
+    } catch (error) {
+        throw error;
+    }
+}
+const getProjectBySiteId = async(siteId)=>{
+    try {
+        const project = await db.Project.find(siteId)
+        return project;
     } catch (error) {
         throw error;
     }
