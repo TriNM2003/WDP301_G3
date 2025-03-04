@@ -12,9 +12,17 @@ const getProjectById = async(projectId)=>{
         throw error;
     }
 }
-const getProjectBySiteId = async(siteId)=>{
+const getAllProjects = async()=>{
     try {
-        const project = await db.Project.find(siteId)
+        const project = await db.Project.find({})
+        return project;
+    } catch (error) {
+        throw error;
+    }
+}
+const getProjectsInSite = async(siteId)=>{
+    try {
+        const project = await db.Project.find({site:siteId})
         return project;
     } catch (error) {
         throw error;
@@ -23,7 +31,9 @@ const getProjectBySiteId = async(siteId)=>{
 
 
 const projectService = {
-    getProjectById
+    getProjectById,
+    getAllProjects,
+    getProjectsInSite
 }
 
 module.exports = projectService;

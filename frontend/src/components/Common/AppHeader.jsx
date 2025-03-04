@@ -67,7 +67,7 @@ function AppHeader() {
                             <Menu.Item key="2" extra="⌘P"  onClick={() => navigate('/profile/profile-info')}>Profile</Menu.Item>
                             <Menu.Item key="3" extra="⌘B"  onClick={() => navigate('/profile/edit-profile')}>Edit profile</Menu.Item>
                             <Menu.Item key="4" extra="⌘B"  onClick={() => navigate('/profile/change-password')}>Change password</Menu.Item>
-                            <Menu.Item key="5" extra="⌘B"  onClick={() => navigate('/create-site')}>Create site</Menu.Item>
+                            <Menu.Item key="5" extra="⌘B"  onClick={() => navigate('/manage-sites')}>Manage sites</Menu.Item>
                             <Menu.Divider />
                             <Menu.Item key="6" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S"
                             onClick={() => handleLogout()}>

@@ -9,6 +9,11 @@ const teamSchema = new mongoose.Schema({
     teamDescription: {
         type: String,
     },
+    teamSlug:{
+        type: String,
+        required: true,
+        minlength: 3,
+    },
     teamRoles: [{
         type: String,
         enum: ['teamLeader', 'teamMember'],

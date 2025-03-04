@@ -177,7 +177,7 @@ const refreshAccessToken = async (req, res) => {
     }
 
     // Tạo accessToken mới
-    const accessToken = jwtUtils.generateAccessToken(user);
+    const accessToken = jwtUtils.generateAccessToken(user._id);
 
     return {
         message: "Refresh access token successfully!",
