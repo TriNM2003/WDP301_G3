@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AppContext } from '../../context/AppContext'
 
 const { Column } = Table;
 const { Title } = Typography;
 const { Option } = Select;
 
 const TeamMemberManagement = () => {
+    const {handleAddTeamMember, handleKickTeamMember} = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
@@ -67,7 +69,6 @@ const TeamMemberManagement = () => {
     };
 
     const showKickMemberModal = (record) => {
-        console.log("Selected User for Kick:", record);
         setSelectedUser(record);
         setIsKickMemberModalVisible(true);
     };
@@ -81,17 +82,14 @@ const TeamMemberManagement = () => {
             return;
         }
     
-        console.log("Sending Kick API Request with:", { userId });
-    
         try {
             const response = await axios.post(
                 "http://localhost:9999/teams/kick-team-member",
                 { userId },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
-    
-            console.log("Kick Member Response:", response.data);
             message.success(`Successfully removed ${selectedUser.username} from the team`);
+            handleKickTeamMember();
             setIsKickMemberModalVisible(false);
             fetchTeamMembers(); // Cập nhật danh sách
         } catch (error) {
@@ -112,7 +110,8 @@ const TeamMemberManagement = () => {
                 { username: searchUser, email: searchUser, role: selectedRole },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
-            message.success("User added successfully!");
+            message.success(`Successfully added ${searchUser} to the team`);
+            handleAddTeamMember();
             setIsAddMemberModalVisible(false);
             fetchTeamMembers();
         } catch (error) {

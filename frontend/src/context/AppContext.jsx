@@ -165,6 +165,14 @@ const handleCompletedSprint = () => {
 
 };
 
+const handleAddTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+}
+
+const handleKickTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
+}
+
   return (
     <AppContext.Provider value={{
       accessToken,
@@ -177,7 +185,8 @@ const handleCompletedSprint = () => {
       showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate,createActivityModal, setCreateActivityModal,activityName, setActivityName,
-      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint,handleCompletedCancel
+      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint,handleCompletedCancel,
+      handleAddTeamMember, handleKickTeamMember
     }}>
       {children}
     </AppContext.Provider>
