@@ -4,6 +4,11 @@ const userRouter = require("./user.route");
 const projectRouter = require("./project.route");
 const activityRouter = require("./activity.route");
 const siteRouter = require("./site.route");
+const activityTypeRouter = require("./activityType.route");
+const notificationRouter = require("./notification.route");
+const sprintRouter = require("./sprint.route");
+const stageRouter = require("./stage.route");
+const teamRouter = require("./team.route");
 
 module.exports = {
     systemRoleRouter,
@@ -11,5 +16,10 @@ module.exports = {
     userRouter,
     projectRouter,
     activityRouter,
-    siteRouter
+    siteRouter,
+    activityTypeRouter,
+    notificationRouter,
+    sprintRouter,
+    stageRouter,
+    teamRouter
 };

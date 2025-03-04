@@ -14,7 +14,7 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 const db = require("./models/index");
-const { systemRoleRouter, authRouter, userRouter, projectRouter, activityRouter, siteRouter } = require("./routes");
+const { systemRoleRouter, authRouter, userRouter, projectRouter, activityRouter, siteRouter, activityTypeRouter, notificationRouter, sprintRouter, stageRouter, teamRouter } = require("./routes");
 // Sử dụng cors middleware để cho phép request từ localhost:3000
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -50,6 +50,11 @@ app.use("/users", userRouter);
 app.use("/projects", projectRouter);
 app.use("/activities", activityRouter);
 app.use("/sites", siteRouter);
+app.use("/activityTypes", activityTypeRouter);
+app.use("/notifications", notificationRouter);
+app.use("/sprints", sprintRouter);
+app.use("/stages", stageRouter);
+app.use("/teams", teamRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
