@@ -5,8 +5,13 @@ const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 
 
-const userService = {
+const getAllUsers = async () => {
+    const users = await db.User.find({});
+    return users;
+}
 
+const userService = {
+    getAllUsers,
 }
 
 module.exports = userService;

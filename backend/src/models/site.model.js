@@ -62,6 +62,11 @@ const siteSchema = new mongoose.Schema({
     siteDescription: {
         type: String
     },
+    siteStatus: {
+        type: String,
+        enum: ['active', 'deactivated'],
+        default: "active"
+    }
 
 }, {timestamps: true});
 

@@ -169,7 +169,7 @@ const LoginForm = () => {
                     }).then(() => {
                         localStorage.setItem("accessToken", loginResult.accessToken);
                         localStorage.setItem("accessTokenExp", Math.floor(Date.now() / 1000) + loginResult.accessTokenExp);
-                        localStorage.setItem("userId", loginResult.user.id);
+                        localStorage.setItem("userId", loginResult.user._id);
                         setUser(loginResult.user);
                         setLoading(false);
                         nav('/home')
