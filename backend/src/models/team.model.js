@@ -24,9 +24,6 @@ const teamSchema = new mongoose.Schema({
             enum: ['teamLeader', 'teamMember'],
         }]
     }],
-    teamAvatar: [{
-        type: String
-    }],
     site: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'site',

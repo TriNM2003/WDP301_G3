@@ -1,10 +1,12 @@
 const systemRoleRouter = require("./systemRole.route");
 const authRouter= require("./auth.route");
 const userRouter = require("./user.route");
+const teamRouter = require("./team.route");
 
 module.exports = {
     systemRoleRouter,
     authRouter,
-    userRouter
+    userRouter,
+    teamRouter
 
 };
