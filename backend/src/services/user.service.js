@@ -4,6 +4,11 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 
+
+const getAllUsers = async () => {
+    const users = await db.User.find({});
+    return users;
+}
 const getUserById = async(userId)=>{
     try {
         const user = await db.User.findById(userId);
@@ -14,6 +19,7 @@ const getUserById = async(userId)=>{
 }
 
 const userService = {
+    getAllUsers,    
     getUserById
 }
 

@@ -11,6 +11,11 @@ const cloudinary = require("../configs/cloudinary");
 
 userRouter.use(bodyParser.json());
 
+userRouter.get("/all",
+    authMiddleware.verifyAccessToken,
+    UserController.getAllUsers
+)
+
 userRouter.get("/user-profile", 
     authMiddleware.verifyAccessToken, 
     UserController.getUserById,

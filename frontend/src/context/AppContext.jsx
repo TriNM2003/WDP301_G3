@@ -7,6 +7,8 @@ import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
+const excludedRoutes = ["/", "/home","/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password"];
+
 const AppProvider = ({ children }) => {
   //parameter
   // const [accessToken,setAccessToken] = useState()
@@ -52,8 +54,13 @@ const AppProvider = ({ children }) => {
 
   //call api
   useEffect(() => {
-    localStorage.setItem("lastVisitedUrl", location.pathname);
-    checkLoginStatus();
+    if(location.pathname !== '/login'){
+      localStorage.setItem("lastVisitedUrl", location.pathname);
+    }
+    if(!excludedRoutes.includes(location.pathname)){
+      checkLoginStatus();
+    }
+    
 
     axios.get(`${userApi}/user-profile`, {
       headers: {
@@ -157,18 +164,20 @@ const AppProvider = ({ children }) => {
 
   const checkLoginStatus = () => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
-      .then(() => {
-        console.log("check login...");
-      })
-      .catch(err => {
-        // khong co refresh token hoac loi lay refresh token
-        console.log(err.response.data.message);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("accessTokenExp");
-        localStorage.removeItem("userId");
-        setUser({});
-        nav('/auth/login');
-      })
+    .then(() => {
+      const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
+      console.log("check login status successfully, last visited url: ", lastVisitedUrl);
+      nav(lastVisitedUrl);
+    })
+    .catch(err => {
+      // khong co refresh token hoac loi lay refresh token
+      console.log(err.response.data.message);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("accessTokenExp");
+      localStorage.removeItem("userId");
+      setUser({});
+      nav('/auth/login');
+    })
   }
 
 
