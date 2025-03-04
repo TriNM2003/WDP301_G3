@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import authAxios from '../utils/authAxios';
 import { message, notification } from 'antd';
 
@@ -14,7 +14,10 @@ const AppProvider = ({ children }) => {
   // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
-
+  const [site, setSite] = useState({})
+  const [projects, setProjects] = useState([]);
+  const [project, setProject] = useState({});
+  const {projectName} = useParams()
   const location = useLocation();
   const nav = useNavigate();
 
@@ -32,6 +35,8 @@ const AppProvider = ({ children }) => {
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
+  const siteAPI = "http://localhost:9999/sites";
+  const projectAPI = "http://localhost:9999/projects";
 
   // State lưu thông tin user & accessToken
 
@@ -62,6 +67,52 @@ const AppProvider = ({ children }) => {
         console.log(error.response?.data?.message);
       });
   }, [location.pathname]);
+
+  useEffect(() => {
+    axios.get(`${siteAPI}/get-by-user-id`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+      .then((res)=>{
+        setSite(res.data);
+      })
+      .catch((err)=>{
+        console.log(err);
+      })
+      axios.get(`${projectAPI}/get-by-site`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+      .then((res)=>{
+        setProjects(res.data);
+      })
+      .catch((err)=>{
+        console.log(err);
+      })
+  },[accessToken])
+  useEffect(() => {
+    const currentProject = projects.find((p)=>{
+      return p.name.toLowerCase() == projectName.toLowerCase();
+    })
+    console.log(projectName);
+    // axios.get(`${projectAPI}/${currentProject._id}`,
+    //   {
+    //     headers: {
+    //       'Authorization': `Bearer ${accessToken}`
+    //     }
+    //   })
+    //   .then((res)=>{
+    //     setProject(res.data);
+    //     console.log(res.data);  
+    //   })
+    //   .catch((err)=>{
+    //     console.log(err);
+    //   })
+  },[projectName])
 
   //fuction
   const changePassword = async (userId, oldPassword, newPassword) => {
@@ -106,18 +157,18 @@ const AppProvider = ({ children }) => {
 
   const checkLoginStatus = () => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
-    .then(() => {
-      console.log("check login...");
-    })
-    .catch(err => {
-      // khong co refresh token hoac loi lay refresh token
-      console.log(err.response.data.message);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("accessTokenExp");
-      localStorage.removeItem("userId");
-      setUser({});
-      nav('/auth/login');
-    })
+      .then(() => {
+        console.log("check login...");
+      })
+      .catch(err => {
+        // khong co refresh token hoac loi lay refresh token
+        console.log(err.response.data.message);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("accessTokenExp");
+        localStorage.removeItem("userId");
+        setUser({});
+        nav('/auth/login');
+      })
   }
 
 
@@ -143,18 +194,18 @@ const AppProvider = ({ children }) => {
   //Complete sprint
   const showCompletedSprint = () => {
     setCompletedSprint(true);
-};
+  };
 
-const handleCompletedCancel = () => {
+  const handleCompletedCancel = () => {
     setCompletedSprint(false);
-};
+  };
 
-const handleCompletedSprint = () => {
+  const handleCompletedSprint = () => {
     message.success({
-        content: `🎯 (Sprint name) has been completed successfully! 🚀 
+      content: `🎯 (Sprint name) has been completed successfully! 🚀 
                   - ✅ 10 (activitys) completed 
                   - ⚠️ 3 (uncompleted bugs) moved to {sprint}`,
-        duration: 4, // Thời gian hiển thị message (4 giây)
+      duration: 4, // Thời gian hiển thị message (4 giây)
 
     });
     showNotification(`Project update`, `🎯 (Sprint name) has been completed successfully! 🚀 
@@ -163,7 +214,7 @@ const handleCompletedSprint = () => {
 
     setCompletedSprint(false);
 
-};
+  };
 
   return (
     <AppContext.Provider value={{
@@ -176,8 +227,8 @@ const handleCompletedSprint = () => {
       showNotification,
       showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
       activityModal, setActivityModal, showActivity, closeActivity,
-      handleActivityCreate,createActivityModal, setCreateActivityModal,activityName, setActivityName,
-      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint,handleCompletedCancel
+      handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
+      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel
     }}>
       {children}
     </AppContext.Provider>

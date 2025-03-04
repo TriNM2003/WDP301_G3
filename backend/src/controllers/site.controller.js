@@ -9,8 +9,8 @@ const { siteService } = require('../services');
 
 const getSiteByUserId = async (req, res, next) => {
     try {
-        const {userId} = req.body;
-            const site = await siteService.getSiteByUserId(userId);
+        const {id} = req.payload;
+            const site = await siteService.getSiteByUserId(id);
             if(!site){
                 return res.status(404).json({ error: { status: 404, message: "Site not found" } })
             }
