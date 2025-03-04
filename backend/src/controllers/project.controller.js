@@ -4,7 +4,34 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const projectService = require('../services/project.service');
+const { userService } = require('../services');
 
+const getAllProjects = async (req, res, next) => {
+    try {
+      
+        const project = await projectService.getAllProjects()
+        if (!project) {
+            return res.status(404).json({ error: { status: 404, message: "Project not found" } })
+        }
+        res.status(200).json(project);
+    } catch (error) {
+        next(error);
+    }
+}
+
+const getProjectsInSite = async (req, res, next) => {
+    try {
+        const {siteId} = req.params;
+        
+        const project = await projectService.getProjectsInSite(siteId)
+        if (!project) {
+            return res.status(404).json({ error: { status: 404, message: "Project not found" } })
+        }
+        res.status(200).json(project);
+    } catch (error) {
+        next(error);
+    }
+}
 
 const getProjectById = async (req, res, next) => {
     try {
@@ -19,8 +46,10 @@ const getProjectById = async (req, res, next) => {
     }
 }
 
-const projectController = {
-    getProjectById
+const   projectController = {
+    getProjectById,
+    getAllProjects,
+    getProjectsInSite
 }
 
 module.exports = projectController;
