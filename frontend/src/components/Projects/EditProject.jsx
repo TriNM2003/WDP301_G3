@@ -1,26 +1,68 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Input, Button, Card, Row, Col, Typography, Dropdown, Breadcrumb, Avatar, Upload, Select, Modal, message } from "antd";
 import { EllipsisOutlined, UploadOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+const axios = require('axios');
 const { Title } = Typography;
 
+
 const EditProject = () => {
-    const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [confirmProjectName, setConfirmProjectName] = useState("");
-    const [projectName, setProjectName] = useState("Example Project");
+    const [projectName, setProjectName] = useState("");
+    const [projectAvatar, setProjectAvatar] = useState("")
+    const [form, setForm] = useState({
+        projectName: '',
+        projectAvatar: '',
+    });
+    const [errors, setErrors] = useState({});
+    const [imagePreview, setImagePreview] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const navigate = useNavigate();
 
-    const handleSubmit = (values) => {
-        console.log("Form values:", values);
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            console.log("Changes saved!");
-        }, 2000);
+    
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
     };
+
+    // Xử lý chọn ảnh và hiển thị ngay lập tức
+    const handleFileChange = ({ file }) => {
+        const fileReader = new FileReader();
+        fileReader.onload = () => setImagePreview(fileReader.result);
+        fileReader.readAsDataURL(file);
+        setSelectedFile(file);
+    };
+
+    // Xử lý lưu thông tin user
+    const handleSave = async () => {
+        const formData = new FormData();
+        formData.append("projectName", form.projectName);
+
+        if (selectedFile) {
+            formData.append("projectAvatar", selectedFile);  // Gửi file ảnh
+        }
+
+        axios.put('http://localhost:9999/projects/project-setting', formData, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+            .then(response => {
+                console.log(response.data);
+                message.open({ content: 'Project updated successfully!', duration: 2, type: 'success' });
+                setImagePreview(response.data.projectAvatar);  // Cập nhật ảnh Cloudinary
+                setTimeout(window.location.reload(), 3000);
+            })
+            .catch(error => {
+                message.error(error.response?.data?.message);
+            });
+    };
+
 
     const handleDeleteProject = () => {
         setIsDeleteModalVisible(true);
@@ -67,7 +109,7 @@ const EditProject = () => {
                                 }}
                                 onClick={handleDeleteProject}
                             >
-                                Delete Project
+                                Move to trash
                             </Button>
                         }
                         trigger={["click"]}
@@ -82,16 +124,20 @@ const EditProject = () => {
                 <Col xs={24} sm={16} md={12}>
                     <Card style={{ padding: "0 100px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
                         <Row justify="center" style={{ marginBottom: '20px' }}>
-                            <Avatar size={100} style={{ borderRadius: '0' }} src="https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" />
+                            <Avatar size={100} style={{ borderRadius: '0' }} src={imagePreview || "https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/"} />
                         </Row>
-                        <Form.Item>
-                            <Upload showUploadList={false} beforeUpload={() => false}>
+                        <Form.Item label="Project Avatar">
+                            <Upload
+                                showUploadList={false}
+                                beforeUpload={() => false}  // Ngăn tải lên tự động
+                                onChange={handleFileChange}
+                            >
                                 <Button icon={<UploadOutlined />}>Upload Image</Button>
                             </Upload>
                         </Form.Item>
-                        <Form layout="vertical" form={form} onFinish={handleSubmit}>
-                            <Form.Item label="Project Name" name="projectName" rules={[{ required: true, message: "This field is required!" }]}>
-                                <Input placeholder="Enter project name" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
+                        <Form layout="vertical">
+                            <Form.Item label="Project Name">
+                                <Input name="projectName" value={form.projectName} onChange={handleChange} />
                             </Form.Item>
 
                             <Form.Item label="Project Manager">
@@ -104,7 +150,7 @@ const EditProject = () => {
                             </Form.Item>
 
                             <Form.Item style={{ textAlign: "left" }}>
-                                <Button type="primary" htmlType="submit" loading={loading} style={{
+                                <Button type="primary" htmlType="submit" onClick={handleSave} loading={loading} style={{
                                     width: "100%",
                                     borderRadius: "0",
                                     fontSize: "16px",
