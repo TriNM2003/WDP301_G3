@@ -36,7 +36,7 @@ const siteSchema = new mongoose.Schema({
             required: true
            // required
         },
-        receivers: {
+        receiver: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
             required: true
