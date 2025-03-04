@@ -42,50 +42,15 @@ import TextArea from "antd/es/input/TextArea";
 import ActivityDetail from "../../../Activity/ActivityDetail";
 
 function KanbanBody() {
-    const { showNotification } = useContext(AppContext);
-    const [createModal, setCreateModal] = useState(false);
-    const [activityName, setActivityName] = useState("");
-    const [deleteModal, setDeleteModal] = useState(false);
-    const [taskToDelete, setTaskToDelete] = useState("");
-    const [inputValue, setInputValue] = useState("");
-    const [taskModal, setTaskModal] = useState({ visible: false, taskName: "" });
+    const {handleActivityCreate,createActivityModal, setCreateActivityModal,activityName, setActivityName,activityModal, setActivityModal,showActivity,closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal,deleteActivity, setDeleteActivity,activityToDelete, setActivityToDelete,confirmActivity, setConfirmActivity,showNotification } = useContext(AppContext);
+    
 
-    const handleCreate = () => {
-        if (activityName.trim()) {
-            message.success(`Activity "${activityName}" created successfully!`);
-            showNotification(`Project update`, `User1 just created task "${activityName}".`);
-            setActivityName("");
-            setCreateModal(false);
-        }
-    };
 
-    const showDeleteModal = (taskName) => {
-        setTaskToDelete(taskName);
-        setDeleteModal(true);
-    };
+    
 
-    const handleCloseModal = () => {
-        setDeleteModal(false);
-        setInputValue(""); // Xóa input khi đóng modal
-    };
+    
 
-    const handleDelete = () => {
-        if (inputValue === taskToDelete) {
-            message.success(`Task "${taskToDelete}" has been deleted successfully!`);
-            showNotification(`Project update`, `User1 just deleted task ${taskToDelete}.`);
-            handleCloseModal();
-        } else {
-            message.error("Task name does not match. Please try again!");
-        }
-    };
-
-    const showTaskModal = (taskName) => {
-        setTaskModal({ visible: true, taskName });
-    };
-
-    const closeTaskModal = () => {
-        setTaskModal({ visible: false, taskName: "" });
-    };
+    
 
     return (
         <Col span={6}>
@@ -97,7 +62,7 @@ function KanbanBody() {
                         style={{ width: "100%", borderRadius: "1%", margin: "5% 0" }}
                         bodyStyle={{ padding: "2%" }}
                         headStyle={{ padding: "2%", border: "0" }}
-                        onClick={() => showTaskModal(`Task ${index}`)}
+                        onClick={() => showActivity(`Activity ${index}`)}
                         cover={
                             <img
                                 src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"
@@ -106,15 +71,15 @@ function KanbanBody() {
                         }
                         title={
                             <Flex justify="space-between" align="center" style={{ padding: "1% 3%", height: "100%" }}>
-                                <p style={{ margin: 0, color: "black" }}>Task {index}</p>
+                                <p style={{ margin: 0, color: "black" }}>Activity {index}</p>
                                 <Dropdown
                                     overlay={
                                         <Menu>
                                             <Menu.Item key="1" icon={<DeleteOutlined />} danger onClick={(e) => {
-                                                e.stopPropagation(); // Ngăn modal mở khi bấm Delete
-                                                showDeleteModal(`Task ${index}`);
+                                               e.domEvent.stopPropagation();
+                                                showDeleteActivity(`Activity ${index}`);
                                             }}>
-                                                Delete task
+                                                Delete activity
                                             </Menu.Item>
                                         </Menu>
                                     }
@@ -152,20 +117,20 @@ function KanbanBody() {
                     </Card>
                 ))}
 
-                {createModal ? (
+                {createActivityModal ? (
                     <Input
                         autoFocus
                         value={activityName}
                         onChange={(e) => setActivityName(e.target.value)}
-                        onPressEnter={handleCreate}
-                        onBlur={() => setCreateModal(false)}
-                        placeholder="Enter task name"
+                        onPressEnter={handleActivityCreate}
+                        onBlur={() => setCreateActivityModal(false)}
+                        placeholder="Enter activity name"
                         prefix={<FormOutlined />}
                         style={{ borderRadius: 0 }}
                     />
                 ) : (
-                    <Button type="text" style={{ width: "100%", borderRadius: "0", color: gray[4] }} onClick={() => setCreateModal(true)}>
-                        <PlusOutlined /> Create task
+                    <Button type="text" style={{ width: "100%", borderRadius: "0", color: gray[4] }} onClick={() => setCreateActivityModal(true)}>
+                        <PlusOutlined /> Create activity
                     </Button>
                 )}
             </Card>
@@ -175,26 +140,26 @@ function KanbanBody() {
                 title={
                     <Flex align="center">
                         <ExclamationCircleOutlined style={{ color: "red", marginRight: 8 }} />
-                        Confirm Delete Task
+                        Confirm Delete Activity
                     </Flex>
                 }
-                open={deleteModal}
-                onCancel={handleCloseModal}
+                open={deleteActivity}
+                onCancel={handleCloseDeleteActivityModal}
                 footer={[
-                    <Button key="cancel" onClick={handleCloseModal}>
+                    <Button key="cancel" onClick={handleCloseDeleteActivityModal}>
                         Cancel
                     </Button>,
-                    <Button key="delete" type="primary" danger onClick={handleDelete} disabled={inputValue !== taskToDelete}>
+                    <Button key="delete" type="primary" danger onClick={handleDelete} disabled={confirmActivity !== activityToDelete}>
                         Delete
                     </Button>,
                 ]}
             >
-                <p>Are you sure you want to delete <strong>{taskToDelete}</strong>?</p>
-                <p>Please type <strong>"{taskToDelete}"</strong> to confirm:</p>
-                <Input placeholder="Enter task name" value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                <p>Are you sure you want to delete <strong>{activityToDelete}</strong>?</p>
+                <p>Please type <strong>"{activityToDelete}"</strong> to confirm:</p>
+                <Input placeholder="Enter activity name" value={confirmActivity} onChange={(e) => setConfirmActivity(e.target.value)} />
             </Modal>
 
-            {/* Modal hiển thị chi tiết Task */}
+            {/* Modal hiển thị chi tiết Activity */}
             <Modal
                 width={{
                     xs: '100%',
@@ -205,8 +170,9 @@ function KanbanBody() {
                     xxl: '75%',
                 }}
 
-                open={taskModal.visible}
+                open={activityModal.visible}
                 footer={[]}
+                onClose={closeActivity}
                 closeIcon={null}
                 style={{ borderRadius: "0" }}
                 modalRender={(node) => (
@@ -218,7 +184,7 @@ function KanbanBody() {
                 )}
                 centered
             >
-                <ActivityDetail/>
+                <ActivityDetail closeActivity={closeActivity} />
 
             </Modal>
         </Col>

@@ -51,6 +51,22 @@ const ManageProjectMember = () => {
     { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Project Member" },
     { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Project Member" },
   ]);
+  const breadCrumbItems = [
+    {
+      title: <a href="/Home">Home</a>
+    },
+    {
+      title: <a href="/site">Site</a>
+    },
+    {
+      title: <a href="/site/project">Project</a>
+    },
+    {
+      title: "Manage project members"
+    }
+  ]
+
+
   // State lưu role đang chọn
 const [selectedRoles, setSelectedRoles] = useState(
   members.reduce((acc, member) => {
@@ -188,12 +204,7 @@ const roleMenu = (record) => (
       {contexHolder}
 
       {/* Breadcrumb */}
-      <Breadcrumb style={{ marginBottom: "20px" }}>
-        <Breadcrumb.Item>Home</Breadcrumb.Item>
-        <Breadcrumb.Item>MySite</Breadcrumb.Item>
-        <Breadcrumb.Item>MyProject</Breadcrumb.Item>
-        <Breadcrumb.Item>Members</Breadcrumb.Item>
-      </Breadcrumb>
+      <Breadcrumb style={{ marginBottom: "20px" }} items={breadCrumbItems} />
 
       <div style={{ display: "flex", marginBottom: "20px"}}>
         <div style={{ display: "flex", gap: "10px",  marginRight: "20px" }}>

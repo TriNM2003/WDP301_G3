@@ -220,11 +220,11 @@ const ProjectList = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={200} theme="light">
+      {/* <Sider width={200} theme="light">
         <Menu mode="inline" defaultSelectedKeys={["all"]}>
           <Menu.Item key="all" icon={<UnorderedListOutlined />}>Recent Projects</Menu.Item>
         </Menu>
-      </Sider>
+      </Sider> */}
 
       <Layout>
         {/* <Header style={{ background: "#fff", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", height: "50px" }}>
@@ -349,7 +349,7 @@ const ProjectList = () => {
               )}
 
               <List
-                grid={{ gutter: 48, column: 4 }}
+                grid={{ gutter: 60, column: 4 }}
                 dataSource={displayedProjects}
                 style={{ marginTop: searchQuery ? "20px" : "0px" }}
                 renderItem={(project) => (

@@ -8,8 +8,8 @@ const EditProfile = () => {
     const [selectedKey, setSelectedKey] = useState('1');
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
-    const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
+    const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({  
         fullName: '',
@@ -95,23 +95,23 @@ const EditProfile = () => {
     };
 
     const handleDeleteRequest = async () => {
-        if (!password) {
-            setPasswordError("Please enter your password");
+        if (!email) {
+            setEmailError("Please enter your email address");
             return;
         }
 
         setLoading(true);
-        axios.post('http://localhost:9999/users/send-delete-email', { password }, {
+        axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
             .then(() => {
                 message.success("A confirmation email has been sent to your email address.");
                 setIsDeleteModalVisible(false);
-                setPassword('');
-                setPasswordError('');
+                setEmail('');
+                setEmailError('');
             })
             .catch(error => {
-                setPasswordError(error.response?.data?.message || "Incorrect password");
+                setEmailError(error.response?.data?.message || "Incorrect password");
             })
             .finally(() => setLoading(false));
     };
@@ -125,7 +125,7 @@ const EditProfile = () => {
 
 
     return (
-        <div style={{ minHeight: '100vh', width: '100%', padding: '20px' }}>
+        <div style={{ minHeight: '100%', width: '100%', padding: '20px' }}>
         {contextHolder}
         <Row gutter={[16, 16]} justify="center">
         <Col xs={24} sm={8} md={6} lg={4}>
@@ -214,9 +214,9 @@ const EditProfile = () => {
                     <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
-                <p>Please enter your password to proceed with account deletion.</p>
-                <Input.Password value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }} placeholder="Enter your password" />
-                {passwordError && <p style={{ color: "red", marginTop: "5px" }}>{passwordError}</p>}
+                <p>Please enter your email to proceed with account deletion.</p>
+                <Input value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(''); }} placeholder="Enter your email" />
+                {emailError && <p style={{ color: "red", marginTop: "5px" }}>{emailError}</p>}
             </Modal>
         </div>
         

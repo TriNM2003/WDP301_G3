@@ -1,14 +1,13 @@
 const mongoose = require('mongoose');
 
-const systemRole = new mongoose.Schema({
+const systemRoleSchema = new mongoose.Schema({
     roleName:{
         type:String,
         required: true,
-        unique:true
+        unique:true,
+        enum: ["user", "admin"],
     }
-}, {
-    timestamps: true
 });
 
-const SystemRole = mongoose.model('systemRole', systemRole);
+const SystemRole = mongoose.model('systemRole', systemRoleSchema);
 module.exports = SystemRole;

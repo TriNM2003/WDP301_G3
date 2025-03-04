@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const sprintSchema = new mongoose.Schema({
     sprintName: {
         type: String,
-        required: true
-        //require co tren 3 ki tu
+        required: true,
+        minlength: 3,
     },
     sprintStatus: {
         type: String,
@@ -16,14 +16,24 @@ const sprintSchema = new mongoose.Schema({
         ref: 'project',
         required: true
     },
+    sprintGoal: {
+        type: String,
+
+    },
     startDate: {
         type: Date,
         required: true
     },
     dueDate: {
         type: Date,
-        required: true
+        required: true,
         //due date lon hon start date
+        validate: {
+            validator: function(v) {
+                return this.startDate < v;
+            },
+            message: props => `${props.value} must be greater than start date`
+        }
     }
 }, { timestamps: true });
 

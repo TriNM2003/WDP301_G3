@@ -4,21 +4,21 @@ const siteSchema = new mongoose.Schema({
     siteName: {
         type: String,
         required: true, 
-        //can unique
-        //require co tren 3 ki tu
+        unique: true,
+        minlength: 3,
     },
-    siteOwner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
-        required: true
-    },
+    siteRoles: [{
+        type: String,
+        default: ['siteOwner', 'siteMember'],
+    }],
     siteMember: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user'
         },
         roles: [{
-            type: String
+            type: String,
+            enum: ['siteOwner', 'siteMember'],
         }]
     }],
     
@@ -28,12 +28,14 @@ const siteSchema = new mongoose.Schema({
         },
         sender: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user'
+            ref: 'user',
+            required: true
            // required
         },
         receivers: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user'
+            ref: 'user',
+            required: true
         }],
         status: {
             type: String,
@@ -41,13 +43,24 @@ const siteSchema = new mongoose.Schema({
             default: 'pending'
         },
         expireAt: {
-            type: Date
+            type: Date,
             //tim hieu thoi gian tu dong het han
-        }
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
+        }   
     }],
     siteAvatar: {
+        type: String,
+        default: 'default.jpg'
+    },
+    siteDescription: {
         type: String
-        //default: 'default.jpg'
     },
 
 }, {timestamps: true});

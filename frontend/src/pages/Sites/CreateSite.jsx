@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Layout, Form, Input, Button, Typography, Card, message } from "antd";
 import { LeftOutlined } from "@ant-design/icons";
+import {useNavigate} from "react-router-dom";
 
 const { Title, Text } = Typography;
 
@@ -8,6 +9,7 @@ const CreateSite = () => {
   const [siteName, setSiteName] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
+  const nav = useNavigate();
 
   const handleCreateSite = async () => {
     try {
@@ -16,7 +18,7 @@ const CreateSite = () => {
             type: 'success',
             content: 'Create site successfully!',
             duration: 2
-        })
+        }).then(res => nav("/site"))
     } catch (error) {
         messageApi.open({
             type: 'error',
@@ -29,7 +31,7 @@ const CreateSite = () => {
   return (
     <Layout
       style={{
-        minHeight: "91vh",
+        height: "calc(100vh - 64px)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -52,7 +54,7 @@ const CreateSite = () => {
           type="link"
           icon={<LeftOutlined />}
           style={{ marginBottom: 10, color: "#333" }}
-          onClick={() => alert("Go back clicked")}
+          onClick={() => nav("/home")}
         >
           Go back
         </Button>

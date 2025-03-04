@@ -24,14 +24,14 @@ import {
 } from "@ant-design/icons";
 import {useNavigate} from "react-router-dom"
 import { green } from "@ant-design/colors";
-import CreateProject from "../Project/CreateProject";
+import CreateProject from "../../components/Project/CreateProject";
 import { AppContext } from "../../context/AppContext";
 
 const { Title } = Typography;
 
 
 // component
-const ManageProjects = () => {
+const ManageSites = () => {
   const nav = useNavigate();
   const [createProjectModal, setCreateProjectModal] = useState(false);
   const {showNotification} = useContext(AppContext);
@@ -47,10 +47,7 @@ const ManageProjects = () => {
       title: <a href="/home">Home</a>
     },
     {
-      title: <a href="/site">Site</a>
-    },
-    {
-      title: "Manage projects"
+      title: "Manage sites"
     }
   ]
 
@@ -131,7 +128,7 @@ const ManageProjects = () => {
         sorter: (a, b) => a.name.localeCompare(b.name),
       width: "30%"
     },
-    { title: "Project Manager",
+    { title: "Site owner",
         dataIndex: "projectManager",
          key: "projectManager" ,
          render: (text, record) => (
@@ -175,7 +172,7 @@ const ManageProjects = () => {
                 </Popconfirm>
               </Menu.Item>
               <Menu.Item key="projectSettings">
-                <Button type="text" onClick={() => nav("/site/project/project-setting")}>Project settings</Button>
+                <Button type="text" onClick={() => nav("/site/project/project-setting")}>Site settings</Button>
               </Menu.Item>
             </Menu>
           }
@@ -200,8 +197,8 @@ const ManageProjects = () => {
 
       {/* title and button */}
       <div style={{ display: "flex", gap: "10px",  marginRight: "20px", justifyContent: "space-between" }}>
-          <Title level={2}>Projects</Title>
-          <Button type="primary" style={{marginTop: "35px"}} onClick={() => setCreateProjectModal(true)}>Create project</Button>
+          <Title level={2}>Sites</Title>
+          <Button type="primary" style={{marginTop: "35px"}} onClick={() => setCreateProjectModal(true)}>Create site</Button>
       </div>
 
       <div style={{ display: "flex", marginBottom: "20px"}}>
@@ -236,4 +233,4 @@ const ManageProjects = () => {
   );
 };
 
-export default ManageProjects;
+export default ManageSites;

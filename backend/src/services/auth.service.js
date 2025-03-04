@@ -35,12 +35,12 @@ const register = async (req) => {
         address: null,
 
         roles: [],
-        userAvatar: "https://static.thenounproject.com/png/5100711-200.png",
+        userAvatar: "https://i.pinimg.com/736x/2e/9b/34/2e9b3443e8afa8d383c132c7b3745d47.jpg",
         notifications: [],
         activities: [],
         projects: [],
         teams: [],
-        googleId: null,
+        // googleId: null,
 
         status: "inactive",
     });
@@ -63,7 +63,7 @@ const login = async (username, password, res) => {
     }
 
     // check co phai account dk bang google
-    if (user.googleId !== null) {
+    if (user.googleId !== undefined) {
         return {
             status: 400,
             message: "Please login by Google!"

@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 const projectSchema = new mongoose.Schema({
     projectName: {
         type: String,
-        required: true
-        //require co tren 3 ki tu
+        required: true,
+        minlength: 3,
+        
     },
     projectMember: [{
         _id: {
@@ -12,21 +13,22 @@ const projectSchema = new mongoose.Schema({
             ref: 'user'
         },
         roles: [{
-            type: String
+            type: String,
+            enum: ['projectManager', 'projectMember'],
         }]
     }],
-    projectRoles: {
-        type: [String],
-        default: ['projectMember', 'projectViewer']
-    },
     projectStatus: {
         type: String,
         enum: ['active', 'archived'],
         default: 'active'
     },
+    projectRoles: [{
+        type: String,
+        default: ['projectManager', 'projectMember'],
+    }],
     projectAvatar: {
         type: String,
-        // default: 'default.jpg'
+        default: 'default.jpg'
     },
     site: {
         type: mongoose.Schema.Types.ObjectId,

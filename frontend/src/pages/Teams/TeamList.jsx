@@ -181,11 +181,11 @@ const TeamList = () => {
 
     return (
         <Layout style={{ minHeight: "100vh" }}>
-            <Sider width={200} theme="light">
+            {/* <Sider width={200} theme="light">
                 <Menu mode="inline" defaultSelectedKeys={["all"]}>
                     <Menu.Item key="all" icon={<UnorderedListOutlined />}>Teams</Menu.Item>
                 </Menu>
-            </Sider>
+            </Sider> */}
 
             <Layout>
                 <Content style={{ padding: "20px", textAlign: "left" }}>
