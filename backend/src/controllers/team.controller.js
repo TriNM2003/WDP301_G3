@@ -149,10 +149,11 @@ const sendEmailNotification = async (email, teamName) => {
 
 
 
-const TeamController = {
+
+const teamController = {
     getTeamMembers,
     addTeamMember,
     kickTeamMember
 };
 
-module.exports = TeamController;
+module.exports = teamController;

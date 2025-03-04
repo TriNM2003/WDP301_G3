@@ -19,6 +19,7 @@ const TeamMemberManagement = () => {
     const [loadingUser, setLoadingUser] = useState(false);
     const [selectedRole, setSelectedRole] = useState("teamMember");
     const [loadingKick, setLoadingKick] = useState(false);
+    const [allMembers, setAllMembers] = useState([]); 
     const nav = useNavigate();
 
     useEffect(() => {
@@ -27,24 +28,42 @@ const TeamMemberManagement = () => {
 
     const fetchTeamMembers = async () => {
         try {
-            const response = await axios.get("http://localhost:9999/team/team-members", {
+            const response = await axios.get("http://localhost:9999/teams/team-members", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
             });
-
+    
             if (Array.isArray(response.data)) {
-                setMembers(response.data.filter(member => member.role === "teamMember"));
+                const membersData = response.data.filter(member => member.role === "teamMember");
+                setMembers(membersData);
+                setAllMembers(membersData); // Lưu danh sách gốc
             } else {
                 setMembers([]);
+                setAllMembers([]);
                 console.error("Invalid data format:", response.data);
             }
         } catch (error) {
             console.error("Error fetching team members:", error);
             setMembers([]);
+            setAllMembers([]);
         }
     };
 
     const handleSearch = (e) => {
-        setSearchText(e.target.value);
+        const value = e.target.value.toLowerCase();
+        setSearchText(value);
+    
+        if (value) {
+            const filteredMembers = allMembers.filter(member => {
+                return (
+                    (member.username && member.username.toLowerCase().includes(value)) ||
+                    (member.email && member.email.toLowerCase().includes(value)) ||
+                    (member.fullName && member.fullName.toLowerCase().includes(value))
+                );
+            });
+            setMembers(filteredMembers);
+        } else {
+            setMembers(allMembers); // Reset danh sách từ allMembers thay vì gọi API
+        }
     };
 
     const showKickMemberModal = (record) => {
@@ -66,7 +85,7 @@ const TeamMemberManagement = () => {
     
         try {
             const response = await axios.post(
-                "http://localhost:9999/team/kick-team-member",
+                "http://localhost:9999/teams/kick-team-member",
                 { userId },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
@@ -89,7 +108,7 @@ const TeamMemberManagement = () => {
         }
         try {
             await axios.post(
-                "http://localhost:9999/team//add-team-member",
+                "http://localhost:9999/teams/add-team-member",
                 { username: searchUser, email: searchUser, role: selectedRole },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );

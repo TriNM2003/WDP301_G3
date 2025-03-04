@@ -3,23 +3,23 @@ const teamRouter = express.Router();
 const bodyParser = require("body-parser");
 const db = require("../models/index");
 const authMiddleware = require("../middlewares/auth.middleware");
-const { TeamController } = require("../controllers");
+const { teamController } = require("../controllers");
 
 teamRouter.use(bodyParser.json());
 
 teamRouter.get("/team-members", 
     authMiddleware.verifyAccessToken, 
-    TeamController.getTeamMembers
+    teamController.getTeamMembers
 );
 
 teamRouter.post("/add-team-member", 
     authMiddleware.verifyAccessToken, 
-    TeamController.addTeamMember
+    teamController.addTeamMember
 );
 
 teamRouter.post("/kick-team-member", 
     authMiddleware.verifyAccessToken, 
-    TeamController.kickTeamMember
+    teamController.kickTeamMember
 );
 
 
