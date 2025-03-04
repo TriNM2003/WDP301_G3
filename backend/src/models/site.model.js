@@ -21,7 +21,11 @@ const siteSchema = new mongoose.Schema({
             enum: ['siteOwner', 'siteMember'],
         }]
     }],
-    
+    siteSlug:{
+        type: String,
+        required: true,
+        minlength: 3,
+    },
     invitations: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId
@@ -32,11 +36,11 @@ const siteSchema = new mongoose.Schema({
             required: true
            // required
         },
-        receivers: [{
+        receivers: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
             required: true
-        }],
+        },
         status: {
             type: String,
             enum: ['pending', 'accepted', 'declined', "expired"],
