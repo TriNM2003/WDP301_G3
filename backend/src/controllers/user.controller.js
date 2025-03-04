@@ -8,7 +8,16 @@ const {cloudinary} = require('../configs/cloudinary');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const {userService} = require("../services")
 
+const getAllUsers = async (req, res, next) => {
+    try {
+        const users = await userService.getAllUsers();
+        res.status(200).json(users);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
 
 
 
@@ -201,6 +210,7 @@ const UserControllers = {
   changePassword,
   sendDeleteAccountEmail,
   confirmDeleteAccount,
+  getAllUsers,
 };
 
 module.exports = UserControllers;
