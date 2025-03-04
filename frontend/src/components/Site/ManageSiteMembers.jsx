@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -30,31 +30,101 @@ import {
 import { green, red } from "@ant-design/colors";
 import { AppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
+import authAxios from "../../utils/authAxios";
 
 const { Title } = Typography;
 const { confirm } = Modal;
 const { Option } = Select;
 
-const ManageSiteMembers = () => {
-  const [members, setMembers] = useState([
-    { key: "1", name: "John", email: "John@gmail.com", role: "Owner" },
-    { key: "2", name: "Alice", email: "Alice@gmail.com", role: "Member" },
-    { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Access Admin" },
-    { key: "4", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-    { key: "5", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-    { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-    { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-  ]);
+const siteApi = "http://localhost:9999/sites"
+const userApi = "http://localhost:9999/users"
+const membersMockData = [
+  { key: "1", name: "John", email: "John@gmail.com", role: "Owner" },
+  { key: "2", name: "Alice", email: "Alice@gmail.com", role: "Member" },
+  { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Access Admin" },
+  { key: "4", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+  { key: "5", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+  { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+  { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+];
 
-  const [invitationModalVisible, setInvitationModalVisible] = useState(false);
-const [invitations, setInvitations] = useState([
+const mockEmailOptions = [
+  { value: "user1@example.com", label: "user1@example.com" },
+  { value: "user2@example.com", label: "user2@example.com" },
+  { value: "user3@example.com", label: "user3@example.com" },
+]
+
+const invitationsMockData = [
   { key: "1", email: "invite1@example.com", status: "pending" },
   { key: "2", email: "invite2@example.com", status: "accept" },
   { key: "3", email: "invite3@example.com", status: "decline" },
   { key: "4", email: "invite4@example.com", status: "accept" },
   { key: "5", email: "invite5@example.com", status: "accept" },
   { key: "6", email: "invite6@example.com", status: "accept" },
-]);
+];
+
+const ManageSiteMembers = () => {
+  const {user} = useContext(AppContext);
+  const [members, setMembers] = useState(membersMockData);
+  const [siteRoles, setSiteRoles] = useState([]);
+  const [userEmails, setUserEmails] = useState(mockEmailOptions);
+
+  const [invitationModalVisible, setInvitationModalVisible] = useState(false);
+const [invitations, setInvitations] = useState(invitationsMockData);
+
+const formatRole = (memberRole) => {
+  let role;
+      if(memberRole === "siteOwner"){
+        role = "Site Owner"
+      }else if(memberRole === "siteMember"){
+        role = "Site Member"
+      }else{
+        role = "Undefined?"
+      }
+  return role;
+}
+
+useEffect(() => {
+  // get site member
+  authAxios.get(`${siteApi}/${user.site}`)
+  .then(res => {
+    const membersData = res.data.siteMember.map((member, index) => {
+      return {
+        index: index+1,
+        name: member._id.username,
+        email: member._id.email,
+        memberAvatar: member._id.userAvatar,
+        role: formatRole(member.roles[0])
+      }
+    })
+    console.log(membersData);
+    setSiteRoles(res.data.siteRoles);
+    setMembers(membersData)
+  })
+  .catch(err => console.log(err))
+
+  // get user emails
+  authAxios.get(`${userApi}/all`)
+  .then(res => {
+    const emails = res.data.reduce((acc, currUser) => {
+      // loai bo user la thanh vien cua site
+      if(currUser.site !== user.site){
+        acc.push ({
+          value: currUser.email,
+          label: currUser.email,
+          avatar: currUser.userAvatar,
+          userId: currUser._id
+        })
+      }
+      return acc;
+    }, [])
+    console.log(emails);
+    setUserEmails(emails);
+  })
+  .catch(err => console.log(err))
+}, [user.site])
+
+
 const invitationColumns = [
   { title: "Email", dataIndex: "email", key: "email" },
   {
@@ -117,22 +187,27 @@ const filteredInvitations = invitations.filter((invite) =>
 
   const handleInviteMember = async () => {
     setInviteModalVisible(false);
-    for(let i=0; i< selectedEmails.length; i++){
-      if(!emailRegex.test(selectedEmails[i])){
-        await messageApi.open({
-          type: "error",
-          content: `Email ${selectedEmails[i]} is not a valid email!`,
-          duration: 2
-        });
-        return;
-      }
-    }
+    // for(let i=0; i< selectedEmails.length; i++){
+    //   if(!emailRegex.test(selectedEmails[i])){
+    //     await messageApi.open({
+    //       type: "error",
+    //       content: `Email ${selectedEmails[i]} is not a valid email!`,
+    //       duration: 2
+    //     });
+    //     return;
+    //   }
+    // }
+
+    // goi api den backend
+
+
     messageApi.open({
       type: "success",
       content: `Send invitation to ${selectedEmails.toString()} successfully !`,
       duration: 2
     });
     showNotification(`👋 Invitation have been sent to ${selectedEmails.toString()} ✉`);
+    setSelectedEmails([]);
   }
 
   const handleDeleteInvitation = (key) => {
@@ -179,10 +254,14 @@ const filteredInvitations = invitations.filter((invite) =>
           onChange={(e) => handleRoleChange(record.key, e.target.value)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
-          {/* <Radio value="Owner">Owner</Radio> */}
-          <Radio value="Owner" disabled>Owner</Radio>
-          <Radio value="Access Admin">Access Admin</Radio>
-          <Radio value="Member">Member</Radio>
+          {siteRoles.map(role => {
+            const formattedRole = formatRole(role);
+            if(formattedRole === "Site Owner"){
+              return <Radio value={formattedRole} disabled>{formattedRole}</Radio>
+            }else{
+              return <Radio value={formattedRole}>{formattedRole}</Radio>
+            }
+          })}
         </Radio.Group>
       </Menu.ItemGroup>
     </Menu>
@@ -194,9 +273,9 @@ const filteredInvitations = invitations.filter((invite) =>
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (text) => (
+      render: (text, record) => (
         <Space>
-          <Avatar icon={<UserOutlined />} style={{ fontSize: "16px" }} />
+          <Avatar src={record.memberAvatar} style={{ fontSize: "16px" }} />
           {text}
         </Space>
       ),
@@ -215,7 +294,7 @@ const filteredInvitations = invitations.filter((invite) =>
           key: "role",
           render: (_, record) => (
               <Dropdown overlay={roleMenu(record)} trigger={["click"]}>
-                {record.role === "Owner" ? 
+                {record.role === "Site Owner" ? 
                 <Button style={{ width: "100%", textAlign: "left" }} disabled>
                       {record.role} <DownOutlined style={{ float: "right" }} />
                   </Button>
@@ -299,9 +378,10 @@ const filteredInvitations = invitations.filter((invite) =>
             onChange={(value) => setSelectedRole(value)}
           >
             <Option value="All">All</Option>
-            <Option value="Owner">Owner</Option>
-            <Option value="Access Admin">Access Admin</Option>
-            <Option value="Member">Member</Option>
+            {siteRoles.map(role => {
+              const formattedRole = formatRole(role);
+              return <Option value={formattedRole}>{formattedRole}</Option>
+            })}
           </Select>
       </div>
 
@@ -319,35 +399,38 @@ const filteredInvitations = invitations.filter((invite) =>
 
       {/* Modal mời thành viên */}
       <Modal
-        title="Invite member"
-        visible={inviteModalVisible}
-        onCancel={() => setInviteModalVisible(false)}
-        footer={[
-          <Button key="add" color={green[6]} variant="solid" onClick={() => handleInviteMember()}>
-            Add
-          </Button>,
-          <Button key="cancel" color="danger" variant="solid" onClick={() => setInviteModalVisible(false)} danger>
-            Cancel
-          </Button>,
-        ]}
-      >
-        <Title level={5}>User email addresses</Title>
-        <Select
-          mode="tags"
-          style={{ width: "100%" }}
-          placeholder="Enter email addresses"
-          value={selectedEmails}
-          onChange={setSelectedEmails}
-          optionRender={(item) => (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <MailOutlined style={{ marginRight: 8 }} />
-              {item.label}
-            </div>
-          )}
-        >
-        </Select>
-
-      </Modal>
+      title="Invite member"
+      visible={inviteModalVisible}
+      onCancel={() => setInviteModalVisible(false)}
+      footer={[
+        <Button key="add" style={{ backgroundColor: green[6], color: "#fff" }} onClick={handleInviteMember}>
+          Invite
+        </Button>,
+        <Button key="cancel" danger onClick={() => setInviteModalVisible(false)}>
+          Cancel
+        </Button>,
+      ]}
+    >
+      <Title level={5}>User email addresses</Title>
+      <Select
+        mode="multiple" // Chỉ cho phép chọn từ danh sách có sẵn
+        showSearch // Hiển thị ô tìm kiếm
+        style={{ width: "100%" }}
+        placeholder="Select user email"
+        value={selectedEmails}
+        onChange={setSelectedEmails}
+        options={userEmails}
+        filterOption={(input, option) =>
+          option.label.toLowerCase().includes(input.toLowerCase())
+        } // Lọc email theo từ khóa nhập vào
+        optionRender={(item) => (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Avatar src={item.data.avatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg"} style={{ marginRight: 8 }} />
+            {item.label}
+          </div>
+        )}
+      />
+    </Modal>
 
       <Modal
   title="Manage Invitations"
