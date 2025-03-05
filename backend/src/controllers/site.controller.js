@@ -73,21 +73,24 @@ const getSiteByUserId = async (req, res, next) => {
     }
 }
 
-// const inviteMembersByEmail = async (req, res, next) => {
-//     try {
-//         const {sender, receivers, siteName} = req.body;
-//         const message = await siteService.inviteMembersByEmail(sender, receivers, siteName)
-//         res.status(200).json({message: message});
-//     } catch (error) {
-//         next(error);
-//     }
-// }
+const inviteMembersByEmail = async (req, res, next) => {
+    try {
+        const {id} = req.payload;
+        const {siteId} = req.params;
+        const receiver = req.body.receiver;
+        console.log(id, siteId, receiver);
+        const message = await siteService.inviteMembersByEmail(id, receiver, siteId)
+        res.status(200).json({message: message});
+    } catch (error) {
+        next(error);
+    }
+}
 
 const siteController = {
     getSiteById,
     createSite,
     getSiteByUserId,
-    // inviteMembersByEmail,
+    inviteMembersByEmail,
     getAllSites,
     getSiteMembersById,
 }

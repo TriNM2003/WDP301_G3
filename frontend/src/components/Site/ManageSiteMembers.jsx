@@ -36,16 +36,9 @@ const { Title } = Typography;
 const { confirm } = Modal;
 const { Option } = Select;
 
-const siteApi = "http://localhost:9999/sites"
-const userApi = "http://localhost:9999/users"
 const membersMockData = [
-  { key: "1", name: "John", email: "John@gmail.com", role: "Owner" },
-  { key: "2", name: "Alice", email: "Alice@gmail.com", role: "Member" },
-  { key: "3", name: "Bob", email: "Bob@gmail.com", role: "Access Admin" },
-  { key: "4", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-  { key: "5", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-  { key: "6", name: "Bob", email: "Bob@gmail.com", role: "Member" },
-  { key: "7", name: "Bob", email: "Bob@gmail.com", role: "Member" },
+  { key: "1", siteMemberName: "John", siteMemberEmail: "John@gmail.com", siteMemberRole: "Owner" },
+  { key: "2", siteMemberName: "Alice", siteMemberEmail: "Alice@gmail.com", siteMemberRole: "Member" },
 ];
 
 const mockEmailOptions = [
@@ -54,23 +47,34 @@ const mockEmailOptions = [
   { value: "user3@example.com", label: "user3@example.com" },
 ]
 
-const invitationsMockData = [
-  { key: "1", email: "invite1@example.com", status: "pending" },
-  { key: "2", email: "invite2@example.com", status: "accept" },
-  { key: "3", email: "invite3@example.com", status: "decline" },
-  { key: "4", email: "invite4@example.com", status: "accept" },
-  { key: "5", email: "invite5@example.com", status: "accept" },
-  { key: "6", email: "invite6@example.com", status: "accept" },
-];
+const breadCrumbItems = [
+  {
+    title: <a href="/home">Home</a>
+  },
+  {
+    title: <a href="/site">Site</a>
+  },
+  {
+    title: "Manage Member"
+  }
+]
+
 
 const ManageSiteMembers = () => {
-  const {user} = useContext(AppContext);
-  const [members, setMembers] = useState(membersMockData);
+  const {user, site, setSite, siteAPI, userApi, showNotification} = useContext(AppContext);
+  const [siteMembers, setSiteMembers] = useState(membersMockData);
   const [siteRoles, setSiteRoles] = useState([]);
   const [userEmails, setUserEmails] = useState(mockEmailOptions);
+  const [searchEmail, setSearchEmail] = useState("");
+const [filterStatus, setFilterStatus] = useState(null);
+const [searchTerm, setSearchTerm] = useState("");
+const [selectedRole, setSelectedRole] = useState(null);
+const [inviteModalVisible, setInviteModalVisible] = useState(false);
+const [selectedEmails, setSelectedEmails] = useState([]);
+const [messageApi, contexHolder] = message.useMessage();
+const nav = useNavigate();
+const emailRegex = /^[a-zA-Z0-9._%+-]+[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  const [invitationModalVisible, setInvitationModalVisible] = useState(false);
-const [invitations, setInvitations] = useState(invitationsMockData);
 
 const formatRole = (memberRole) => {
   let role;
@@ -86,22 +90,7 @@ const formatRole = (memberRole) => {
 
 useEffect(() => {
   // get site member
-  authAxios.get(`${siteApi}/${user.site}`)
-  .then(res => {
-    const membersData = res.data.siteMember.map((member, index) => {
-      return {
-        index: index+1,
-        name: member._id.username,
-        email: member._id.email,
-        memberAvatar: member._id.userAvatar,
-        role: formatRole(member.roles[0])
-      }
-    })
-    console.log(membersData);
-    setSiteRoles(res.data.siteRoles);
-    setMembers(membersData)
-  })
-  .catch(err => console.log(err))
+  fetchSiteMembers();
 
   // get user emails
   authAxios.get(`${userApi}/all`)
@@ -112,7 +101,7 @@ useEffect(() => {
         acc.push ({
           value: currUser.email,
           label: currUser.email,
-          avatar: currUser.userAvatar,
+          avatar: currUser.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
           userId: currUser._id
         })
       }
@@ -122,84 +111,40 @@ useEffect(() => {
     setUserEmails(emails);
   })
   .catch(err => console.log(err))
-}, [user.site])
+}, [])
 
 
-const invitationColumns = [
-  { title: "Email", dataIndex: "email", key: "email" },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (text) => (
-      <span style={{ color: text === "accept" ? green[6] : text === "decline" ? red[6] : "inherit" }}>
-        {text}
-      </span>
-    ),
-  },  
-  {
-    title: "Action",
-    key: "action",
-    render: (_, record) =>
-      record.status === "pending" ? (
-        <Popconfirm
-          title="Are you sure to delete this invitation?"
-          onConfirm={() => handleDeleteInvitation(record.key)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <Button danger>Delete</Button>
-        </Popconfirm>
-      ) : null,
-  },
-];
-
-const [searchEmail, setSearchEmail] = useState("");
-const [filterStatus, setFilterStatus] = useState(null);
-
-const filteredInvitations = invitations.filter((invite) =>
-  invite.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
-  (!filterStatus || invite.status === filterStatus)
-);
-
-
-  const breadCrumbItems = [
-    {
-      title: <a href="/home">Home</a>
-    },
-    {
-      title: <a href="/site">Site</a>
-    },
-    {
-      title: "Manage Member"
-    }
-  ]
-
-  const [currSite, setCurrSite] = useState({siteName: "exmaplegggg123"});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [inviteModalVisible, setInviteModalVisible] = useState(false);
-  const [selectedEmails, setSelectedEmails] = useState([]);
-  const [messageApi, contexHolder] = message.useMessage();
-  const {showNotification} = useContext(AppContext)
-  const nav = useNavigate();
-  const emailRegex = /^[a-zA-Z0-9._%+-]+[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const fetchSiteMembers = () => {
+  authAxios.get(`${siteAPI}/get-by-user-id`).then(res => {
+    setSite(res.data);
+    setSiteRoles(res.data.siteRoles)
+    authAxios.get(`${siteAPI}/${res.data._id}/get-site-members`).then(resMember => {
+      console.log(resMember.data)
+      const memberData = resMember.data.map((member, index) => {
+        return { key: index+1, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: formatRole(member.roles[0]), siteMemberAvatar: member._id.userAvatar }
+      })
+      setSiteMembers(memberData)
+    }).catch(err => console.log(err));
+  }).catch(err => console.log(err));
+ }
 
   const handleInviteMember = async () => {
     setInviteModalVisible(false);
-    // for(let i=0; i< selectedEmails.length; i++){
-    //   if(!emailRegex.test(selectedEmails[i])){
-    //     await messageApi.open({
-    //       type: "error",
-    //       content: `Email ${selectedEmails[i]} is not a valid email!`,
-    //       duration: 2
-    //     });
-    //     return;
-    //   }
-    // }
+    for(let i=0; i< selectedEmails.length; i++){
+      if(!emailRegex.test(selectedEmails[i])){
+        await messageApi.open({
+          type: "error",
+          content: `Email ${selectedEmails[i]} is not a valid email!`,
+          duration: 2
+        });
+        return;
+      }
+    }
 
     // goi api den backend
-
+    authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiver: selectedEmails})
+    .then(res => console.log(res.data))
+    .catch(err => console.log(err));
 
     messageApi.open({
       type: "success",
@@ -210,39 +155,33 @@ const filteredInvitations = invitations.filter((invite) =>
     setSelectedEmails([]);
   }
 
-  const handleDeleteInvitation = (key) => {
-    setInvitations(invitations.filter((invite) => invite.key !== key));
-    messageApi.success("Pending invitation deleted successfully!");
-  };
-  
-
   // Xử lý tìm kiếm
   let filteredMembers;
   if(selectedRole !== "All"){
-    filteredMembers = members.filter(
+    filteredMembers = siteMembers.filter(
         (member) =>
-          member.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          (!selectedRole || member.role === selectedRole)
+          member.siteMemberName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+          (!selectedRole || member.siteMemberRole === selectedRole)
       );
   }else{
-    filteredMembers = members
+    filteredMembers = siteMembers
   }
 
   // Xử lý đổi vai trò
   const handleRoleChange = (key, newRole) => {
-    setMembers(members.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
+    setSiteMembers(siteMembers.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
   };
 
   // Xử lý xóa thành viên bằng Popconfirm
   const handleRevokeAccess = (key, name) => {
-    setMembers(members.filter((member) => member.key !== key));
+    setSiteMembers(siteMembers.filter((member) => member.key !== key));
     // show thong bao
     messageApi.open({
       type: "success",
       content: `Revoke access 🔒 member ${name} successfully!`,
       duration: 2
     });
-    showNotification(`Member ${name} has been revoke access 🔒 from site ${currSite.siteName}`);
+    showNotification(`Member ${name} has been revoke access 🔒 from site ${site.siteName}`);
   };
 
   // Hiển thị menu chọn vai trò
@@ -271,41 +210,41 @@ const filteredInvitations = invitations.filter((invite) =>
   const columns = [
     {
       title: "Name",
-      dataIndex: "name",
-      key: "name",
+      dataIndex: "siteMemberName",
+      key: "siteMemberName",
       render: (text, record) => (
         <Space>
-          <Avatar src={record.memberAvatar} style={{ fontSize: "16px" }} />
+          <Avatar src={record.siteMemberAvatar} style={{ fontSize: "16px" }} />
           {text}
         </Space>
       ),
-        sorter: (a, b) => a.name.localeCompare(b.name),
+        sorter: (a, b) => a.siteMemberName.localeCompare(b.siteMemberName),
       width: "35%"
     },
     { title: "Email",
-        dataIndex: "email",
-         key: "email" ,
-        sorter: (a, b) => a.email.localeCompare(b.email),
+        dataIndex: "siteMemberEmail",
+         key: "siteMemberEmail" ,
+        sorter: (a, b) => a.siteMemberEmail.localeCompare(b.siteMemberEmail),
         width: "35%"
     },
       {
           title: "Role",
-          dataIndex: "role",
-          key: "role",
+          dataIndex: "siteMemberRole",
+          key: "siteMemberRole",
           render: (_, record) => (
               <Dropdown overlay={roleMenu(record)} trigger={["click"]}>
-                {record.role === "Site Owner" ? 
+                {record.siteMemberRole === "Site Owner" ? 
                 <Button style={{ width: "100%", textAlign: "left" }} disabled>
-                      {record.role} <DownOutlined style={{ float: "right" }} />
+                      {record.siteMemberRole} <DownOutlined style={{ float: "right" }} />
                   </Button>
                   :
                   <Button style={{ width: "100%", textAlign: "left" }}>
-                      {record.role} <DownOutlined style={{ float: "right" }} />
+                      {record.siteMemberRole} <DownOutlined style={{ float: "right" }} />
                   </Button>
                 }
               </Dropdown>
           ),
-          sorter: (a, b) => a.role.localeCompare(b.role),
+          sorter: (a, b) => a.siteMemberRole.localeCompare(b.siteMemberRole),
           width: "15%"
       },
     {
@@ -320,7 +259,7 @@ const filteredInvitations = invitations.filter((invite) =>
                 <Popconfirm
                   title="Are you sure to revoke access?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleRevokeAccess(record.key, record.name)}
+                  onConfirm={() => handleRevokeAccess(record.key, record.siteMemberName)}
                   okText="Yes"
                   cancelText="No"
                 >
@@ -362,10 +301,6 @@ const filteredInvitations = invitations.filter((invite) =>
         <Button type="primary" icon={<UserAddOutlined />} onClick={() => setInviteModalVisible(true)}>
           Invite more
         </Button>
-        {/* <Button icon={<MailOutlined />} danger onClick={() => setInvitationModalVisible(true)}
-        style={{marginLeft: "20px"}}>
-        Manage Invitations
-        </Button> */}
 
       </div>
 
@@ -431,35 +366,6 @@ const filteredInvitations = invitations.filter((invite) =>
         )}
       />
     </Modal>
-
-      <Modal
-  title="Manage Invitations"
-  visible={invitationModalVisible}
-  onCancel={() => setInvitationModalVisible(false)}
-  footer={null}
-  bodyStyle={{ height: "400px", overflowY: "auto" }}
->
-<Input
-  prefix={<SearchOutlined />}
-  placeholder="Search by email"
-  value={searchEmail}
-  onChange={(e) => setSearchEmail(e.target.value)}
-  style={{ marginBottom: 10 }}
-/>
-
-<Select
-  placeholder="Filter by status"
-  style={{ width: "100%", marginBottom: 10 }}
-  allowClear
-  onChange={(value) => setFilterStatus(value)}
->
-  <Select.Option value="pending">Pending</Select.Option>
-  <Select.Option value="accept">Accept</Select.Option>
-  <Select.Option value="decline">Decline</Select.Option>
-</Select>
-
-  <Table columns={invitationColumns} dataSource={filteredInvitations} pagination={false} />
-</Modal>
 
     </div>
   );

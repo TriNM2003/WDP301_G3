@@ -94,51 +94,17 @@ const getSiteByUserId = async(userId) => {
     }
 }
 
-// const inviteMembersByEmail = async (sender, receiverEmails, receiverIds, siteName, siteId) => {
-//     const acceptUrl = `http://localhost:3000/site/processing-invitations?isAccept=true&siteId=${siteId}`;
-//     const declineUrl = `http://localhost:3000/site/processing-invitations?isAccept=false&siteId=${siteId}`;
+const inviteMembersByEmail = async (sender, receiverEmails, receiverIds, siteName, siteId) => {
+   
 
-//      const emailBody = `
-//                     <h2>You have been invited to site ${siteName} by ${sender}</h2>
-//                     <p>Click the button below to be a site member:</p>
-//                     <a href=${acceptUrl}
-//                        style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
-//                         Accept invitation
-//                     </a>
-//                     <p>Or click the button below to decline the invitation:</p>
-//                     <a href=${declineUrl}
-//                        style="padding: 10px 20px; background:rgb(255, 24, 24); color: #fff; text-decoration: none; border-radius: 5px;">
-//                         Decline invitation
-//                     </a>
-//                 `;
-
-//     // Cấu hình SMTP
-//     const transporter = nodemailer.createTransport({
-//         service: "gmail",
-//         auth: {
-//             user: process.env.EMAIL_USER,
-//             pass: process.env.EMAIL_PASS,
-//         },
-//     });
-
-//     // Gửi đến tất cả người nhận cùng lúc
-//     const mailOptions = {
-//         from: process.env.EMAIL_USER,
-//         to: receivers.join(","), // Chuyển mảng email thành chuỗi
-//         subject: `You have been invited to site ${siteName}`,
-//         html: emailBody,
-//     };
-
-//     await transporter.sendMail(mailOptions);
-
-//     return "Invitation emails send successfully!"
-// }
+    return "Invitation emails send successfully!"
+}
 
 const siteService = {
     getSiteById,
     createSite,
     getSiteByUserId,
-    // inviteMembersByEmail,
+    inviteMembersByEmail,
     getAllSites,
     getSiteMembersById,
 }
