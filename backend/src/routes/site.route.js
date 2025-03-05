@@ -12,11 +12,15 @@ siteRouter.use(bodyParser.json());
 
 siteRouter.get("/all", verifyAccessToken, siteController.getAllSites)
 siteRouter.get("/:id/get-by-id",verifyAccessToken, SiteController.getSiteById)
-siteRouter.post("/create", verifyAccessToken, cloudinary.upload.single("siteAvatar"), SiteController.createSite)
 siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],
     siteController.getSiteByUserId
-)
+
+siteRouter.post("/create", verifyAccessToken, cloudinary.upload.single("siteAvatar"), SiteController.createSite)
+
+// get all user in site
+siteRouter.get("/:siteId/members", verifyAccessToken, siteController.getAllUsersInSite)
+
 siteRouter.post("/invite", verifyAccessToken, siteController.inviteMembersByEmail)
 
 module.exports = siteRouter;

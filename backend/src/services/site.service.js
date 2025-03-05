@@ -87,6 +87,35 @@ const getSiteByUserId = async(userId) => {
     }
 }
 
+// get all user in site
+const getAllUsersInSite = async (siteId) => {
+    try {
+        
+        const site = await db.Site.findById(siteId).populate({
+            path: "siteMember._id",
+            select: "username email userAvatar fullName"
+        });
+
+        if (!site) {
+            throw new Error("Site not found");
+        }
+
+       
+        return site.siteMember.map(member => ({
+            _id: member._id._id,
+            username: member._id.username,
+            email: member._id.email,
+            userAvatar: member._id.userAvatar,
+            fullName: member._id.fullName,
+            roles: member.roles
+        }));
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
 const inviteMembersByEmail = async (sender, receiverEmails, receiverIds, siteName, siteId) => {
     const acceptUrl = `http://localhost:3000/site/processing-invitations?isAccept=true&siteId=${siteId}`;
     const declineUrl = `http://localhost:3000/site/processing-invitations?isAccept=false&siteId=${siteId}`;
@@ -133,6 +162,7 @@ const siteService = {
     getSiteByUserId,
     inviteMembersByEmail,
     getAllSites,
+    getAllUsersInSite
 }
 
 module.exports = siteService;
