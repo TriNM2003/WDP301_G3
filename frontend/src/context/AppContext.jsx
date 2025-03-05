@@ -19,7 +19,7 @@ const AppProvider = ({ children }) => {
   const [site, setSite] = useState({})
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
-  const {projectName} = useParams()
+  
   const location = useLocation();
   const nav = useNavigate();
 
@@ -76,21 +76,6 @@ const AppProvider = ({ children }) => {
   }, [location.pathname]);
 
 
-  // get project in site
-  useEffect(() => {
-    axios.get(`${siteAPI}/get-by-user-id/${user._id}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      .then((res)=>{
-        setSite(res.data);       
-    }).catch((err)=>{
-      console.log(err);
-    })
-     
-  },[accessToken])
 
 // get project in site
   useEffect(() => {
@@ -129,6 +114,7 @@ const AppProvider = ({ children }) => {
     //     console.log(err);
     //   })
   },[projectName])
+
 
   //fuction
   const changePassword = async (userId, oldPassword, newPassword) => {
@@ -175,7 +161,6 @@ const AppProvider = ({ children }) => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
     .then(() => {
       const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
-      console.log("check login status successfully, last visited url: ", lastVisitedUrl);
       nav(lastVisitedUrl);
     })
     .catch(err => {
@@ -246,7 +231,9 @@ const AppProvider = ({ children }) => {
       showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
-      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,setProjects, projects, setSite, site
+      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
+      project, setProject,projects, setProjects, setSite, site
+
     }}>
       {children}
     </AppContext.Provider>

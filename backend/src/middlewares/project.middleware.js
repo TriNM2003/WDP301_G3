@@ -9,7 +9,7 @@ const isInProject = async (req, res, next) => {
         const { projectId } = req.params;
         const user = await db.User.findOne({ _id: id, projects:{$in:projectId} });
         if(!user){
-            return res.status(400).json({ error: { status: 400, message: "The user is not in the project" } })
+            return res.status(400).json({ error: { status: 400, message: "User is not permitted to access the project." } })
         }
         console.log(user);
         next();

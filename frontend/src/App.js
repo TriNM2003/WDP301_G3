@@ -141,8 +141,6 @@ function App() {
                 </Route>
 
 
-              </Route>
-
               <Route path='/create-site' element={<CreateSite />} />
 
               <Route path='/manage-sites' element={<ManageSites />} />

@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const db = require("../models/index");
 
 
-const sprintRouter = express.Router();
+const sprintRouter = express.Router({mergeParams: true});
 
 
 sprintRouter.use(bodyParser.json());

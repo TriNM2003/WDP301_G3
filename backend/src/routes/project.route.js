@@ -8,7 +8,6 @@ const { projectMiddleware, siteMiddleware } = require("../middlewares");
 const projectRouter = express.Router({ mergeParams: true });
 
 
-
 projectRouter.use(bodyParser.json());
 projectRouter.get("/get-all",
     [authMiddleware.verifyAccessToken],
