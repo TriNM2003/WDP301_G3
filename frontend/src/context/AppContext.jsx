@@ -109,43 +109,11 @@ const AppProvider = ({ children }) => {
           console.error("Error fetching projects in site:", err);
         });
     }
-  }, [site,projects]);
+  }, [site]);
 
-
-  // useEffect(() => {
-  //   const currentProject = projects.find((p)=>{
-  //     return p.name.toLowerCase() == projectName.toLowerCase();
-  //   })
-  //   console.log(projectName);
-  //   axios.get(`${projectAPI}/${currentProject._id}`,
-  //     {
-  //       headers: {
-  //         'Authorization': `Bearer ${accessToken}`
-  //       }
-  //     })
-  //     .then((res)=>{
-  //       setProject(res.data);
-  //       console.log(res.data);  
-  //     })
-  //     .catch((err)=>{
-  //       console.log(err);
-  //     })
-  // },[projectName])
 
 
   //fuction
-  const changePassword = async (userId, oldPassword, newPassword) => {
-    try {
-      const response = await axios.put(`${userApi}/change-password`, {
-        userId,
-        oldPassword,
-        newPassword
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response.data;
-    }
-  };
 
   const showNotification = (message, description) => {
     notification.info({
@@ -242,7 +210,7 @@ const AppProvider = ({ children }) => {
       authAPI, siteAPI, userApi,
       accessToken,
       user, setUser,
-      //    setAccessToken,
+      //setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,
       showNotification,
       showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,

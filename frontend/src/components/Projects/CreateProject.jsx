@@ -6,7 +6,7 @@ import { AppContext } from "../../context/AppContext";
 
 const CreateProject = ({ visible, onCreate, onCancel }) => {
   const [form] = Form.useForm();
-  const { site, accessToken, setProjects, user } = useContext(AppContext); // Lấy user hiện tại
+  const { siteAPI,site, accessToken, setProjects, user } = useContext(AppContext); // Lấy user hiện tại
   const [searchTerm, setSearchTerm] = useState("");
   const [siteMembers, setSiteMembers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -31,11 +31,11 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
   // Lọc thành viên theo từ khóa tìm kiếm
   const filteredUsers = searchTerm
     ? siteMembers.filter(
-        (member) =>
-          member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          member.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : siteMembers; 
+      (member) =>
+        member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    : siteMembers;
 
   // Chỉ hiển thị tối đa 5 thành viên, nếu nhiều hơn sẽ có scroll
   const visibleUsers = filteredUsers.slice(0, 5);
@@ -56,7 +56,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
 
   // Kiểm tra thành viên có hợp lệ không
   const isValidMembers = () => {
-    return selectedUsers.every(member => 
+    return selectedUsers.every(member =>
       siteMembers.some(siteMember => siteMember._id === member._id)
     );
   };
@@ -80,7 +80,17 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
         }
       );
 
-      setProjects((prev) => [...prev, response.data.project]);
+      axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setProjects(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching projects in site:", err);
+        });
       message.success("Project created successfully!");
       form.resetFields();
       setSelectedUsers([]); // Reset danh sách sau khi tạo

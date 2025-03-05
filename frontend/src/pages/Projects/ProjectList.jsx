@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { Card, Avatar, Badge, Button, List, Typography, Layout, Menu, Divider, Tooltip, Input, Empty, Dropdown } from "antd";
 import { ArrowRightOutlined, RightOutlined, UnorderedListOutlined, FilterOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import CreateProject from "../../components/Project/CreateProject";
+import CreateProject from "../../components/Projects/CreateProject";
 import { AppContext } from "../../context/AppContext";
 
 

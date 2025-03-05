@@ -1,7 +1,7 @@
 
 import TabPane from 'antd/es/tabs/TabPane'
 import React, { useContext, useEffect, useState } from 'react'
-import Summary from '../../components/Project/Detail/Summary'
+
 import Title from 'antd/es/typography/Title'
 
 

@@ -4,7 +4,8 @@ const JWT = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
-const slugify = require("../utils/slugify.util");
+const { slugify } = require('../utils/slugify.util');
+
 
 
 

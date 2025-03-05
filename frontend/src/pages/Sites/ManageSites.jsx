@@ -28,7 +28,6 @@ import {
 } from "@ant-design/icons";
 import {useNavigate} from "react-router-dom"
 import { green, red } from "@ant-design/colors";
-import CreateProject from "../../components/Project/CreateProject";
 import { AppContext } from "../../context/AppContext";
 import authAxios from "../../utils/authAxios";
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, Avatar, Badge, Button, List, Typography, Layout, Menu, Tooltip, Row, Col, Calendar, Alert, DatePicker } from "antd";
 import { ArrowRightOutlined, RightOutlined, UnorderedListOutlined, FilterOutlined, SearchOutlined, LeftOutlined, PlusCircleFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import CreateProject from "../../components/Project/CreateProject";
+import CreateProject from "../../components/Projects/CreateProject";
 import dayjs from "dayjs";
 const { Text, Title } = Typography;
 const { Sider, Content, Header } = Layout;
