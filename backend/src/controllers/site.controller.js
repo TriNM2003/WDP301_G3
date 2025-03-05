@@ -18,8 +18,8 @@ const getAllSites = async (req, res, next) => {
 
 const getSiteById = async (req, res, next) => {
     try {
-        const id = req.params.id;
-        const site = await SiteService.getSiteById(id)
+        const {siteId} = req.params;
+        const site = await SiteService.getSiteById(siteId)
         res.status(200).json(site);
     } catch (error) {
         res.status(400).json({ 

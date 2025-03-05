@@ -10,7 +10,6 @@ import { useLocation } from 'react-router-dom'
 function _id() {
     let location = useLocation();
     let isManageProject = location.pathname === "/site/project/manage/members";
-    console.log(location)
     return (
         <Layout style={{ height: 'calc(100vh - 64px)' }}>
             {!isManageProject && 

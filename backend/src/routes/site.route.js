@@ -11,7 +11,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 siteRouter.use(bodyParser.json());
 
 siteRouter.get("/all", verifyAccessToken, siteController.getAllSites)
-siteRouter.get("/:id/get-by-id",verifyAccessToken, SiteController.getSiteById)
+siteRouter.get("/:siteId/get-by-id",verifyAccessToken, SiteController.getSiteById)
 siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],
     siteController.getSiteByUserId
