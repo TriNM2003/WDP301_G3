@@ -20,11 +20,17 @@ const getAllSites= async () => {
 
 const getSiteById = async (id) => {
     const site = await Site.findById(id).populate("siteMember._id");
+    if(!site){
+        throw new Error("No site found");
+    }
     return site;
 }
 
 const getSiteMembersById = async (id) => {
     const site = await Site.findById(id).populate("siteMember._id");
+    if(!site){
+        throw new Error("No site found");
+    }
     return site.siteMember;
 }
 
