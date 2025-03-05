@@ -24,7 +24,7 @@ import {
 } from "@ant-design/icons";
 import {useNavigate} from "react-router-dom"
 import { green } from "@ant-design/colors";
-import CreateProject from "../Project/CreateProject";
+import CreateProject from "../Projects/CreateProject";
 import { AppContext } from "../../context/AppContext";
 
 const { Title } = Typography;

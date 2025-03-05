@@ -1,11 +1,13 @@
 import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import authAxios from '../utils/authAxios';
 import { message, notification } from 'antd';
 
 export const AppContext = createContext();
+
+const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password"];
 
 const AppProvider = ({ children }) => {
   //parameter
@@ -14,6 +16,9 @@ const AppProvider = ({ children }) => {
   // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
+  const [site, setSite] = useState({})
+  const [projects, setProjects] = useState([]);
+  const [project, setProject] = useState({});
 
   const location = useLocation();
   const nav = useNavigate();
@@ -32,6 +37,8 @@ const AppProvider = ({ children }) => {
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
+  const siteAPI = "http://localhost:9999/sites";
+  const projectAPI = "http://localhost:9999/projects";
 
   // State lưu thông tin user & accessToken
 
@@ -47,8 +54,13 @@ const AppProvider = ({ children }) => {
 
   //call api
   useEffect(() => {
-    localStorage.setItem("lastVisitedUrl", location.pathname);
-    checkLoginStatus();
+    if (location.pathname !== '/login') {
+      localStorage.setItem("lastVisitedUrl", location.pathname);
+    }
+    if (!excludedRoutes.includes(location.pathname)) {
+      checkLoginStatus();
+    }
+
 
     axios.get(`${userApi}/user-profile`, {
       headers: {
@@ -63,19 +75,45 @@ const AppProvider = ({ children }) => {
       });
   }, [location.pathname]);
 
-  //fuction
-  const changePassword = async (userId, oldPassword, newPassword) => {
-    try {
-      const response = await axios.put(`${userApi}/change-password`, {
-        userId,
-        oldPassword,
-        newPassword
+
+
+  // get project in site
+
+  useEffect(() => {
+
+    axios.get(`${siteAPI}/get-by-user-id`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+      .then((res) => {
+        setSite(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching site:", err);
       });
-      return response.data;
-    } catch (error) {
-      throw error.response.data;
+
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (site._id) {
+      axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setProjects(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching projects in site:", err);
+        });
     }
-  };
+  }, [site]);
+
+
+
+  //fuction
 
   const showNotification = (message, description) => {
     notification.info({
@@ -106,18 +144,19 @@ const AppProvider = ({ children }) => {
 
   const checkLoginStatus = () => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
-    .then(() => {
-      console.log("check login...");
-    })
-    .catch(err => {
-      // khong co refresh token hoac loi lay refresh token
-      console.log(err.response.data.message);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("accessTokenExp");
-      localStorage.removeItem("userId");
-      setUser({});
-      nav('/auth/login');
-    })
+      .then(() => {
+        const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
+        nav(lastVisitedUrl);
+      })
+      .catch(err => {
+        // khong co refresh token hoac loi lay refresh token
+        console.log(err.response.data.message);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("accessTokenExp");
+        localStorage.removeItem("userId");
+        setUser({});
+        nav('/auth/login');
+      })
   }
 
 
@@ -143,18 +182,18 @@ const AppProvider = ({ children }) => {
   //Complete sprint
   const showCompletedSprint = () => {
     setCompletedSprint(true);
-};
+  };
 
-const handleCompletedCancel = () => {
+  const handleCompletedCancel = () => {
     setCompletedSprint(false);
-};
+  };
 
-const handleCompletedSprint = () => {
+  const handleCompletedSprint = () => {
     message.success({
-        content: `🎯 (Sprint name) has been completed successfully! 🚀 
+      content: `🎯 (Sprint name) has been completed successfully! 🚀 
                   - ✅ 10 (activitys) completed 
                   - ⚠️ 3 (uncompleted bugs) moved to {sprint}`,
-        duration: 4, // Thời gian hiển thị message (4 giây)
+      duration: 4, // Thời gian hiển thị message (4 giây)
 
     });
     showNotification(`Project update`, `🎯 (Sprint name) has been completed successfully! 🚀 
@@ -163,21 +202,32 @@ const handleCompletedSprint = () => {
 
     setCompletedSprint(false);
 
-};
+  };
+
+const handleAddTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+}
+
+const handleKickTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
+}
 
   return (
     <AppContext.Provider value={{
       accessToken,
-      authAPI,
+      authAPI, siteAPI, userApi,
       accessToken,
       user, setUser,
-      //    setAccessToken,
+      //setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,
       showNotification,
       showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
       activityModal, setActivityModal, showActivity, closeActivity,
-      handleActivityCreate,createActivityModal, setCreateActivityModal,activityName, setActivityName,
-      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint,handleCompletedCancel
+      handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
+      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
+      handleAddTeamMember, handleKickTeamMember
+      project, setProject, projects, setProjects, setSite, site
+
     }}>
       {children}
     </AppContext.Provider>

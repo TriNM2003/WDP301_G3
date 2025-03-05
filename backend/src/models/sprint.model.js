@@ -20,6 +20,10 @@ const sprintSchema = new mongoose.Schema({
         type: String,
 
     },
+    activities:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'activity',
+    }],
     startDate: {
         type: Date,
         required: true

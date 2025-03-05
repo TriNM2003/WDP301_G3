@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, Avatar, Badge, Button, List, Typography, Layout, Menu, Tooltip, Row, Col, Calendar, Alert, DatePicker } from "antd";
 import { ArrowRightOutlined, RightOutlined, UnorderedListOutlined, FilterOutlined, SearchOutlined, LeftOutlined, PlusCircleFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import CreateProject from "../../components/Project/CreateProject";
+import CreateProject from "../../components/Projects/CreateProject";
 import dayjs from "dayjs";
 const { Text, Title } = Typography;
 const { Sider, Content, Header } = Layout;
@@ -20,7 +20,7 @@ const activities = [
         activityTitle: "Fe common",
         startDate: "2025-02-23",
         dueDate: "2025-03-4",
-        assignee:[ "u1"],
+        assignee: ["u1"],
         color: "#60A5FA",
         project: {
             projectName: "NJZ 1",
@@ -31,7 +31,7 @@ const activities = [
         activityTitle: "API Design",
         startDate: "2025-02-24",
         dueDate: "2025-02-28",
-        assignee:[ "u1"],
+        assignee: ["u1"],
         color: "#FBBF24",
         project: {
             projectName: "NJZ 2",
@@ -42,7 +42,7 @@ const activities = [
         activityTitle: "UI Design",
         startDate: "2025-02-25",
         dueDate: "2025-02-27",
-        assignee:[ "u1"],
+        assignee: ["u1"],
         color: "#F87171",
         project: {
             projectName: "NJZ 3",
@@ -53,7 +53,7 @@ const activities = [
         activityTitle: "HUHU Design",
         startDate: "2025-02-25",
         dueDate: "2025-03-3",
-        assignee:[ "u1"],
+        assignee: ["u1"],
         color: "#F87171",
         project: {
             projectName: "NJZ 4",
@@ -176,7 +176,7 @@ const ProjectList = () => {
     };
 
 
-   
+
 
     // Hàm lấy màu không trùng lặp
     const getUniqueColor = (() => {
@@ -217,170 +217,166 @@ const ProjectList = () => {
     const activeProjectsCount = projects.filter((project) => {
         // Nếu project.projectStatus không có, coi như active theo mặc định
         return (project.projectStatus || "active") === "active";
-      }).length;
-      
-      // Tính tổng số activity được assign cho user hiện tại
-      const assignedActivitiesCount = activities.filter((activity) => {
+    }).length;
+
+    // Tính tổng số activity được assign cho user hiện tại
+    const assignedActivitiesCount = activities.filter((activity) => {
         return Array.isArray(activity.assignee) && activity.assignee.includes(currentUserId);
-      }).length;
-      
-      // Tính số activity sắp hết hạn trong vòng 2 ngày (chỉ tính các activity chưa hết hạn)
-      const expiringActivitiesCount = activities.filter((activity) => {
+    }).length;
+
+    // Tính số activity sắp hết hạn trong vòng 2 ngày (chỉ tính các activity chưa hết hạn)
+    const expiringActivitiesCount = activities.filter((activity) => {
         if (!activity.dueDate) return false;
         const diffDays = dayjs(activity.dueDate).diff(dayjs(), "day");
         // Chỉ tính các activity có hạn từ 0 đến 2 ngày
         return diffDays >= 0 && diffDays <= 2;
-      }).length;
+    }).length;
     return (
         <Layout style={{ minHeight: "100%" }}>
-            <Sider width={200} theme="light">
-                <Menu mode="inline" defaultSelectedKeys={["all"]}>
-                    <Menu.Item key="all" icon={<UnorderedListOutlined />}>Recent Projects</Menu.Item>
-                </Menu>
-            </Sider>
+
             <Layout>
                 <Content style={{ padding: "20px 10px", textAlign: "left" }}>
                     <Row gutter={[16, 16]}>
-                    <Col xs={24} md={15}>
-    <div style={{ display: "flex", flexDirection: "column" }}> 
-        <div style={{
-            maxWidth: "100%", 
-            padding: "16px",
-            borderRadius: "8px",
-            textAlign: "left",
-            display: "inline-block",
-            marginBottom: "20px" ,
-            backgroundColor: "#bae7ff"
-        }}>
-            <Title level={3} style={{ marginBottom: 4 }}>Add Project</Title>
-            <Text style={{ color: "gray", fontSize: "12px" }}>
-                Create a new project on SkrumIO. Directory to your local projects.
-            </Text>
-            <Button
-                type="text"
-                style={{
-                    color: "#ff4d4f",
-                    fontWeight: "bold",
-                    fontSize: "16px",
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "0px",
-                    marginTop: "15px",
-                    textAlign: "left",
-                    width: "210px",
-                    justifyContent: "flex-start",
-                }}
-                onClick={() => setShowCreateModal(true)}
-            >
-                <PlusCircleFilled style={{ fontSize: "20px", color: "#ff4d4f", marginRight: "6px" }} />
-                CREATE NEW PROJECT
-            </Button>
-            <CreateProject
-                visible={showCreateModal}
-                onCreate={handleCreateProject}
-                onCancel={() => setShowCreateModal(false)}
-            />
-        </div>
-        <Row gutter={[16, 16]} style={{ marginBottom: "10px", display: "flex", justifyContent: "space-between" }}>
-    <Col span={8}>
-        <Card hoverable style={{ textAlign: "center", height: "100px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", borderRadius: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-                <div style={{ width: "8px", height: "8px", backgroundColor: "#3B82F6", borderRadius: "50%", marginRight: "6px" }}></div>
-                <Text type="secondary" style={{ fontSize: "12px" }}>Active Projects</Text>
-            </div>
-            <Title level={2} style={{ margin: 0, color: "#3B82F6" }}>{activeProjectsCount}</Title>
-        </Card>
-    </Col>
-    <Col span={8}>
-        <Card hoverable style={{ textAlign: "center", height: "100px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", borderRadius: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-                <div style={{ width: "8px", height: "8px", backgroundColor: "#10B981", borderRadius: "50%", marginRight: "6px" }}></div>
-                <Text type="secondary" style={{ fontSize: "12px" }}>Assigned Activities</Text>
-            </div>
-            <Title level={2} style={{ margin: 0, color: "#10B981" }}>{assignedActivitiesCount}</Title>
-        </Card>
-    </Col>
-    <Col span={8}>
-        <Card hoverable style={{ textAlign: "center", height: "100px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", borderRadius: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-                <div style={{ width: "8px", height: "8px", backgroundColor: "#F97316", borderRadius: "50%", marginRight: "6px" }}></div>
-                <Text type="secondary" style={{ fontSize: "12px" }}>Expiring Soon</Text>
-            </div>
-            <Title level={2} style={{ margin: 0, color: "#F97316" }}>{expiringActivitiesCount}</Title>
-        </Card>
-    </Col>
-</Row>
+                        <Col xs={24} md={15}>
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                <div style={{
+                                    maxWidth: "100%",
+                                    padding: "16px",
+                                    borderRadius: "8px",
+                                    textAlign: "left",
+                                    display: "inline-block",
+                                    marginBottom: "20px",
+                                    backgroundColor: "#bae7ff"
+                                }}>
+                                    <Title level={3} style={{ marginBottom: 4 }}>Add Project</Title>
+                                    <Text style={{ color: "gray", fontSize: "12px" }}>
+                                        Create a new project on SkrumIO. Directory to your local projects.
+                                    </Text>
+                                    <Button
+                                        type="text"
+                                        style={{
+                                            color: "#ff4d4f",
+                                            fontWeight: "bold",
+                                            fontSize: "16px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            padding: "0px",
+                                            marginTop: "15px",
+                                            textAlign: "left",
+                                            width: "210px",
+                                            justifyContent: "flex-start",
+                                        }}
+                                        onClick={() => setShowCreateModal(true)}
+                                    >
+                                        <PlusCircleFilled style={{ fontSize: "20px", color: "#ff4d4f", marginRight: "6px" }} />
+                                        CREATE NEW PROJECT
+                                    </Button>
+                                    <CreateProject
+                                        visible={showCreateModal}
+                                        onCreate={handleCreateProject}
+                                        onCancel={() => setShowCreateModal(false)}
+                                    />
+                                </div>
+                                <Row gutter={[16, 16]} style={{ marginBottom: "10px", display: "flex", justifyContent: "space-between" }}>
+                                    <Col span={8}>
+                                        <Card hoverable style={{ textAlign: "center", height: "100px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", borderRadius: "8px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+                                                <div style={{ width: "8px", height: "8px", backgroundColor: "#3B82F6", borderRadius: "50%", marginRight: "6px" }}></div>
+                                                <Text type="secondary" style={{ fontSize: "12px" }}>Active Projects</Text>
+                                            </div>
+                                            <Title level={2} style={{ margin: 0, color: "#3B82F6" }}>{activeProjectsCount}</Title>
+                                        </Card>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Card hoverable style={{ textAlign: "center", height: "100px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", borderRadius: "8px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+                                                <div style={{ width: "8px", height: "8px", backgroundColor: "#10B981", borderRadius: "50%", marginRight: "6px" }}></div>
+                                                <Text type="secondary" style={{ fontSize: "12px" }}>Assigned Activities</Text>
+                                            </div>
+                                            <Title level={2} style={{ margin: 0, color: "#10B981" }}>{assignedActivitiesCount}</Title>
+                                        </Card>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Card hoverable style={{ textAlign: "center", height: "100px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", borderRadius: "8px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+                                                <div style={{ width: "8px", height: "8px", backgroundColor: "#F97316", borderRadius: "50%", marginRight: "6px" }}></div>
+                                                <Text type="secondary" style={{ fontSize: "12px" }}>Expiring Soon</Text>
+                                            </div>
+                                            <Title level={2} style={{ margin: 0, color: "#F97316" }}>{expiringActivitiesCount}</Title>
+                                        </Card>
+                                    </Col>
+                                </Row>
 
-        {/* Hàng 2: Recent Projects */}
-        <div>
-            <Title level={5} style={{ marginBottom: "20px", marginTop: "0px" }}>Recent Projects</Title>
-            <List
-                grid={{ gutter: 24, column: 4 }}
-                dataSource={recentProjects}
-                renderItem={(project) => (
-                    <List.Item>
-                        <Card
-                            className="project-card"
-                            hoverable
-                            style={{ width: "170px" }}
-                            cover={
-                                <div
-                                    className="project-card-bg"
-                                    style={{
-                                        background: `url(${project.projectAvatar}) center/cover no-repeat`,
-                                        height: "100px",
-                                        width: "95%",
-                                        margin: "5px auto 0px",
-                                        borderRadius: "5px 5px 0 0",
-                                    }}
-                                />
-                            }
-                            bodyStyle={{ padding: "7px" }}
-                            onClick={() => navigate(`/project/${project.id}`)}
-                        >
-                            <Title level={5} style={{ margin: "0", textAlign: "left" }}>
-                                {project.projectName}
-                            </Title>
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", padding: "10px 0" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-                                    <Text type="secondary" style={{ fontSize: "12px" }}>Members</Text>
-                                    <Text type="secondary" style={{ fontSize: "12px" }}>Manager</Text>
+                                {/* Hàng 2: Recent Projects */}
+                                <div>
+                                    <Title level={5} style={{ marginBottom: "20px", marginTop: "0px" }}>Recent Projects</Title>
+                                    <List
+                                        grid={{ gutter: 24, column: 4 }}
+                                        dataSource={recentProjects}
+                                        renderItem={(project) => (
+                                            <List.Item>
+                                                <Card
+                                                    className="project-card"
+                                                    hoverable
+                                                    style={{ width: "170px" }}
+                                                    cover={
+                                                        <div
+                                                            className="project-card-bg"
+                                                            style={{
+                                                                background: `url(${project.projectAvatar}) center/cover no-repeat`,
+                                                                height: "100px",
+                                                                width: "95%",
+                                                                margin: "5px auto 0px",
+                                                                borderRadius: "5px 5px 0 0",
+                                                            }}
+                                                        />
+                                                    }
+                                                    bodyStyle={{ padding: "7px" }}
+                                                    onClick={() => navigate(`/project/${project.id}`)}
+                                                >
+                                                    <Title level={5} style={{ margin: "0", textAlign: "left" }}>
+                                                        {project.projectName}
+                                                    </Title>
+                                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", padding: "10px 0" }}>
+                                                        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                                                            <Text type="secondary" style={{ fontSize: "12px" }}>Members</Text>
+                                                            <Text type="secondary" style={{ fontSize: "12px" }}>Manager</Text>
+                                                        </div>
+                                                        <div
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "space-between",
+                                                                backgroundColor: "#F5F5F5",
+                                                                padding: "1px 0px",
+                                                                borderRadius: "25px",
+                                                                width: "100%",
+                                                                marginTop: "4px"
+                                                            }}
+                                                        >
+                                                            <Avatar.Group maxCount={2}>
+                                                                {project.projectMember.map((member) => (
+                                                                    <Tooltip key={member._id} title={member.name}>
+                                                                        <Avatar src={member.avatar} />
+                                                                    </Tooltip>
+                                                                ))}
+                                                            </Avatar.Group>
+                                                            <Tooltip title={project.pm.name}>
+                                                                <Avatar src={project.pm.avatar} />
+                                                            </Tooltip>
+                                                        </div>
+                                                    </div>
+                                                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                                                        Last update: {getRelativeTime(project.projectMember[0]?.updatedAt)}
+                                                    </Text>
+                                                </Card>
+                                            </List.Item>
+                                        )}
+                                    />
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        backgroundColor: "#F5F5F5",
-                                        padding: "1px 0px",
-                                        borderRadius: "25px",
-                                        width: "100%",
-                                        marginTop: "4px"
-                                    }}
-                                >
-                                    <Avatar.Group maxCount={2}>
-                                        {project.projectMember.map((member) => (
-                                            <Tooltip key={member._id} title={member.name}>
-                                                <Avatar src={member.avatar} />
-                                            </Tooltip>
-                                        ))}
-                                    </Avatar.Group>
-                                    <Tooltip title={project.pm.name}>
-                                        <Avatar src={project.pm.avatar} />
-                                    </Tooltip>
-                                </div>
+
                             </div>
-                            <Text type="secondary" style={{ fontSize: "12px" }}>
-                                Last update: {getRelativeTime(project.projectMember[0]?.updatedAt)}
-                            </Text>
-                        </Card>
-                    </List.Item>
-                )}
-            />
-        </div>
-
-    </div>
-</Col>
+                        </Col>
 
                         <Col xs={24} md={9}>
                             <div style={{ flex: 1 }}>

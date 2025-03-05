@@ -5,7 +5,7 @@ import { ArrowRightOutlined, GoogleCircleFilled, GoogleOutlined, GooglePlusCircl
 import { Link, useNavigate } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 function Home() {
-  const {user} = useContext(AppContext);
+  const {user, site} = useContext(AppContext);
   const navigate = useNavigate();
   return (
     <Row  justify="space-around"  style={{height:"55vh", margin: "0 0 5% 0" , background: " linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/homepage/wellcome-bg.jpg') no-repeat center center fixed ", "background-size": "100%", "background-blend-mode": "multiply" }}>
@@ -15,7 +15,7 @@ function Home() {
           <Row align="middle" style={{border:"1px solid white", margin:"0 5%", padding:"1% 3%"}}>
               <Col span={18}  >
                   <Title level={4} style={{color:"white", margin:"0"}}>🖥️ Site</Title>
-                  <p style={{color:"white", margin:"0"}}>Sitename</p>
+                  <p style={{color:"white", margin:"0"}}>{site.siteName}</p>
               </Col>
               <Col align="end" span={4} >
                   <Button onClick={()=>{navigate("/site")}} icon={<ArrowRightOutlined />} iconPosition='end' color='cyan' variant='solid' style={{border:"0"}}>Go to site</Button>

@@ -93,9 +93,9 @@ const login = async (username, password, res) => {
     };
 } 
     // accessToken
-    const accessToken = jwtUtils.generateAccessToken(user);
+    const accessToken = jwtUtils.generateAccessToken(user._id);
     // refresh token
-    const refreshToken = jwtUtils.generateRefreshToken(user);
+    const refreshToken = jwtUtils.generateRefreshToken(user._id);
     // luu vao trong redis
     await redisUtils.setRefreshToken(user._id, refreshToken, jwtUtils.refreshTokenExp);
     return {
@@ -177,7 +177,7 @@ const refreshAccessToken = async (req, res) => {
     }
 
     // Tạo accessToken mới
-    const accessToken = jwtUtils.generateAccessToken(user);
+    const accessToken = jwtUtils.generateAccessToken(user._id);
 
     return {
         message: "Refresh access token successfully!",
