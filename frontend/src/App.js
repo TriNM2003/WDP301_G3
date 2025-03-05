@@ -52,6 +52,7 @@ import ManageTeams from './components/Team/ManageTeams';
 import ManageSites from './pages/Sites/ManageSites';
 import ManageInvitations from './components/Site/ManageInvitations';
 import SprintBoard from './components/Project/Detail/Sprint/SprintBoard';
+import ProjectListLayout from './components/Project/Layout/ProjectListLayout';
 
 
 
@@ -108,15 +109,30 @@ function App() {
                   <Route path='members' element={<ManageSiteMembers />} />
                   <Route path='teams' element={<ManageTeams />} />
                 </Route>
-              
+
 
 
                 <Route path='list'>
                   <Route index element={<ProjectList />} />
-                  <Route path="projects" element={<ProjectList />} />
+                  <Route path="projects" element={<ProjectListLayout />} >
+                    <Route index element={<ProjectList />} />
+                    <Route path=':projectSlug' element={<P_id />}>
+                      <Route path='' element={<ProjectLayout />}  >
+                        <Route index element={<Summary />} />
+                        <Route path='summary' element={<Summary />} />
+                        <Route path='sprint' element={<SprintBoard />} />
+                        <Route path='board' element={<KanbanBoard />} />
+                      </Route>
+                      <Route path='manage' element={<ManageProjectLayout />}>
+                        <Route path='members' element={<ManageProjectMember />} />
+                      </Route>
+                      <Route path="project-setting" element={<EditProject />} />
+                    </Route>
+                  </Route>
+
                   <Route path="teams" element={<TeamList />} />
                 </Route>
-        
+
                 <Route path='team'>
                   <Route index element={<TeamPerformance />} />
                   <Route path="manage-member" element={<TeamMemberManagement />} />
@@ -124,20 +140,9 @@ function App() {
                   <Route path="member-performance" element={<TeamMemberPerformance />} />
                 </Route>
 
-                <Route path='project' element={<P_id />}>
-                  <Route path='' element={<ProjectLayout />}  >
-                    <Route index element={<Summary />} />
-                    <Route path='summary' element={<Summary />} />
-                    <Route path='sprint' element={<SprintBoard />} />
-                    <Route path='board' element={<KanbanBoard />} />
-                  </Route>
-                  <Route path='manage' element={<ManageProjectLayout />}>
-                    <Route path='members' element={<ManageProjectMember />} />
-                  </Route>
-                  <Route path="project-setting" element={<EditProject />} />
-                </Route>
+
               </Route>
-             
+
               <Route path='/create-site' element={<CreateSite />} />
 
               <Route path='/manage-sites' element={<ManageSites />} />
