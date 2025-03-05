@@ -47,14 +47,14 @@ app.get("/", async (req, res, next) => {
 app.use("/systemRoles", systemRoleRouter);
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
-app.use("/projects", projectRouter);
-app.use("/activities", activityRouter);
 app.use("/sites", siteRouter);
+app.use("/sites/:siteId/projects", projectRouter);
+app.use("/sites/:siteId/projects/:projectId/activities", activityRouter);
 app.use("/activityTypes", activityTypeRouter);
 app.use("/notifications", notificationRouter);
-app.use("/sprints", sprintRouter);
-app.use("/stages", stageRouter);
-app.use("/teams", teamRouter);
+app.use("/sites/:siteId/projects/:projectId/sprints", sprintRouter);
+app.use("/sites/:siteId/projects/:projectId/stages", stageRouter);
+app.use("/sites/:siteId/teams", teamRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 

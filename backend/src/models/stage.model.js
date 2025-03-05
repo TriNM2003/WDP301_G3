@@ -11,6 +11,10 @@ const stageSchema = new mongoose.Schema({
         ref: 'project',
         required: true
     },
+    activities:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'activity',
+    }],
     stageStatus: {
         type: String,
         enum: ['todo', 'doing', 'done'],

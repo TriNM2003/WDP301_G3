@@ -10,7 +10,7 @@ import { blue, cyan, grey, magenta } from '@ant-design/colors';
 
 function SiteSider() {
 
-  const { defaultSelectedKeys, setDefaultSelectedKeys } = useContext(AppContext)
+  const { defaultSelectedKeys, setDefaultSelectedKeys , site} = useContext(AppContext)
   const navigate = useNavigate();
 
   const handleMenuClick = (e) => {
@@ -19,7 +19,7 @@ function SiteSider() {
   };
   return (
     <>
-      <Title level={3} onClick={()=>{navigate("/site")}} style={{cursor:"pointer"}}>Sitename</Title>
+      <Title level={4} onClick={()=>{navigate("/site")}} style={{cursor:"pointer"}}>{site?.siteName}</Title>
       <Divider />
       <Menu
         mode="inline"

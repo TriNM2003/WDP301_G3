@@ -13,3 +13,6 @@ function slugify(str) {
   // "the-quick-brown-fox-jumps-over-the-lazy-dog"
   
   console.log(slugify("söme stüff with áccènts"))
+
+ module.exports = {slugify};
+

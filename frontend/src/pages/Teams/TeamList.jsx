@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, Avatar, Button, List, Typography, Layout, Menu, Tooltip, Input, Empty, Dropdown } from "antd";
 import { RightOutlined, UnorderedListOutlined, FilterOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import CreateTeam from "../../components/Team/CreateTeam"; // Component tạo team
+import CreateTeam from "../../components/Teams/CreateTeam"; // Component tạo team
 
 const { Text, Title } = Typography;
 const { Sider, Content } = Layout;
