@@ -4,15 +4,19 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 
-const getProjectById = async(projectId)=>{
+const getProjectById = async (projectId) => {
     try {
         const project = await db.Project.findById(projectId)
+            .populate({
+                path: "projectMember._id",
+                select: "username fullName"
+            }).populate("site");
         return project;
     } catch (error) {
         throw error;
     }
 }
-const getProjectBySiteId = async(siteId)=>{
+const getProjectBySiteId = async (siteId) => {
     try {
         const project = await db.Project.find(siteId)
         return project;
