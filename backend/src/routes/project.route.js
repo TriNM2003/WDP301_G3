@@ -5,11 +5,11 @@ const { projectController } = require("../controllers");
 
 const cloudinary = require("../configs/cloudinary");
 const authMiddleware = require("../middlewares/auth.middleware");
-projectRouter.use(bodyParser.json());
 const { projectMiddleware, siteMiddleware } = require("../middlewares");
 
-const projectRouter = express.Router({ mergeParams: true });
 
+const projectRouter = express.Router({ mergeParams: true });
+projectRouter.use(bodyParser.json());
 
 projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,

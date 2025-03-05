@@ -1,5 +1,4 @@
 const express = require("express");
-const teamRouter = express.Router();
 const bodyParser = require("body-parser");
 const db = require("../models/index");
 const authMiddleware = require("../middlewares/auth.middleware");
