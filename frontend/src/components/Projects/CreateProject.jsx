@@ -6,11 +6,12 @@ import { AppContext } from "../../context/AppContext";
 
 const CreateProject = ({ visible, onCreate, onCancel }) => {
   const [form] = Form.useForm();
-  const { siteAPI,site, accessToken, setProjects, user } = useContext(AppContext); // Lấy user hiện tại
+  const { siteAPI,site, accessToken, setProjects, user } = useContext(AppContext); 
   const [searchTerm, setSearchTerm] = useState("");
   const [siteMembers, setSiteMembers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showList, setShowList] = useState(false);
+  const [inputError, setInputError] = useState(""); // Thêm state lưu lỗi
 
   // Lấy danh sách thành viên trong site (bỏ qua user đang tạo project)
   useEffect(() => {
@@ -45,8 +46,8 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
     if (!selectedUsers.some((u) => u._id === member._id)) {
       setSelectedUsers([...selectedUsers, member]);
     }
-    setSearchTerm(""); // Reset ô tìm kiếm sau khi chọn
-    setShowList(false); // Ẩn danh sách sau khi chọn
+    setSearchTerm(""); 
+    setShowList(false); 
   };
 
   // Xóa thành viên khỏi danh sách đã chọn
@@ -60,46 +61,66 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
       siteMembers.some(siteMember => siteMember._id === member._id)
     );
   };
-
+  
   // Gửi yêu cầu tạo project
-  const handleCreateProject = async (values) => {
-    if (!isValidMembers()) {
-      message.error("Some members are not in the site. Please check again.");
-      return;
-    }
 
-    try {
-      const response = await axios.post(
-        `http://localhost:9999/sites/${site._id}/projects/create`,
-        {
-          projectName: values.projectName,
-          projectMember: selectedUsers.map((member) => member._id),
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
 
-      axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-        .then((res) => {
-          setProjects(res.data);
-        })
-        .catch((err) => {
-          console.error("Error fetching projects in site:", err);
-        });
-      message.success("Project created successfully!");
-      form.resetFields();
-      setSelectedUsers([]); // Reset danh sách sau khi tạo
-      onCreate();
-    } catch (error) {
-      console.error("Error creating project:", error);
-      message.error("Failed to create project.");
-    }
-  };
+const handleCreateProject = async (values) => {
+  // Kiểm tra nếu input có giá trị nhưng chưa được chọn từ danh sách
+  if (searchTerm && !siteMembers.some(member => 
+      member.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()))) {
+    setInputError("Member not exist in this site");
+    return;
+  }
+
+  // Kiểm tra nếu tất cả thành viên được chọn đều thuộc site
+  const invalidMembers = selectedUsers.filter(member => 
+    !siteMembers.some(siteMember => siteMember._id === member._id)
+  );
+
+  if (invalidMembers.length > 0) {
+    message.error("Some selected members are not part of the site. Please check again.");
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      `http://localhost:9999/sites/${site._id}/projects/create`,
+      {
+        projectName: values.projectName,
+        projectMember: selectedUsers.map((member) => member._id),
+      },
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+    .then((res) => {
+      setProjects(res.data);
+    })
+    .catch((err) => {
+      console.error("Error fetching projects in site:", err);
+    });
+
+    message.success("Project created successfully!");
+    form.resetFields();
+    setSelectedUsers([]);
+    setSearchTerm("");
+    setInputError(""); // Xóa lỗi sau khi tạo thành công
+    onCreate();
+  } catch (error) {
+    console.error("Error creating project:", error);
+    message.error("Failed to create project.");
+  }
+};
+
+  
 
   return (
     <Modal open={visible} title="Create New Project" onCancel={onCancel} footer={null}>
@@ -114,7 +135,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
         </Form.Item>
 
         {/* Mời thành viên vào project */}
-        <Form.Item label="Invite Project Members">
+        <Form.Item label="Add Project Members ( Optional )"  validateStatus={inputError ? "error" : ""} help={inputError}>
           <div style={{ position: "relative" }}>
             <Input
               placeholder="Search by username or email"
@@ -122,6 +143,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setShowList(true);
+                setInputError(""); 
               }}
               style={{ paddingRight: "40px" }}
             />

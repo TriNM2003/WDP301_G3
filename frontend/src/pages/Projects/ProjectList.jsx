@@ -11,10 +11,6 @@ const { Text, Title } = Typography;
 const { Sider, Content, Header } = Layout;
 
 
-
-
-
-
 const getRelativeTime = (date) => {
   const now = new Date();
   const past = new Date(date);
@@ -222,11 +218,14 @@ const ProjectList = () => {
                 grid={{ gutter: 48, column: 4 }}
                 dataSource={displayedProjects}
                 style={{ marginTop: searchQuery ? "20px" : "0px" }}
+            
+                        
                 renderItem={(project) => (
                   <List.Item>
                     <Card
                       className="project-card"
                       hoverable
+                      onClick={() => navigate(`${project.projectSlug}`)}
                       cover={
                         <div
                           className="project-card-bg"
@@ -313,7 +312,7 @@ const ProjectList = () => {
 
                         }}
                         onClick={() => navigate(`${project.projectSlug}`)}
-                        lo
+                        
                         
                       >
                         Go to project{" "}
