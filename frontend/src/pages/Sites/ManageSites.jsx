@@ -84,7 +84,7 @@ useEffect(() => {
 
 const fetchSites = () => {
   // get all sites
-  authAxios.get(`${siteApi}/all`)
+  authAxios.get(`${siteApi}/get-all`)
   .then(res => {
     const sites = res.data.map((site, index) => {
       const siteOwner = site.siteMember.find(member => member.roles[0] === "siteOwner");
@@ -109,7 +109,10 @@ const fetchSites = () => {
     // console.log(sites)
     setSites(sites);
   })
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.log(err);
+    nav("/home");
+  });
 }
 
 const fetchUserEmails = () => {
@@ -164,6 +167,10 @@ const handleCreateSite = async () => {
         formData.append("siteAvatar", fileList[0].originFileObj);
         console.log("has file");
       }
+      console.log("FormData Entries:");
+for (let pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
       await authAxios.post(`${siteApi}/create`, formData,{
         headers: { 
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -190,7 +197,7 @@ const handleCreateSite = async () => {
     console.log(error)
       messageApi.open({
           type: 'error',
-          content: error.response?.data?.message || error.errorFields[0].errors[0],
+          content: String(error.response?.data?.error?.message),
           duration: 2
       })
   }

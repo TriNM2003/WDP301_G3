@@ -14,4 +14,5 @@ function slugify(str) {
   
   console.log(slugify("söme stüff with áccènts"))
 
-  module.exports =  slugify ;
+ module.exports = {slugify};
+

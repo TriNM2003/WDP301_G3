@@ -239,7 +239,7 @@ const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{
       accessToken,
-      authAPI,
+      authAPI, siteAPI, userApi,
       accessToken,
       user, setUser,
       //    setAccessToken,
@@ -250,6 +250,7 @@ const AppProvider = ({ children }) => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       project, setProject, projects, setProjects, setSite, site
+
 
     }}>
       {children}
