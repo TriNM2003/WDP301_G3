@@ -5,7 +5,7 @@ const { projectController } = require("../controllers");
 const authMiddleware = require("../middlewares/auth.middleware");
 const { projectMiddleware, siteMiddleware } = require("../middlewares");
 
-const projectRouter = express.Router();
+const projectRouter = express.Router({mergeParams: true});
 
 
 projectRouter.use(bodyParser.json());

@@ -1,3 +1,4 @@
+const accountMiddleware = require("./account.middleware");
 const activityMiddleware = require("./activity.middleware");
 const auth = require("./auth.middleware");
 const projectMiddleware = require("./project.middleware");
@@ -7,5 +8,6 @@ module.exports = {
     auth,
     activityMiddleware,
     projectMiddleware,
-    siteMiddleware
+    siteMiddleware,
+    accountMiddleware
 };

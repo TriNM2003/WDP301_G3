@@ -124,7 +124,7 @@ function App() {
                   <Route path="member-performance" element={<TeamMemberPerformance />} />
                 </Route>
 
-                <Route path='project' element={<P_id />}>
+                <Route path='project/:projectSlug' element={<P_id />}>
                   <Route path='' element={<ProjectLayout />}  >
                     <Route index element={<Summary />} />
                     <Route path='summary' element={<Summary />} />

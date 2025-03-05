@@ -62,7 +62,7 @@ const activitySchema = new mongoose.Schema({
         updatedAt: {
             type: Date,
             default: Date.now
-        }   
+        }
     }],
 
     attachments: [
@@ -96,13 +96,15 @@ const activitySchema = new mongoose.Schema({
         type: Date,
         // lon hon hoac bang startDate 
         validate: {
-            validator: function(v) {
+            validator: function (v) {
+                if (v != null && this.startDate != null) { 
                 return v >= this.startDate;
-            },
-            message: 'Due date must be greater than or equal to start date'
-        }
-
+            }
+        },
+        message: 'Due date must be greater than or equal to start date'
     }
+
+}
 }, { timestamps: true });
 
 const Activity = mongoose.model("activity", activitySchema);
