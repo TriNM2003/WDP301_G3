@@ -20,6 +20,7 @@ const getUserById = async(userId)=>{
 
 const userService = {
     getAllUsers,    
+
     getUserById
 }
 

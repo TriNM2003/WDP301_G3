@@ -11,14 +11,19 @@ const { slugify } = require('../utils/slugify.util');
 
 
 
-const getProjectById = async(projectId)=>{
+const getProjectById = async (projectId) => {
     try {
         const project = await db.Project.findById(projectId)
+            .populate({
+                path: "projectMember._id",
+                select: "username fullName"
+            }).populate("site");
         return project;
     } catch (error) {
         throw error;
     }
 }
+
 const getAllProjects = async()=>{
     try {
         const project = await db.Project.find({})
