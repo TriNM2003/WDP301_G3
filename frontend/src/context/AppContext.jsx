@@ -19,7 +19,7 @@ const AppProvider = ({ children }) => {
   const [site, setSite] = useState({})
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
-  const {projectName} = useParams()
+  
   const location = useLocation();
   const nav = useNavigate();
 
@@ -88,38 +88,9 @@ const AppProvider = ({ children }) => {
       .catch((err)=>{
         console.log(err);
       })
-      axios.get(`${projectAPI}/get-by-site`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      .then((res)=>{
-        setProjects(res.data);
-      })
-      .catch((err)=>{
-        console.log(err);
-      })
+
   },[accessToken])
-  useEffect(() => {
-    const currentProject = projects.find((p)=>{
-      return p.name.toLowerCase() == projectName.toLowerCase();
-    })
-    console.log(projectName);
-    // axios.get(`${projectAPI}/${currentProject._id}`,
-    //   {
-    //     headers: {
-    //       'Authorization': `Bearer ${accessToken}`
-    //     }
-    //   })
-    //   .then((res)=>{
-    //     setProject(res.data);
-    //     console.log(res.data);  
-    //   })
-    //   .catch((err)=>{
-    //     console.log(err);
-    //   })
-  },[projectName])
+
 
   //fuction
   const changePassword = async (userId, oldPassword, newPassword) => {
@@ -166,7 +137,6 @@ const AppProvider = ({ children }) => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
     .then(() => {
       const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
-      console.log("check login status successfully, last visited url: ", lastVisitedUrl);
       nav(lastVisitedUrl);
     })
     .catch(err => {
@@ -237,7 +207,8 @@ const AppProvider = ({ children }) => {
       showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
-      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel
+      completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
+      project, setProject,projects, setProjects
     }}>
       {children}
     </AppContext.Provider>
