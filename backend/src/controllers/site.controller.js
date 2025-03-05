@@ -19,7 +19,9 @@ const getAllSites = async (req, res, next) => {
 
 const getSiteById = async (req, res, next) => {
     try {
-        const siteId = req.params.siteId;
+
+        const {siteId} = req.params;
+
         const site = await SiteService.getSiteById(siteId)
         res.status(200).json(site);
     } catch (error) {
@@ -86,6 +88,23 @@ const inviteMembersByEmail = async (req, res, next) => {
     }
 }
 
+// get all user in site
+
+const getAllUsersInSite = async (req, res, next) => {
+    try {
+        const { siteId } = req.params;
+        const users = await siteService.getAllUsersInSite(siteId);
+
+        if (!users || users.length === 0) {
+            return res.status(404).json({ error: { status: 404, message: "No members found in this site" } });
+        }
+
+        res.status(200).json(users);
+    } catch (error) {
+        next(error);
+    }
+};
+
 const siteController = {
     getSiteById,
     createSite,
@@ -93,6 +112,8 @@ const siteController = {
     inviteMembersByEmail,
     getAllSites,
     getSiteMembersById,
+    getAllUsersInSite
+
 }
 
 module.exports = siteController;

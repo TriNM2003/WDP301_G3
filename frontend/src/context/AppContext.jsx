@@ -7,7 +7,7 @@ import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
-const excludedRoutes = ["/", "/home","/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password"];
+const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password"];
 
 const AppProvider = ({ children }) => {
   //parameter
@@ -19,7 +19,7 @@ const AppProvider = ({ children }) => {
   const [site, setSite] = useState({})
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
-  const {projectName} = useParams()
+
   const location = useLocation();
   const nav = useNavigate();
 
@@ -54,13 +54,13 @@ const AppProvider = ({ children }) => {
 
   //call api
   useEffect(() => {
-    if(location.pathname !== '/login'){
+    if (location.pathname !== '/login') {
       localStorage.setItem("lastVisitedUrl", location.pathname);
     }
-    if(!excludedRoutes.includes(location.pathname)){
+    if (!excludedRoutes.includes(location.pathname)) {
       checkLoginStatus();
     }
-    
+
 
     axios.get(`${userApi}/user-profile`, {
       headers: {
@@ -75,51 +75,63 @@ const AppProvider = ({ children }) => {
       });
   }, [location.pathname]);
 
+
+
+  // get project in site
+
   useEffect(() => {
-    axios.get(`${siteAPI}/get-by-user-id`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      .then((res)=>{
+
+    axios.get(`${siteAPI}/get-by-user-id`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+      .then((res) => {
         setSite(res.data);
       })
-      .catch((err)=>{
-        console.log(err);
-      })
-      axios.get(`${projectAPI}/get-by-site`,
-      {
+      .catch((err) => {
+        console.error("Error fetching site:", err);
+      });
+
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (site._id) {
+      axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       })
-      .then((res)=>{
-        setProjects(res.data);
-      })
-      .catch((err)=>{
-        console.log(err);
-      })
-  },[accessToken])
-  useEffect(() => {
-    const currentProject = projects.find((p)=>{
-      return p.name.toLowerCase() == projectName.toLowerCase();
-    })
-    console.log(projectName);
-    // axios.get(`${projectAPI}/${currentProject._id}`,
-    //   {
-    //     headers: {
-    //       'Authorization': `Bearer ${accessToken}`
-    //     }
-    //   })
-    //   .then((res)=>{
-    //     setProject(res.data);
-    //     console.log(res.data);  
-    //   })
-    //   .catch((err)=>{
-    //     console.log(err);
-    //   })
-  },[projectName])
+        .then((res) => {
+          setProjects(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching projects in site:", err);
+        });
+    }
+  }, [site,projects]);
+
+
+  // useEffect(() => {
+  //   const currentProject = projects.find((p)=>{
+  //     return p.name.toLowerCase() == projectName.toLowerCase();
+  //   })
+  //   console.log(projectName);
+  //   axios.get(`${projectAPI}/${currentProject._id}`,
+  //     {
+  //       headers: {
+  //         'Authorization': `Bearer ${accessToken}`
+  //       }
+  //     })
+  //     .then((res)=>{
+  //       setProject(res.data);
+  //       console.log(res.data);  
+  //     })
+  //     .catch((err)=>{
+  //       console.log(err);
+  //     })
+  // },[projectName])
+
 
   //fuction
   const changePassword = async (userId, oldPassword, newPassword) => {
@@ -164,20 +176,19 @@ const AppProvider = ({ children }) => {
 
   const checkLoginStatus = () => {
     authAxios.get(`${authAPI}/checkLoginStatus`)
-    .then(() => {
-      const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
-      console.log("check login status successfully, last visited url: ", lastVisitedUrl);
-      nav(lastVisitedUrl);
-    })
-    .catch(err => {
-      // khong co refresh token hoac loi lay refresh token
-      console.log(err.response.data.message);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("accessTokenExp");
-      localStorage.removeItem("userId");
-      setUser({});
-      nav('/auth/login');
-    })
+      .then(() => {
+        const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
+        nav(lastVisitedUrl);
+      })
+      .catch(err => {
+        // khong co refresh token hoac loi lay refresh token
+        console.log(err.response.data.message);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("accessTokenExp");
+        localStorage.removeItem("userId");
+        setUser({});
+        nav('/auth/login');
+      })
   }
 
 
@@ -238,7 +249,9 @@ const AppProvider = ({ children }) => {
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
-      site, setSite,
+      project, setProject, projects, setProjects, setSite, site
+
+
     }}>
       {children}
     </AppContext.Provider>

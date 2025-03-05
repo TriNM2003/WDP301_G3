@@ -13,6 +13,7 @@ const siteRouter = express.Router({mergeParams: true});
 siteRouter.use(bodyParser.json());
 
 
+
 siteRouter.get("/get-all", [verifyAccessToken, adminMiddleware.isAdmin], siteController.getAllSites)  //hung
 siteRouter.get("/:siteId/get-by-id",verifyAccessToken, SiteController.getSiteById) //hung
 siteRouter.get("/:siteId/get-site-members", [verifyAccessToken, siteMiddleware.isInSite], siteController.getSiteMembersById) //hung
@@ -23,6 +24,7 @@ siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],
     siteController.getSiteByUserId
 )
+
 
 
 module.exports = siteRouter;
