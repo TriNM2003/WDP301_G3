@@ -225,7 +225,7 @@ const handleKickTeamMember = () => {
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
-      handleAddTeamMember, handleKickTeamMember
+      handleAddTeamMember, handleKickTeamMember,
       project, setProject, projects, setProjects, setSite, site
 
     }}>
