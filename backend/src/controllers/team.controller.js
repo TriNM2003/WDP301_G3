@@ -71,8 +71,12 @@ const addTeamMember = async (req, res) => {
         team.teamMembers.push({ _id: user._id, roles: [role || 'teamMember'] });
         await team.save();
 
+        // Thêm teamId vào user
+        user.teams.push(team._id);
+        await user.save();
+
         // Gửi email thông báo
-        await sendEmailNotification(user.email, team.teamName);
+        await sendEmailNotification(user.email, team.teamName, "added");
 
         res.status(200).json({ message: "User added to the team and email sent", userId: user._id });
     } catch (error) {
@@ -105,11 +109,15 @@ const kickTeamMember = async (req, res) => {
         team.teamMembers = team.teamMembers.filter(member => member._id.toString() !== userId);
         await team.save();
 
+        // Xóa teamId khỏi user
+        const user = await db.User.findById(userId);
+        user.teams = user.teams.filter(team => team.toString() !== teamId);
+        await user.save();
+
         // Tìm email của user để gửi thông báo
-        // const user = await db.User.findById(userId);
-        // if (user) {
-        //     await sendEmailNotification(user.email, team.teamName, "removed");
-        // }
+        if (user) {
+            await sendEmailNotification(user.email, team.teamName, "removed");
+        }
 
         res.status(200).json({ message: "User kicked from the team" });
     } catch (error) {
@@ -118,32 +126,56 @@ const kickTeamMember = async (req, res) => {
     }
 };
 
-const sendEmailNotification = async (email, teamName) => {
+const sendEmailNotification = async (email, teamName, action) => {
     const viewTeam = `http://localhost:3000/site/team`;
-   const transporter = nodemailer.createTransport({
-               service: "gmail",
-               auth: {
-                   user: process.env.EMAIL_USER,
-                   pass: process.env.EMAIL_PASS,
-               },
-           });
-   
-           const mailOptions = {
-               from: process.env.EMAIL_USER,
-               to: email,
-               subject: "You've been added to a team!",
-               html: `
+    
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    let mailOptions;
+
+    if (action === "added") {
+        mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "You've been added to a team!",
+            html: `
                 <h2>Welcome to ${teamName} team!</h2>
-                <p>You have been successfully added to the team: ${teamName}. Welcome aboard!</p>
-                <p>Click to view team:</p>
+                <p>You have been successfully added to the team: <strong>${teamName}</strong>. Welcome aboard!</p>
+                <p>Click below to view your team:</p>
                 <a href="${viewTeam}"
                    style="padding: 10px 20px; background: blue; color: #fff; text-decoration: none; border-radius: 5px;">
-                     View Team
+                    View Team
                 </a>
             `,
-           };
-   
-           await transporter.sendMail(mailOptions);
+        };
+    } else if (action === "removed") {
+        mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: `Team Notification: You have been removed from ${teamName}`,
+            html: `
+                <h2>Team Notification</h2>
+                <p>Dear user,</p>
+                <p>You have been <strong>removed</strong> from the team: <strong>${teamName}</strong>.</p>
+            `,
+        };
+    } else {
+        console.error("Invalid action for email notification");
+        return;
+    }
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent successfully to ${email} regarding ${action} in ${teamName}`);
+    } catch (error) {
+        console.error("Error sending email notification:", error);
+    }
 };
 
 

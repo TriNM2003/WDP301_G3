@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message } from "antd";
+import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { AppContext } from '../../context/AppContext'
+
 
 const { Column } = Table;
 const { Title } = Typography;
 const { Option } = Select;
 
+
 const TeamMemberManagement = () => {
-    const {handleAddTeamMember, handleKickTeamMember} = useContext(AppContext);
+    const {showNotification,siteAPI,site, accessToken, setProjects, user} = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
@@ -22,31 +24,49 @@ const TeamMemberManagement = () => {
     const [selectedRole, setSelectedRole] = useState("teamMember");
     const [loadingKick, setLoadingKick] = useState(false);
     const [allMembers, setAllMembers] = useState([]); 
+    const [isLeader, setIsLeader] = useState(false);
+    const [loading, setLoading] = useState(true);
     const nav = useNavigate();
 
     useEffect(() => {
-        fetchTeamMembers();
-    }, []);
+        if(site._id && accessToken){
+            fetchTeamMembers();
+        }
+        
+    }, [site, accessToken]);
 
     const fetchTeamMembers = async () => {
         try {
-            const response = await axios.get("http://localhost:9999/teams/team-members", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+            setLoading(true);
+            const response = await axios.get(`${siteAPI}/${site._id}/teams/team-members`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
             });
-    
+
             if (Array.isArray(response.data)) {
-                const membersData = response.data.filter(member => member.role === "teamMember");
-                setMembers(membersData);
-                setAllMembers(membersData); // Lưu danh sách gốc
+                setAllMembers(response.data);
+
+                // Lọc danh sách, chỉ hiển thị teamMember (ẩn teamLeader)
+                const filteredMembers = response.data.filter(member => member.role !== "teamLeader");
+                setMembers(filteredMembers);
+
+                // Kiểm tra user hiện tại có phải là teamLeader không
+                const currentUser = response.data.find(member => member._id === user?._id);
+                setIsLeader(currentUser?.role === "teamLeader");
+
+                // Nếu user không phải leader, điều hướng về trang khác
+                if (!currentUser || currentUser.role !== "teamLeader") {
+                    message.warning("You are not a team leader. Access is restricted!");
+                    nav('/site')
+                }
             } else {
                 setMembers([]);
-                setAllMembers([]);
-                console.error("Invalid data format:", response.data);
             }
         } catch (error) {
             console.error("Error fetching team members:", error);
+            message.error("Failed to load team members.");
             setMembers([]);
-            setAllMembers([]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -84,12 +104,12 @@ const TeamMemberManagement = () => {
     
         try {
             const response = await axios.post(
-                "http://localhost:9999/teams/kick-team-member",
+                `http://localhost:9999/sites/${site._id}/teams/kick-team-member`,
                 { userId },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
             message.success(`Successfully removed ${selectedUser.username} from the team`);
-            handleKickTeamMember();
+            showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
             setIsKickMemberModalVisible(false);
             fetchTeamMembers(); // Cập nhật danh sách
         } catch (error) {
@@ -106,12 +126,12 @@ const TeamMemberManagement = () => {
         }
         try {
             await axios.post(
-                "http://localhost:9999/teams/add-team-member",
+                `http://localhost:9999/sites/${site._id}/teams/add-team-member`,
                 { username: searchUser, email: searchUser, role: selectedRole },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
             message.success(`Successfully added ${searchUser} to the team`);
-            handleAddTeamMember();
+            showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
             setIsAddMemberModalVisible(false);
             fetchTeamMembers();
         } catch (error) {
@@ -120,6 +140,7 @@ const TeamMemberManagement = () => {
         }
     };
 
+    if (loading) return <Spin tip="Loading..." style={{ display: "block", marginTop: 50 }} />;
 
     return (
         <Layout style={{ padding: "24px", minHeight: "100%", background: "white" }}>
@@ -141,16 +162,20 @@ const TeamMemberManagement = () => {
                 <Col>
                     <Title level={3}>All member <span style={{ color: "#999" }}>{members.length}</span></Title>
                 </Col>
-                <Col>
-                    <Input
-                        placeholder="Search"
-                        prefix={<SearchOutlined />}
-                        style={{ width: 250, marginRight: "10px" }}
-                        value={searchText}
-                        onChange={handleSearch}
-                    />
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>Add member</Button>
-                </Col>
+                {isLeader && (
+                    <Col>
+                        <Input
+                            placeholder="Search"
+                            prefix={<SearchOutlined />}
+                            style={{ width: 250, marginRight: "10px" }}
+                            value={searchText}
+                            onChange={handleSearch}
+                        />
+                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>
+                            Add Member
+                        </Button>
+                    </Col>
+                )}
             </Row>
 
             {/* Table */}
@@ -194,18 +219,17 @@ const TeamMemberManagement = () => {
                     )}
                 />
                 <Column title="Date added" dataIndex="dateAdded" key="dateAdded" sorter={(a, b) => new Date(a.dateAdded) - new Date(b.dateAdded)} />
-                <Column
-                    title="Action"
-                    key="actions"
-                    render={(text, record) => (
-                        <Dropdown
-                            overlay={<Button danger onClick={() => showKickMemberModal(record)}>Kick Member</Button>}
-                            trigger={["click"]}
-                        >
-                            <Button icon={<MoreOutlined />} type="text" />
-                        </Dropdown>
-                    )}
-                />
+                {isLeader && (
+                    <Column
+                        title="Action"
+                        key="actions"
+                        render={(text, record) => (
+                            <Button danger onClick={() => { setSelectedUser(record); setIsKickMemberModalVisible(true); }}>
+                                Kick Member
+                            </Button>
+                        )}
+                    />
+                )}
             </Table>
 
             {/* Modal: Add Member */}
