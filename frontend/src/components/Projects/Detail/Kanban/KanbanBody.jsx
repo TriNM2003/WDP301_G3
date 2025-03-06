@@ -55,14 +55,14 @@ function KanbanBody() {
     return (
         <Col span={6}>
             <Card style={{ borderRadius: "0", background: "#F5F5F5" }} bodyStyle={{ padding: "2%" }}>
-                {[1, 2, 3].map((index) => (
+                {[1, 2, 3].map((a) => (
                     <Card
-                        key={index}
+                        key={a}
                         hoverable
                         style={{ width: "100%", borderRadius: "1%", margin: "5% 0" }}
                         bodyStyle={{ padding: "2%" }}
                         headStyle={{ padding: "2%", border: "0" }}
-                        onClick={() => showActivity(`Activity ${index}`)}
+                        onClick={() => showActivity()}
                         cover={
                             <img
                                 src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"
@@ -71,13 +71,13 @@ function KanbanBody() {
                         }
                         title={
                             <Flex justify="space-between" align="center" style={{ padding: "1% 3%", height: "100%" }}>
-                                <p style={{ margin: 0, color: "black" }}>Activity {index}</p>
+                                <p style={{ margin: 0, color: "black" }}>Activity {a}</p>
                                 <Dropdown
                                     overlay={
                                         <Menu>
                                             <Menu.Item key="1" icon={<DeleteOutlined />} danger onClick={(e) => {
                                                e.domEvent.stopPropagation();
-                                                showDeleteActivity(`Activity ${index}`);
+                                                showDeleteActivity(`${a}`);
                                             }}>
                                                 Delete activity
                                             </Menu.Item>
@@ -170,7 +170,7 @@ function KanbanBody() {
                     xxl: '75%',
                 }}
 
-                open={activityModal.visible}
+                open={activityModal}
                 footer={[]}
                 onClose={closeActivity}
                 closeIcon={null}
@@ -184,7 +184,7 @@ function KanbanBody() {
                 )}
                 centered
             >
-                <ActivityDetail closeActivity={closeActivity} />
+                <ActivityDetail />
 
             </Modal>
         </Col>

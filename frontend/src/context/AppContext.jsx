@@ -32,9 +32,11 @@ const AppProvider = ({ children }) => {
   const [activityName, setActivityName] = useState("");
 
   const [activities,setActivities]=useState([]);
+  const [activity,setActivity]=useState({});
+
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
-
+  const [sprints,setSprints] = useState([])
 
   // api
   const authAPI = "http://localhost:9999/auth";
@@ -174,12 +176,15 @@ const AppProvider = ({ children }) => {
     }
   };
   // hien thi Activity
-  const showActivity = (activityName) => {
-    setActivityModal({ visible: true, activityName });
+  const showActivity = (activity) => {
+    setActivityModal(true);
+    setActivity(activity)
+
   };
 
   const closeActivity = () => {
-    setActivityModal({ visible: false, activityName: "" });
+    setActivityModal( false);
+    setActivity()
   };
 
   //Complete sprint
@@ -229,7 +234,7 @@ const handleKickTeamMember = () => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site,activities,setActivities
+      project, setProject, projects, setProjects, setSite, site,activities,setActivities,sprints,setSprints,activity,setActivity
 
     }}>
       {children}

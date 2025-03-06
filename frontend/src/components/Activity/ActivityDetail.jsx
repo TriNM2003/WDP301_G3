@@ -8,8 +8,8 @@ import React, { useContext, useState } from 'react'
 import moment from "moment";
 import { AppContext } from '../../context/AppContext'
 
-function ActivityDetail({ closeActivity }) {
-  const {showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity}= useContext(AppContext)
+function ActivityDetail() {
+  const {showDeleteActivity,closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity}= useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },

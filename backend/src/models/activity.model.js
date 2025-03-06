@@ -10,6 +10,11 @@ const activitySchema = new mongoose.Schema({
     description: {
         type: String
     },
+    description: {
+        type: String,
+        default:"medium",
+        enum:["lowest","low","medium","high","highest"]
+    },
     parent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'activity'

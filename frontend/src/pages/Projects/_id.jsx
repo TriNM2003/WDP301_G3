@@ -13,7 +13,7 @@ import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 
 function _id() {
-    const { project, setProject, projects, setProjects,siteAPI, site,activties, setActivities,accessToken } = useContext(AppContext);
+    const { project, setProject, projects, setProjects,siteAPI, site,activties, setActivities,accessToken ,sprints,setSprints} = useContext(AppContext);
     const { projectSlug } = useParams();
     useEffect(() => {
         const project = projects?.find((p) => p.projectSlug == projectSlug)
@@ -30,7 +30,20 @@ function _id() {
                 .catch((err) => {
                     console.error("Error fetching projects in site:", err);
                 });
+                axios.get(`${siteAPI}/${site._id}/projects/${project?._id}/sprints/get-by-project`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                })
+                    .then((res) => {
+                        setSprints(res.data.sprints);
+                    })
+                    .catch((err) => {
+                        console.error("Error fetching projects in site:", err);
+                    });    
+
         }
+
     }, [projectSlug, site, projects]);
     return (
         <Flex vertical style={{ height: "100%" }}>

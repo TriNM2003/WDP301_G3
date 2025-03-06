@@ -80,7 +80,6 @@ const inviteMembersByEmail = async (req, res, next) => {
         const {id} = req.payload;
         const {siteId} = req.params;
         const receiver = req.body.receiver;
-        console.log(id, siteId, receiver);
         const message = await siteService.inviteMembersByEmail(id, receiver, siteId)
         res.status(200).json({message: message});
     } catch (error) {

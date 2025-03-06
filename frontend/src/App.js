@@ -112,7 +112,7 @@ function App() {
                     <Route path=':projectSlug' element={<P_id />}>
                       <Route path='' element={<ProjectLayout />}  >
                         <Route index element={<Summary />} />
-                        <Route path='summary' element={<Summary />} />
+                        <Route path='summary' element={<KanbanBoard />} />
                         <Route path='sprint' element={<SprintBoard />} />
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>
