@@ -10,10 +10,55 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+async function sendEmail(type, email, link) {
+    let subject;
+    let text;
 
-const sendInvitations = async () => {
-    // const acceptUrl = `http://localhost:3000/site/${siteId}/processing-invitations?isAccept=true&siteId=${siteId}`;
-    // const declineUrl = `http://localhost:3000/site/${siteId}/processing-invitations?isAccept=false&siteId=${siteId}`;
+    if (type == "verify") {
+        subject = "Verify your account";
+        text = `Click this link to verify your account: ${link}`;
+    } else if (type == "reset") {
+        subject = "Change your password";
+        emailBody = `
+            <h2>Change Your Password</h2>
+            <p>Click the button below to change your password:</p>
+            <a href="${link}" 
+               style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
+                Change password
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        `;
+    } else if( type == "activate"){
+        subject = "Activate Your Account";
+        emailBody = `
+                <h2>Confirm Your Account Activation</h2>
+                <p>Click the button below to activate your account:</p>
+                <a href="${link}"
+                   style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
+                    Confirm Activation
+                </a>
+            `;
+    }
+    else{
+        throw new Error("Invalid email type");
+    }
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: subject,
+        text: text,
+        html: emailBody,
+    };
+
+    return transporter.sendMail(mailOptions);
+}
+
+
+// unfinished
+const sendInvitations = async (senderId, siteId, receiver) => {
+    const acceptUrl = `http://localhost:3000/site/processing-invitations?isAccept=true&siteId=${siteId}&senderId`;
+    const declineUrl = `http://localhost:3000/site/processing-invitations?isAccept=false&siteId=${siteId}`;
     const emailBody = `
                     
                     <p>Click the button below to be a site member:</p>
@@ -39,6 +84,7 @@ const sendInvitations = async () => {
 }
 
 const mailer = {
+    sendEmail,
     sendInvitations,
 }
 
