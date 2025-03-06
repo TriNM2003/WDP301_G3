@@ -12,7 +12,7 @@ const getActivityByProjectId = async (req, res, next) => {
     try {
         const { projectId } = req.params;
         const activities = await activityService.getActivitiesByProjectId(projectId)
-        return res.status(200).json({ error: { status: 200, activities:activities  }})
+        return res.status(200).json({  status: 200, activities:activities  })
 
     } catch (error) {
         next(error);
@@ -53,7 +53,7 @@ const createActivity = async (req, res, next) => {
 
 
         }
-        return res.status(201).json({ error: { status: 201,  message: "Activity created successfully", activity: newActivity  }})
+        return res.status(201).json({  status: 201,  message: "Activity created successfully", activity: newActivity  })
 
     } catch (error) {
         next(error);
@@ -91,7 +91,7 @@ const editActivity = async (req, res, next) => {
             return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
 
         }
-        return res.status(201).json({ error: { status: 201, message: "Activity updated successfully", activity: updatedActivity } })
+        return res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity  })
     } catch (error) {
         next(error);
     }
@@ -121,7 +121,7 @@ const assignMember = async (req, res, next) => {
 
 
         }
-        return res.status(201).json({ error: { status: 201, message: "Activity updated successfully", activity: updatedActivity } })
+        return res.status(201).json({status: 201, message: "Activity updated successfully", activity: updatedActivity  })
 
     } catch (error) {
         next(error);
@@ -139,7 +139,7 @@ const removeActivity = async (req, res, next) => {
         }
         await activityService.remove(activityId)
 
-        return res.status(200).json({ error: { status: 200, message: "Activity deleted successfully" } })
+        return res.status(200).json({ status: 200, message: "Activity deleted successfully"  })
 
     } catch (error) {
         next(error);

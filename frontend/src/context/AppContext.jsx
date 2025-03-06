@@ -11,9 +11,9 @@ const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register
 
 const AppProvider = ({ children }) => {
   //parameter
-  // const [accessToken,setAccessToken] = useState()
+
   const accessToken = localStorage.getItem("accessToken");
-  // const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
+
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
   const [site, setSite] = useState({})
@@ -30,6 +30,8 @@ const AppProvider = ({ children }) => {
   const [activityModal, setActivityModal] = useState({ visible: false, activityName: "" });
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
+
+  const [activities,setActivities]=useState([]);
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
 
@@ -111,6 +113,7 @@ const AppProvider = ({ children }) => {
     }
   }, [site]);
 
+  
 
 
   //fuction
@@ -226,7 +229,7 @@ const handleKickTeamMember = () => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site
+      project, setProject, projects, setProjects, setSite, site,activities,setActivities
 
     }}>
       {children}

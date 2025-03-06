@@ -10,32 +10,31 @@ import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutl
 import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
+import axios from 'axios'
 
 function _id() {
-    const {project, setProject,projects, setProjects}= useContext(AppContext);
-    const {projectSlug} = useParams()
-    // useEffect(() => {
-    //     const currentProject = projects?.find((p)=>{
-    //       return p.projectSlug == projectSlug;
-    //     })
-    //     console.log(projects);
-    //     axios.get(`${projectAPI}/${currentProject._id}`,
-    //       {
-    //         headers: {
-    //           'Authorization': `Bearer ${accessToken}`
-    //         }
-    //       })
-    //       .then((res)=>{
-    //         setProject(res.data);
-    //         console.log(res.data);  
-    //       })
-    //       .catch((err)=>{
-    //         console.log(err);
-    //       })
-    //   },[projectSlug])
+    const { project, setProject, projects, setProjects,siteAPI, site,activties, setActivities,accessToken } = useContext(AppContext);
+    const { projectSlug } = useParams();
+    useEffect(() => {
+        const project = projects?.find((p) => p.projectSlug == projectSlug)
+        // console.log('Selected project:', projectSlug);
+        if (project && site) {
+            axios.get(`${siteAPI}/${site._id}/projects/${project?._id}/activities/get-by-project-id`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+                .then((res) => {
+                    setActivities(res.data.activities);
+                })
+                .catch((err) => {
+                    console.error("Error fetching projects in site:", err);
+                });
+        }
+    }, [projectSlug, site, projects]);
     return (
-        <Flex vertical  style={{ height: "100%"}}>
-            <Outlet/>
+        <Flex vertical style={{ height: "100%" }}>
+            <Outlet />
         </Flex>
     )
 }
