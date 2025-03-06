@@ -85,6 +85,13 @@ const createProject = async (projectData, creatorId, siteId) => {
 
         const savedProject = await newProject.save();
 
+         // Cập nhật danh sách project của các user trong model User
+         const memberIds = projectMembers.map(member => member._id);
+         await db.User.updateMany(
+             { _id: { $in: memberIds } },
+             { $push: { projects: savedProject._id } }
+         );             
+
         return savedProject;
     } catch (error) {
         throw error;

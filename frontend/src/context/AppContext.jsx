@@ -19,7 +19,6 @@ const AppProvider = ({ children }) => {
   const [site, setSite] = useState({})
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
-
   const location = useLocation();
   const nav = useNavigate();
 
@@ -30,6 +29,7 @@ const AppProvider = ({ children }) => {
   const [activityModal, setActivityModal] = useState({ visible: false, activityName: "" });
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
+  const [userActivities, setUserActivities] = useState([]);
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
 
@@ -110,6 +110,23 @@ const AppProvider = ({ children }) => {
         });
     }
   }, [site]);
+
+// get activities by userId
+    useEffect(() => {
+      if (user._id) {
+        axios.get(`${userApi}/user-activities`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+          .then((res) => {
+            setUserActivities(res.data.activities);
+          })
+          .catch((err) => {
+            console.error("Error fetching projects in site:", err);
+          });
+      }
+    }, [user]);
 
 
 
@@ -226,7 +243,7 @@ const handleKickTeamMember = () => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site
+      project, setProject, projects, setProjects, setSite, site, userActivities, setUserActivities
 
     }}>
       {children}
