@@ -1,34 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Dropdown, Modal, Typography, Avatar, Breadcrumb, Col, Row } from "antd";
+import React, { useState, useEffect, useContext } from "react";
+import { Table, Input, Button, Dropdown, Modal, Typography, Avatar, Breadcrumb, Col, Row, message } from "antd";
 import { MoreOutlined, SearchOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { AppContext } from '../../context/AppContext'
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const { Title } = Typography;
 
 const ProjectTrash = () => {
-    const siteId = "65d2f1a4e1a0b6f79dabcdef";
     const [projects, setProjects] = useState([]);
+    const {showNotification,siteAPI,site, accessToken, user} = useContext(AppContext);
     const [selectedProject, setSelectedProject] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [modalType, setModalType] = useState("");
     const [searchText, setSearchText] = useState("");
     const [confirmProjectName, setConfirmProjectName] = useState("");
+    const navigate = useNavigate(); 
 
-    useEffect(() => {
-        fetchProjects();
-    }, []);
+      useEffect(() => {
+            if(site._id && accessToken){
+                fetchProjects();
+            }
+            
+        }, [site, accessToken]);
 
-    const fetchProjects = async () => {
-        try {
-            const response = await axios.get(`http://localhost:9999/sites/${siteId}/projects/trash`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
-            setProjects(response.data);
-        } catch (error) {
-            console.error("Error fetching projects:", error);
-        }
-    };
+        const fetchProjects = async () => {
+            try {
+                const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/trash`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+                });
+        
+                const processedProjects = response.data.map(project => {
+                    const manager = project.projectMember?.find(member => member.roles.includes("projectManager")) || null;
+        
+                    return {
+                        ...project,
+                        projectManager: manager && manager._id ? manager._id.username : "Unknown",
+                        isUserManager: manager && manager._id && manager._id._id === user._id // Kiểm tra nếu user là projectManager
+                    };
+                });
+        
+                setProjects(processedProjects);
+        
+                // Nếu người dùng không phải projectManager của bất kỳ project nào, chuyển hướng về trang site
+                const userIsManager = processedProjects.some(project => project.isUserManager);
+                if (!userIsManager) {
+                    showNotification("error", "Access Denied", "You don't have permission to access Project Trash.");
+                    navigate(`/site`); // Chuyển hướng về trang site
+                }
+        
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+            }
+        };
 
     const showModal = (record, type) => {
         setSelectedProject(record);
@@ -41,17 +65,21 @@ const ProjectTrash = () => {
         if (!selectedProject) return;
         try {
             if (modalType === "Restore") {
-                await axios.put(`http://localhost:9999/sites/${siteId}/projects/${selectedProject._id}/restore`, {}, {
+                await axios.put(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/restore`, {}, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                 });
+                message.success(`Project "${selectedProject.projectName}" has been restored successfully.`);
+                showNotification("success", "Project Restored", `Project "${selectedProject.projectName}" has been restored successfully.`);
             } else if (modalType === "Delete") {
                 if (confirmProjectName !== selectedProject.projectName) {
                     alert("Project name does not match!");
                     return;
                 }
-                await axios.delete(`http://localhost:9999/sites/${siteId}/projects/${selectedProject._id}`, {
+                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                 });
+                message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);
+                showNotification("success", "Project Deleted", `Project "${selectedProject.projectName}" has been deleted permanently.`);
             }
             setIsModalVisible(false);
             fetchProjects();
@@ -84,19 +112,15 @@ const ProjectTrash = () => {
             title: "Project Manager",
             dataIndex: "projectManager",
             key: "projectManager",
+            sorter: (a, b) => a.projectManager.localeCompare(b.projectManager),
             render: (manager) => manager || "Unknown"
         },
         {
             title: "Moved to Trash",
             dataIndex: "updatedAt",
             key: "updatedAt",
+            sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
             render: (date) => new Date(date).toLocaleDateString()
-        },
-        {
-            title: "Permanently deleting",
-            dataIndex: "deletedIn",
-            key: "deletedIn",
-            render: (text) => text || "Unknown"
         },
         {
             title: "Actions",
@@ -105,9 +129,11 @@ const ProjectTrash = () => {
                 <Dropdown
                     overlay={
                         <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
+                            {record.isUserManager && (
                             <div style={{ borderBottom: "1px solid #f0f0f0", paddingBottom: "5px" }}>
                                 <Button type="link" onClick={() => showModal(record, "Restore")}>Restore Project</Button>
                             </div>
+                            )}
                             <div style={{ paddingTop: "5px" }}>
                                 <Button type="link" danger onClick={() => showModal(record, "Delete")}>Delete Project</Button>
                             </div>

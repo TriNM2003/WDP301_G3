@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Form, Input, Button, Card, Row, Col, Typography, Avatar, Upload, Modal, message, Dropdown } from "antd";
 import { UploadOutlined, ExclamationCircleOutlined, EllipsisOutlined } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from 'axios';
-
+import { AppContext } from '../../context/AppContext'
 const { Title, Text } = Typography;
 
 const EditProject = () => {
-    const  projectId  = "67c6ce54eca28a980463e475";
-    const  siteId = "65d2f1a4e1a0b6f79dabcdef"
+    const { projectSlug } = useParams();
     const navigate = useNavigate();
+    const {showNotification,siteAPI,site, accessToken, setProjects, user} = useContext(AppContext);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [confirmProjectName, setConfirmProjectName] = useState("");
@@ -23,33 +23,70 @@ const EditProject = () => {
     const [selectedFile, setSelectedFile] = useState(null);
 
     useEffect(() => {
-        fetchProjectData();
-    }, []);
+        if(site._id && accessToken){
+            fetchProjectData();
+        }
+        
+    }, [site, accessToken]);
 
     const fetchProjectData = async () => {
         try {
-            const response = await axios.get(`http://localhost:9999/sites/${siteId}/projects/${projectId}`, {
+            // 🔹 Bước 1: Fetch danh sách dự án để tìm ID từ slug
+            const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/get-all`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
             });
-            const { projectName, projectAvatar, projectMember, projectStatus } = response.data;
-
-            // Nếu project đã bị archived, chuyển hướng người dùng
-            if (projectStatus === "archived") {
-                message.error("This project has been moved to trash!");
-                navigate("/site/team");
+    
+            const projects = Array.isArray(response.data) ? response.data : response.data.projects;
+            if (!projects || projects.length == 0) {
+                message.error("No projects found!");
+                navigate(`/sites/${site._id}`);
                 return;
             }
-
-            const manager = projectMember.find(member => member.roles.includes('projectManager'));
-
+    
+            // 🔹 Bước 2: Tìm project theo slug để lấy ID
+            const project = projects.find(p => p.projectSlug == projectSlug);
+            if (!project) {
+                message.error("Project not found!");
+                navigate(`/sites/${site._id}`);
+                return;
+            }
+    
+            const projectId = project._id;
+    
+            // 🔹 Bước 3: Fetch chi tiết project từ ID
+            const projectResponse = await axios.get(`http://localhost:9999/sites/${site._id}/projects/${projectId}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+            });
+    
+            const { projectName, projectAvatar, projectMember, projectStatus } = projectResponse.data;
+    
+            // 🔹 Nếu project bị archived, chặn truy cập
+            if (projectStatus === "archived") {
+                message.error("This project has been moved to trash!");
+                navigate(`/sites/${site._id}`);
+                return;
+            }
+    
+            // 🔹 Bước 4: Kiểm tra quyền truy cập (chỉ projectManager mới có quyền)
+            const manager = projectMember.find(member => member.roles.includes("projectManager"));
+    
+            if (!manager || manager._id._id !== user._id) {
+                message.error("Access Denied! You don't have permission to access this project.");
+                navigate(`/sites/${site._id}`);
+                return;
+            }
+    
+            // 🔹 Lưu dữ liệu nếu người dùng có quyền
             setProjectData({
+                projectId,
                 projectName,
                 projectAvatar,
                 projectManager: manager ? manager._id.username : "Unknown",
                 projectStatus
             });
-
+    
             setImagePreview(projectAvatar);
+    
         } catch (error) {
             console.error("Error fetching project data:", error);
             message.error("Failed to load project data.");
@@ -75,7 +112,7 @@ const EditProject = () => {
         }
 
         try {
-            const response = await axios.put(`http://localhost:9999/sites/${siteId}/projects/${projectId}/project-setting`, formData, {
+            const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
                     'Content-Type': 'multipart/form-data'
@@ -83,6 +120,7 @@ const EditProject = () => {
             });
             message.success("Project updated successfully!");
             setImagePreview(response.data.projectAvatar);
+            navigate("/site/list/projects")
         } catch (error) {
             console.error("Error updating project:", error);
             message.error("Failed to update project.");
@@ -94,7 +132,7 @@ const EditProject = () => {
             return;
         }
         try {
-            await axios.put(`http://localhost:9999/sites/${siteId}/projects/${projectId}/remove-to-trash`, {}, {
+            await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("accessToken")}`
                 }
@@ -112,7 +150,7 @@ const EditProject = () => {
         <div style={{ padding: "24px", minHeight: "100%" }}>
             <Row justify="space-between" align="middle" style={{ margin: "0 100px 20px" }}>
                 <Col>
-                    <Link to="/site/project">Projects</Link> / <Link to={`/site/project/${projectId}/settings`}>Project Setting</Link>
+                    <Link to={`/site/list/projects`}>Projects</Link> / <Link to={`/site/${site._id}/project/${projectData.projectId}/settings`}>Project Setting</Link>
                     <Title level={3}>Project Setting</Title>
                 </Col>
                  {/* More Options Button */}

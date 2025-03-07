@@ -5,7 +5,8 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const { slugify } = require('../utils/slugify.util');
-
+const { cloudinary } = require('../configs/cloudinary');
+const fs = require('fs');
 
 
 
@@ -74,6 +75,64 @@ const createProject = async (projectData, creatorId, siteId) => {
     }
 };
 
+const editProject = async (projectId, projectName, file) => {
+    const project = await getProjectById(projectId);
+    if (!project) throw new Error("Project not found");
+    
+    let newProjectAvatar = project.projectAvatar;
+    if (file) {
+        const result = await cloudinary.uploader.upload(file.path);
+        if (result && result.secure_url) {
+            newProjectAvatar = result.secure_url;
+            fs.unlink(file.path, (err) => { if (err) console.error("Error deleting local file:", err); });
+        } else {
+            throw new Error("Failed to upload image");
+        }
+    }
+    
+    project.projectName = projectName;
+    project.projectAvatar = newProjectAvatar;
+    project.projectSlug = slugify(projectName);
+    return await project.save();
+};
+
+const removeToTrash = async (projectId) => {
+    const project = await getProjectById(projectId);
+    if (!project) throw new Error("Project not found");
+    
+    project.projectStatus = "archived";
+    return await project.save();
+};
+
+const restoreProject = async (projectId) => {
+    const project = await getProjectById(projectId);
+    if (!project) throw new Error("Project not found");
+    
+    project.projectStatus = "active";
+    return await project.save();
+};
+
+const getProjectTrash = async () => {
+    return await db.Project.find({ projectStatus: "archived" }).populate({
+        path: "projectMember._id",
+        select: "fullName username email"
+    });
+};
+
+const deleteProject = async (projectId) => {
+    const project = await db.Project.findById(projectId);
+    if (!project) throw new Error("Project not found");
+    
+    // Xóa project khỏi collection User
+    await db.User.updateMany(
+        { projects: projectId },
+        { $pull: { projects: projectId } }
+    );
+    
+    // Xóa project khỏi database
+    return await db.Project.deleteOne({ _id: projectId });
+};
+
 
 
 
@@ -81,7 +140,12 @@ const projectService = {
     getProjectById,
     getAllProjects,
     getProjectsInSite,
-    createProject
+    createProject,
+    editProject,
+    removeToTrash,
+    restoreProject,
+    getProjectTrash,
+    deleteProject
 }
 
 module.exports = projectService;

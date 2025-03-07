@@ -71,8 +71,8 @@ const EditProfile = () => {
         })
         .then(response => {
             console.log(response.data);
-            messageApi.open({ content: 'Profile updated successfully!', duration: 2, type: 'success' });
-            setImagePreview(response.data.userAvatar);  // Cập nhật ảnh Cloudinary
+            message.success("Profile updated successfully");
+            setImagePreview(response.data.userAvatar);
             setTimeout(window.location.reload(), 3000);
         })
         .catch(error => {

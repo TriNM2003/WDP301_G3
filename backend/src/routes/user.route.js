@@ -39,4 +39,9 @@ userRouter.delete("/confirm-delete",
     UserController.confirmDeleteAccount
 );
 
+userRouter.put("/change-password",
+    authMiddleware.verifyAccessToken,
+    UserController.changePassword
+);
+
 module.exports = userRouter

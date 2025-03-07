@@ -65,7 +65,7 @@ const ChangePassword = () => {
                 headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
             })
             .then(() => {
-                messageApi.open({ content: 'Password changed successfully!', duration: 2, type: 'success' });
+                message.success("Password changed successfully");
                 setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
                 setErrors({});
             })

@@ -34,26 +34,31 @@ projectRouter.get("/:projectId",
 )
 projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.removeToTrash
 );
 
 projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.getProjectTrash
 );
 
 projectRouter.put("/:projectId/restore",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.restoreProject
 );
 
 projectRouter.delete("/:projectId",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.deleteProject
 );
 

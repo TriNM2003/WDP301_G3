@@ -41,7 +41,7 @@ const LoginForm = () => {
                       });
                     }, 2000);
                     break;
-              case 'deactivate':
+              case 'deactived':
                   setTimeout(() => {
                       setLoading(false);
                       messageApi.open({
@@ -151,7 +151,7 @@ const LoginForm = () => {
                         });
                       }, 2000);
                       break;
-                case 'deactivate':
+                case 'deactived':
                     setTimeout(() => {
                         setLoading(false);
                         messageApi.open({
