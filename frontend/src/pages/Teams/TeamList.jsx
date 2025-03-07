@@ -1,141 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useContext} from "react";
 import { Card, Avatar, Button, List, Typography, Layout, Menu, Tooltip, Input, Empty, Dropdown } from "antd";
 import { RightOutlined, UnorderedListOutlined, FilterOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import CreateTeam from "../../components/Teams/CreateTeam"; // Component tạo team
+import { AppContext } from "../../context/AppContext";
+import axios from "axios";
 
 const { Text, Title } = Typography;
 const { Sider, Content } = Layout;
 
-const currentUserId = "u1"; // Giả sử ID tài khoản hiện tại là "u1"
+// Giả sử ID tài khoản hiện tại là "u1"
 
 // Danh sách team mẫu
-const teams = [
-    {
-        id: "1",
-        teamName: "Frontend Devs",
-        teamLeader: { id: "u1", name: "Alice Johnson", avatar: "https://randomuser.me/api/portraits/women/1.jpg" },
-        teamMembers: [
-            { id: "u2", name: "Bob Smith", avatar: "https://randomuser.me/api/portraits/men/2.jpg" },
-            { id: "u3", name: "Charlie Brown", avatar: "https://randomuser.me/api/portraits/men/3.jpg" },
-        ],
-        site: { id: "s1", name: "Site A" },
-        createdAt: "2024-01-15T10:00:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
 
-    {
-        id: "2",
-        teamName: "Backend Engineers",
-        teamLeader: { id: "u4", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-        teamMembers: [
-            { id: "u5", name: "Emily Green", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-            { id: "u6", name: "Frank Martin", avatar: "https://randomuser.me/api/portraits/men/6.jpg" },
-        ],
-        site: { id: "s2", name: "Site B" },
-        createdAt: "2024-02-01T08:30:00Z",
-    },
-
-
-];
 
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
 
@@ -146,7 +23,17 @@ const TeamList = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [inputValue, setInputValue] = useState("");
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [filter, setFilter] = useState("name-asc"); // Mặc định lọc theo tên A-Z
+    const [filter, setFilter] = useState("created-newest"); // Mặc định lọc theo tên A-Z
+    const { teams } = useContext(AppContext);
+
+
+
+
+
+    // filter team in site      
+    if (!Array.isArray(teams))  {
+        return <div style ={{ textAlign: "center" , margin: "200px" }}>Loading teams ...</div>;
+    }
 
     const handlePageChange = (page) => setCurrentPage(page);
     const handleSearch = () => {
@@ -172,7 +59,7 @@ const TeamList = () => {
 
     // Lọc danh sách team theo tìm kiếm
     const filteredTeams = searchQuery
-        ? sortedTeams.filter((team) => team.teamName.toLowerCase().includes(searchQuery.toLowerCase()))
+        ? sortedTeams.filter((team) => team.teamName.toLowerCase().includes(searchQuery.toLowerCase().trim()))
         : sortedTeams;
 
     const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
@@ -180,12 +67,6 @@ const TeamList = () => {
     const displayedTeams = filteredTeams.slice(startIndex, startIndex + teamsPerPage);
 
     return (
-        <Layout style={{ minHeight: "100vh" }}>
-            <Sider width={200} theme="light">
-                <Menu mode="inline" defaultSelectedKeys={["all"]}>
-                    <Menu.Item key="all" icon={<UnorderedListOutlined />}>Teams</Menu.Item>
-                </Menu>
-            </Sider>
 
             <Layout>
                 <Content style={{ padding: "20px", textAlign: "left" }}>
@@ -314,10 +195,12 @@ const TeamList = () => {
                             )}
 
                             <List
-                                grid={{ gutter: 48, column: 4 }}
+                                grid={{ gutter: 70, column: 4 }}
                                 dataSource={displayedTeams}
                                 style={{ marginTop: searchQuery ? "20px" : "0px" }}
                                 renderItem={(team) => (
+                                   
+                                    
                                     <List.Item>
                                         <Card
                                             className="team-card"
@@ -326,8 +209,8 @@ const TeamList = () => {
                                                 <div
                                                     className="team-card-bg"
                                                     style={{
-                                                        background: "#f5f5f5", // Đổi nền xám nhẹ thay vì ảnh
-                                                        height: "150px",
+                                                        background: `url(${team.teamAvatar}) center/cover no-repeat`,
+                                                        height: "130px",
                                                         width: "95%",
                                                         margin: "5px auto 0px",
                                                         borderRadius: "5px 5px 0 0",
@@ -339,7 +222,7 @@ const TeamList = () => {
                                                         color: "#1890ff",
                                                     }}
                                                 >
-                                                    {team.teamName}
+                                                  
                                                 </div>
                                             }
                                             bodyStyle={{ padding: "7px" }}
@@ -369,20 +252,31 @@ const TeamList = () => {
                                                     }}
                                                 >
                                                     {/* Team Avatars */}
-                                                    <Avatar.Group maxCount={3}>
-                                                        {team.teamMembers.map((member) => (
-                                                            <Tooltip key={member.id} title={member.name}>
-                                                                <Avatar src={member.avatar} />
+                                                    <Avatar.Group maxCount={2}>
+                                                        {team.teamMembers?.filter(member => member.roles.includes("teamMember")).map((member) => (
+                                                            
+                                                            <Tooltip key={member._id?._id} title={member._id?.username || "Unknown User"} 
+                                                            >
+                                                                <Avatar src={member._id.userAvatar } />
                                                             </Tooltip>
+                                                            
                                                         ))}
                                                     </Avatar.Group>
 
+
                                                     {/* Team Leader Avatar */}
-                                                    <Tooltip title={team.teamLeader.name}>
-                                                        <Avatar src={team.teamLeader.avatar} />
-                                                    </Tooltip>
+                                                    {team.teamMembers
+                                                        .filter(member => member.roles.includes("teamLeader"))
+                                                        .map(leader => (
+                                                            <Tooltip key={leader._id._id} title={leader._id.username}>
+                                                                <Avatar src={leader._id.userAvatar} />
+                                                            </Tooltip>
+                                                        ))}
+
                                                 </div>
                                             </div>
+
+
 
                                             <div style={{ display: "flex", justifyContent: "space-between", width: "100%", paddingTop: "7px" }}>
                                                 <Text type="secondary">Team Created</Text>
@@ -399,7 +293,8 @@ const TeamList = () => {
                                                     gap: "5px",
                                                     backgroundColor: "#f0f5ff",
                                                 }}
-                                                onClick={() => navigate(`/team/${team.id}`)}
+                                                onClick={() => navigate(`/site/teams/${team.teamSlug}`)}
+
                                             >
                                                 Go to team{" "}
                                                 <RightOutlined style={{ fontSize: "14px", position: "relative", top: "2px" }} />
@@ -429,7 +324,7 @@ const TeamList = () => {
 
                 </Content>
             </Layout>
-        </Layout>
+
     );
 };
 

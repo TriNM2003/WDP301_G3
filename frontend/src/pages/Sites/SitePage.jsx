@@ -412,7 +412,7 @@ const ProjectList = () => {
                                             return (
                                                 <div
                                                     key={item.id}
-                                                    onClick={() => navigate(`${item.project?.projectSlug}`)}
+                                                    onClick={() => navigate(`/list/projects/${item.project?.projectSlug}`)}
 
                                                     style={{
                                                         gridColumn: `${startIndex + 1} / span ${span}`,

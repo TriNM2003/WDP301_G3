@@ -33,6 +33,11 @@ const AppProvider = ({ children }) => {
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
 
+  // Team
+
+  const [teams, setTeams] = useState({});
+
+
 
   // api
   const authAPI = "http://localhost:9999/auth";
@@ -127,6 +132,25 @@ const AppProvider = ({ children }) => {
           });
       }
     }, [user]);
+
+
+// get teams in site
+  useEffect(() => {
+    if (site._id) {
+      axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setTeams(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching projects in site:", err);
+        });
+    }
+  }, [site]);
+
 
 
 
@@ -243,7 +267,7 @@ const handleKickTeamMember = () => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site, userActivities, setUserActivities
+      project, setProject, projects, setProjects, setSite, site, userActivities, setUserActivities, teams, setTeams
 
     }}>
       {children}

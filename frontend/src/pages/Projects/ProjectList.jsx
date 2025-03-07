@@ -37,15 +37,15 @@ const ProjectList = () => {
 
   const { projects, user } = useContext(AppContext);
 
+
+
+  // filter project by user
   const filteredProjectsByUser = Array.isArray(projects)
     ? projects.filter((project) =>
       project.projectMember?.some(member => member._id?._id === user._id)
     )
     : [];
 
-
-
-  // console.log("ProjectList huhu:", filteredProjectsByUser);
 
   const navigate = useNavigate();
   const [showAllProjects, setShowAllProjects] = useState(false);
@@ -54,7 +54,8 @@ const ProjectList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [filter, setFilter] = useState("created-newest"); // Mặc định lọc theo tên A-Z
+  const [filter, setFilter] = useState("created-newest"); // Mặc định lọc theo tên A-
+
 
   const handlePageChange = (page) => {
     setCurrentPage(page);

@@ -6,7 +6,7 @@ import { AppContext } from "../../context/AppContext";
 
 const CreateProject = ({ visible, onCreate, onCancel }) => {
   const [form] = Form.useForm();
-  const { siteAPI,site, accessToken, setProjects, user } = useContext(AppContext); 
+  const { siteAPI,site, accessToken, setProjects, user} = useContext(AppContext); 
   const [searchTerm, setSearchTerm] = useState("");
   const [siteMembers, setSiteMembers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -55,13 +55,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
     setSelectedUsers(selectedUsers.filter((member) => member._id !== id));
   };
 
-  // Kiểm tra thành viên có hợp lệ không
-  const isValidMembers = () => {
-    return selectedUsers.every(member =>
-      siteMembers.some(siteMember => siteMember._id === member._id)
-    );
-  };
-  
+
   // Gửi yêu cầu tạo project
 
 
@@ -129,7 +123,9 @@ const handleCreateProject = async (values) => {
         <Form.Item
           name="projectName"
           label="Project Name"
-          rules={[{ required: true, message: "Please enter a project name!" }]}
+          rules={[{ required: true, message: "Please enter a project name!",
+                    min: 3, message: "Project name must be at least 3 characters!"
+           }]}
         >
           <Input placeholder="Enter project name" />
         </Form.Item>
