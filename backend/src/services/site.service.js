@@ -135,13 +135,40 @@ const inviteMembersByEmail = async (sender, receiverEmails, receiverIds, siteNam
     return "Invitation emails send successfully!"
 }
 
+const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
+    const site = await Site.findById(siteId);
+    if(!site){
+        throw new Error("Site does not exist!");
+    }
+
+     // Kiểm tra nếu user có activity chưa hoàn thành
+     const activeTasks = await db.Activity.find({
+        assignee: siteMemberId,
+    }).populate("stage");
+
+    // Lọc ra các activity chưa hoàn thành
+    const incompleteActivities = activeTasks.filter(activity => activity.stage.stageStatus !== "done");
+
+    if (incompleteActivities.length > 0) {
+        throw new Error(`User ${siteMemberId} still has ${incompleteActivities.length} incomplete activities.`);
+    }
+
+    site.siteMember = site.siteMember.filter(member => member._id.toString() !== siteMemberId);
+    const updatedSite = await site.save();
+
+    return {
+        message:`Revoke site memeber ${siteMemberId} from site ${siteId} successfully!`,
+        site: updatedSite
+    };
+}
+
 const siteService = {
     getSiteById,
     createSite,
     getSiteByUserId,
     inviteMembersByEmail,
     getAllSites,
-
+    revokeSiteMemberAccess,
     getSiteMembersById,
 
     getAllUsersInSite

@@ -9,11 +9,8 @@ import SiteSider from '../../components/Sites/Layout/SiteSider'
 import SiteContent from '../../components/Sites/Layout/SiteContent'
 
 function _id() {
-    let location = useLocation();
-    let isManageProject = location.pathname === "/site/project/manage/members";
     return (
         <Layout style={{ height: 'calc(100vh - 64px)' }}>
-            {!isManageProject && 
                 <Sider
                 width={"15%"}
              style={{
@@ -23,7 +20,7 @@ function _id() {
             }}>
                 <SiteSider />
             </Sider>
-            }
+            
             <Content style={{height: '100%', background: "white", overflowX: "unset" }} >
                 <SiteContent />
 

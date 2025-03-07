@@ -105,6 +105,17 @@ const getAllUsersInSite = async (req, res, next) => {
     }
 };
 
+const revokeSiteMemberAccess = async (req, res, next) => {
+    try {
+        const siteId = req.params.siteId;
+        const siteMemberId = req.params.siteMemberId;
+        const result = await siteService.revokeSiteMemberAccess(siteId, siteMemberId);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
+
 const siteController = {
     getSiteById,
     createSite,
@@ -112,8 +123,8 @@ const siteController = {
     inviteMembersByEmail,
     getAllSites,
     getSiteMembersById,
-    getAllUsersInSite
-
+    getAllUsersInSite,
+    revokeSiteMemberAccess,
 }
 
 module.exports = siteController;

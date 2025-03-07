@@ -32,6 +32,18 @@ projectRouter.get("/:projectId",
 
     projectController.getProjectById
 )
+projectRouter.get("/:projectId/get-project-members",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject],
+    projectController.getProjectMembersById
+)
+projectRouter.post("/:projectId/add-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject],
+    projectController.addProjectMember
+)
+projectRouter.delete("/:projectId/remove-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject],
+    projectController.removeProjectMember
+)
 projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
     cloudinary.upload.single("projectAvatar"),

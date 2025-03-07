@@ -251,6 +251,44 @@ const deleteProject = async (req, res, next) => {
 //     }
 // };
 
+
+const getProjectMembersById = async (req, res, next) => {
+    try {
+            const projectId = req.params.projectId;
+            const projectMember = await projectService.getProjectMembersById(projectId);
+            res.status(200).json(projectMember);
+        } catch (error) {
+            console.error("Error get project members:", error);
+            return res.status(400).json({ message: error.message });
+        }
+}
+
+const addProjectMember = async (req, res, next) => {
+    try {
+        // const projectMemberId = "67c1bd8279dc063bae8ce244";
+        const {projectMemberId} = req.body;
+        const {siteId, projectId} = req.params;
+        const projectMember = await projectService.addProjectMember(siteId, projectId, projectMemberId);
+        res.status(200).json(projectMember);
+    } catch (error) {
+        console.error("Error add project member:", error);
+        return res.status(400).json({ message: error.message });
+    }
+}
+
+const removeProjectMember = async (req, res, next) => {
+    try {
+        // const projectMemberId = "67c1bd8279dc063bae8ce244";
+        const {projectMemberId} = req.body;
+        const projectId = req.params.projectId;
+        const projectMember = await projectService.removeProjectMember(projectId, projectMemberId);
+        res.status(200).json(projectMember);
+    } catch (error) {
+        console.error("Error removing project member:", error);
+        return res.status(400).json({ message: error.message });
+    }
+}
+
 const projectController = {
     getProjectById,
     editProject,
@@ -261,8 +299,10 @@ const projectController = {
     //checkProjectManager
     getAllProjects,
     getProjectsInSite,
-    createProject
-
+    createProject,
+    getProjectMembersById,
+    addProjectMember,
+    removeProjectMember,
 }
 
 module.exports = projectController;

@@ -34,19 +34,21 @@ const AppProvider = ({ children }) => {
   const [completedSprint, setCompletedSprint] = useState(false);
 
 
+
+  //parameter
+  const [user, setUser] = useState({});
+
+
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
   const siteAPI = "http://localhost:9999/sites";
-  const projectAPI = "http://localhost:9999/projects";
+  const projectAPI = `http://localhost:9999/sites/${user.site || "notFound"}/projects`;
 
   // State lưu thông tin user & accessToken
 
 
 
-
-  //parameter
-  const [user, setUser] = useState({});
 
 
 
@@ -215,7 +217,7 @@ const handleKickTeamMember = () => {
   return (
     <AppContext.Provider value={{
       accessToken,
-      authAPI, siteAPI, userApi,
+      authAPI, siteAPI, userApi, projectAPI,
       accessToken,
       user, setUser,
       //setAccessToken,
