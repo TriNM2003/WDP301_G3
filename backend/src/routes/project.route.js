@@ -56,16 +56,12 @@ projectRouter.put("/:projectId/restore",
     projectController.restoreProject
 );
 
-projectRouter.delete("/:projectId",
+projectRouter.delete("/:projectId/delete",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectController.deleteProject
 );
 
-// projectRouter.get("/:projectId/check-manager",
-//     authMiddleware.verifyAccessToken,
-//     projectController.checkProjectManager
-// );
 
 
 projectRouter.post("/create",
