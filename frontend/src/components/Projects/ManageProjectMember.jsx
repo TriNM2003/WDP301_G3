@@ -58,12 +58,29 @@ const breadCrumbItems = [
 
 
 const ManageProjectMember = () => {
+  // state
   const {projectSlug} = useParams();
   const {user, project, setProject, userApi, showNotification, projectAPI} = useContext(AppContext)
-  // const projectAPI = `http://localhost:9999/sites/${user.site}/projects`
   const [userEmails, setUserEmails] = useState([]);
+  const [projectRoles, setProjectRoles] = useState([]);
+  const [projectMembers, setProjectMembers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState();
+  const [selectMemberRole, setSelectedMemberRole] = useState();
+  const [messageApi, contexHolder] = message.useMessage();
+  const nav = useNavigate();
   
+  // filter by name and role
+  const filteredMembers = projectMembers.filter((member) => {
+    const matchesSearch = member.projectMemberName?.toLowerCase().includes(searchTerm?.toLowerCase());
+    const matchesRole = selectedRole === "All" || !selectedRole || member.projectMemberRole === selectedRole;
+    return matchesSearch && matchesRole;
+  });
 
+  
+ // use effect
   useEffect(() => {
     if(!projectSlug){
       messageApi.open({
@@ -74,6 +91,63 @@ const ManageProjectMember = () => {
     }
     fetchData();
   },[projectSlug])
+
+  const formattedProjectMembers = (rawProjectMembers) => {
+    return rawProjectMembers.map((member, index) => {
+    return { 
+      key: index+1,
+      projectMemberId: member._id._id, 
+      projectMemberName: member._id.username, 
+      projectMemberEmail: member._id.email, 
+      projectMemberRole: member.roles[0],
+      projectMemberAvatar: member._id.userAvatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+    }})
+
+  } 
+
+  const fetchData = async () => {
+    try {
+      console.clear()
+    const allProjects = await authAxios.get(`${projectAPI}/get-all`);
+    const currProject = allProjects.data.find(item => item.projectSlug === projectSlug);
+    setProject(currProject)
+    //get project member
+    const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id || currProject._id}/get-project-members`);
+    const projectMember = formattedProjectMembers(rawProjectMembers.data);
+    setProjectMembers(projectMember);
+    // get user emails
+    const rawEmails = await authAxios.get(`${userApi}/all`);
+    const filteredEmails = rawEmails.data.reduce((acc, currUser) => {
+      const isSameSite = currUser.site === user.site;
+      const isProjectMember = projectMember.find(member => member.projectMemberId === currUser?._id.toString()) !== undefined;
+      const isActive = currUser.status === "active";
+      // loai bo user khong la thanh vien cua site , khongla thanh vien cua project
+      if(!isSameSite && !isProjectMember && isActive){
+        acc.push ({
+          value: currUser.email,
+          label: currUser.email,
+          avatar: currUser.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
+          userId: currUser._id
+        })
+      }
+      return acc;
+    }, [])
+    setUserEmails(filteredEmails);
+    // set project roles for add member
+    const roleList = project.projectRoles.map(role => {
+      return {
+        value: role,
+        label: formatRole(role),
+      }
+    })
+    console.log(roleList)
+    setProjectRoles(roleList);
+    } catch (error) {
+      console.log(error)
+      // nav("/home")
+    }
+        
+  }
 
   const formatRole = (memberRole) => {
     let role;
@@ -86,74 +160,9 @@ const ManageProjectMember = () => {
         }
     return role;
   }
-  // content
-  const [projectMembers, setProjectMembers] = useState([
-    { key: "1", projectMemberName: "John", projectMemberEmail: "John@gmail.com", projectMemberRole: "Project Manager" },
-    { key: "2", projectMemberName: "Alice", projectMemberEmail: "Alice@gmail.com", projectMemberRole: "Project Member" },
-  ]);
-
-  const fetchData = async () => {
-    try {
-      // check slug
-        // console.log(projectSlug);
-    //get all project
-    const allProjects = await authAxios.get(`${projectAPI}/get-all`);
-    const currProject = allProjects.data.find(item => item.projectSlug === projectSlug);
-    setProject(currProject)
-    // console.log(currProject)
-
-    //get project member
-    const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id || currProject._id}/get-project-members`);
-    const formattedProjectMembers = rawProjectMembers.data.map((member, index) => {
-      return { 
-        key: index+1,
-        projectMemberId: member._id._id, 
-        projectMemberName: member._id.username, 
-        projectMemberEmail: member._id.email, 
-        projectMemberRole: member.roles[0],
-        projectMemberAvatar: member._id.userAvatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
-      }})
-    setProjectMembers(formattedProjectMembers);
-    // console.log(rawProjectMembers)
-
-    // get user emails
-    const rawEmails = await authAxios.get(`${userApi}/all`);
-    const filteredEmails = rawEmails.data.reduce((acc, currUser) => {
-      const isSameSite = currUser.site !== user.site;
-      const isNotProjectMember = formattedProjectMembers.find(member => member.projectMemberId === currUser?._id.toString()) === undefined ? true : false;
-      // console.log(isNotProjectMember)
-      // loai bo user khong la thanh vien cua site , khongla thanh vien cua project
-      if(isSameSite && isNotProjectMember){
-        acc.push ({
-          value: currUser.email,
-          label: currUser.email,
-          avatar: currUser.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
-          userId: currUser._id
-        })
-      }
-      return acc;
-    }, [])
-    setUserEmails(filteredEmails);
-    } catch (error) {
-      console.log(error)
-    }
-        
-  }
-  
-
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
-  const [selectedEmail, setSelectedEmail] = useState();
-  const [messageApi, contexHolder] = message.useMessage();
-
-  const handleEmailChange = (email) => {
-    setSelectedEmail(email);
-  };
 
   const handleAddMember = async () => {
+    console.clear();
     if(selectedEmail === "" || selectedEmail === undefined){
       await messageApi.open({
         type: "error",
@@ -162,13 +171,17 @@ const ManageProjectMember = () => {
       });
       return;
     }
-
+    // console.log(selectedEmail, selectMemberRole)
+    // return;
     // lay user
     const currentUser = userEmails.find(user => user.value === selectedEmail)
     // console.log(currentUser)
     // call api
-    await authAxios.post(`${projectAPI}/${project._id}/add-project-member`, {projectMemberId: currentUser.userId})
-
+   const newProjectMemberListRaw = await authAxios.post(`${projectAPI}/${project._id}/add-project-member`, 
+    { projectMemberId: currentUser.userId,
+      projectMemberRole: selectMemberRole
+    })
+    // hien thi thong bao thanh cong
     setAddMemberModalVisible(false);
     showNotification(`Project member ${currentUser.value} has been add to project ${project?.projectName}`)
     await messageApi.open({
@@ -176,28 +189,42 @@ const ManageProjectMember = () => {
       content: "Add project member successfully",
       duration: 2
     });
-
-    // await fetchData();
-    window.location.reload();
+    // cap nhap du lieu moi
+    const newEmailList = userEmails.filter(email => email.value !== selectedEmail);
+    setUserEmails(newEmailList);
+    setSelectedEmail();
+    const newProjectMemberList = formattedProjectMembers(newProjectMemberListRaw.data);
+    setProjectMembers(newProjectMemberList);
+    setSelectedMemberRole();
   }
 
-  // filter by name and role
-  const filteredMembers = projectMembers.filter((member) => {
-    const matchesSearch = member.projectMemberName?.toLowerCase().includes(searchTerm?.toLowerCase());
-    const matchesRole = selectedRole === "All" || !selectedRole || member.projectMemberRole === selectedRole;
-    return matchesSearch && matchesRole;
-  });
-
-
  // Xử lý đổi vai trò
-const handleRoleChange = (key, newRole) => {
-  console.log("role changed")
+const handleRoleChange = async (key, newRole, projectMemberId, projectMemberName) => {
+  console.log("role changed: ", newRole, projectMemberId)
+  const res = await authAxios.put(`${projectAPI}/${project._id}/edit-project-member`, 
+    {newRole: newRole,
+      projectMemberId: projectMemberId
+    }
+  )
+  console.log(res.data)
+
+  showNotification(`Project member ${projectMemberName} role has been changed to ${formatRole(newRole)}`)
+    await messageApi.open({
+      type: "success",
+      content: "Change project member role successfully",
+      duration: 2
+    });
+
+    const newProjectMemberList = formattedProjectMembers(res.data);
+    setProjectMembers(newProjectMemberList);
+
   // setSelectedRoles({ ...selectedRoles, [key]: newRole });
   // setProjectMembers(projectMembers.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
 };
 
-  // Xử lý xóa thành viên bằng Popconfirm
-  const handleRemoveMember = async (key, projectMemberName, projectMemberId) => {
+
+  // Xử lý xóa thành viên
+  const handleRemoveMember = async (key, projectMemberName, projectMemberId, projectMemberAvatar, projectMemberEmail) => {
     try {
       // console.log(projectMemberName, projectMemberId)
       const response = await authAxios.delete(`${projectAPI}/${project._id}/remove-project-member`, 
@@ -212,8 +239,17 @@ const handleRoleChange = (key, newRole) => {
         content: "Remove project member successfully",
         duration: 2
       });
-      // await fetchData();
-      window.location.reload();
+      // cap nhap du lieu moi
+    const newEmailList = [...userEmails, {
+      value: projectMemberEmail,
+      label: projectMemberEmail,
+      avatar: projectMemberAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
+      userId: projectMemberId
+    }];
+    setUserEmails(newEmailList);
+    setSelectedEmail();
+    const newProjectMemberList = formattedProjectMembers(response.data);
+    setProjectMembers(newProjectMemberList);
     } catch (error) {
       console.log(error)
     }
@@ -227,11 +263,11 @@ const roleMenu = (record) => (
     <Menu.ItemGroup title="Select role">
       <Radio.Group
         value={record.projectMemberRole}
-        onChange={(e) => handleRoleChange(record.key, e.target.value)}
+        onChange={(e) => handleRoleChange(record.key, e.target.value, record.projectMemberId, record.projectMemberName)}
         style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
       >
         {project?.projectRoles?.map(role => {
-          return <Radio value={role} disabled={role === "projectManager"}>{formatRole(role)}</Radio>
+          return <Radio value={role}>{formatRole(role)}</Radio>
         })}
       </Radio.Group>
     </Menu.ItemGroup>
@@ -285,7 +321,7 @@ const roleMenu = (record) => (
                 <Popconfirm
                   title="Are you sure to remove this member?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleRemoveMember(record.key, record.projectMemberName, record.projectMemberId)}
+                  onConfirm={() => handleRemoveMember(record.key, record.projectMemberName, record.projectMemberId, record.projectMemberAvatar, record.projectMemberEmail)}
                   okText="Yes"
                   cancelText="No"
                 >
@@ -378,7 +414,7 @@ const roleMenu = (record) => (
           style={{ width: "100%" }}
           placeholder="Enter email addresses"
           value={selectedEmail}
-          onChange={handleEmailChange}
+          onChange={setSelectedEmail}
           tokenSeparators={[","]}
           options={userEmails || ["Not found"]}
           optionRender={(item) => (
@@ -387,6 +423,17 @@ const roleMenu = (record) => (
               {item.label}
             </div>
           )}
+        />
+        <Title level={5} style={{marginTop: '2%'}}>Project role</Title>
+        <Select
+          style={{ width: "100%", marginBottom: "5%" }}
+          placeholder="Choose project role"
+          value={selectMemberRole}
+          onChange={setSelectedMemberRole}
+          tokenSeparators={[","]}
+          options={[{value: "projectManager", label: "Project Manager"},
+                {value: "projectMember", label: "Project Member"},
+           ]|| ["Not found"]}
         />
 
       </Modal>

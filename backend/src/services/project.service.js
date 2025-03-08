@@ -87,7 +87,7 @@ const getProjectMembersById = async (projectId) => {
     }
 }
 
-const addProjectMember = async (siteId, projectId, projectMemberId) => {
+const addProjectMember = async (siteId, projectId, projectMemberId, projectMemberRole) => {
     try {
         const project = await db.Project.findById(projectId);
         const site = await db.Site.findById(siteId);
@@ -99,12 +99,12 @@ const addProjectMember = async (siteId, projectId, projectMemberId) => {
             throw new Error("User not found");
         }
 
-        // //check xem user co trong site chua
-        // const isInSite = site.siteMember.find(member => member._id.toString() === projectMember._id);
-        // if(!isInSite){
-        //     throw new Error("User not in site");
-        // }
-        // console.log(isInSite); return "ok"
+        //check xem user co trong site chua
+        const isInSite = site.siteMember.find(member => member._id.toString() === projectMember._id.toString());
+        if(!isInSite){
+            throw new Error("User not in site");
+        }
+        // console.log(projectMember._id); return "ok"
         //check xem user co trong project chua
         const isInProject = project.projectMember.find(member => member._id.toString() === projectMemberId);
         if(isInProject){
@@ -114,7 +114,7 @@ const addProjectMember = async (siteId, projectId, projectMemberId) => {
         //add project member
         project.projectMember = [...project.projectMember, {
             _id: projectMember._id,
-            roles: ["projectMember"]
+            roles: [projectMemberRole]
         }]
         await project.save();
         const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
@@ -122,6 +122,38 @@ const addProjectMember = async (siteId, projectId, projectMemberId) => {
         // cap nhap project trong user
         projectMember.projects = [...projectMember.projects, updatedProject._id];
         await projectMember.save();
+
+        return updatedProject.projectMember;
+    } catch (error) {
+        throw error;
+    }
+}
+
+const editProjectMemberRole = async (projectId, projectMemberId, newRole) => {
+    try {
+        // console.log(projectId, projectMemberId, newRole); return "ok"
+        const project = await db.Project.findById(projectId);
+        if(!project){
+            throw new Error("No project found");
+        }
+        const projectMember = await db.User.findById(projectMemberId);
+        if(!projectMember){
+            throw new Error("User not found");
+        }
+
+        //check xem user co trong project chua
+        const isInProject = project.projectMember.find(member => member._id.toString() === projectMemberId);
+        if(!isInProject){
+            throw new Error("User is not in project");
+        }
+
+
+        //edit project member from project
+        const memberToEdit = project.projectMember.find(member => member._id.toString() === projectMemberId)
+        memberToEdit.roles = [newRole];
+        await project.save();
+        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
+
 
         return updatedProject.projectMember;
     } catch (error) {
@@ -190,6 +222,7 @@ const projectService = {
     getProjectMembersById,
     addProjectMember,
     removeProjectMember,
+    editProjectMemberRole,
 }
 
 module.exports = projectService;

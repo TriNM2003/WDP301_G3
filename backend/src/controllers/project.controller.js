@@ -266,12 +266,24 @@ const getProjectMembersById = async (req, res, next) => {
 const addProjectMember = async (req, res, next) => {
     try {
         // const projectMemberId = "67c1bd8279dc063bae8ce244";
-        const {projectMemberId} = req.body;
+        const {projectMemberId, projectMemberRole} = req.body;
         const {siteId, projectId} = req.params;
-        const projectMember = await projectService.addProjectMember(siteId, projectId, projectMemberId);
+        const projectMember = await projectService.addProjectMember(siteId, projectId, projectMemberId, projectMemberRole);
         res.status(200).json(projectMember);
     } catch (error) {
         console.error("Error add project member:", error);
+        return res.status(400).json({ message: error.message });
+    }
+}
+
+const editProjectMemberRole = async (req, res, nect) => {
+    try {
+        const {projectMemberId, newRole} = req.body;
+        const {projectId} = req.params;
+        const projectMember = await projectService.editProjectMemberRole(projectId, projectMemberId, newRole);
+        res.status(200).json(projectMember);
+    } catch (error) {
+        console.error("Error editing project member:", error);
         return res.status(400).json({ message: error.message });
     }
 }
@@ -303,6 +315,7 @@ const projectController = {
     getProjectMembersById,
     addProjectMember,
     removeProjectMember,
+    editProjectMemberRole,
 }
 
 module.exports = projectController;
