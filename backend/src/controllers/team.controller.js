@@ -1,5 +1,15 @@
 const teamService = require("../services/team.service");
 
+const getAllTeams = async (req, res) => {
+    try {
+        const teams = await teamService.getAllTeams();
+        res.status(200).json(teams);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const getTeamMembers = async (req, res) => {
     try {
         const teamId = "67c5263a1584be9f82734433";
@@ -36,6 +46,7 @@ const kickTeamMember = async (req, res) => {
 };
 
 const teamController = {
+    getAllTeams,
     getTeamMembers,
     addTeamMember,
     kickTeamMember,

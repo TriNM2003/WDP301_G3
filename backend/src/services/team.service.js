@@ -1,6 +1,11 @@
 const db = require('../models');
 const nodemailer = require("nodemailer");
 
+const getAllTeams = async () => {
+    const teams = await db.Team.find();
+    return teams;
+}
+
 const getTeamById = async (teamId) => {
     const team = await db.Team.findById(teamId).populate("teamMembers._id");
     if (!team) {
@@ -132,6 +137,7 @@ const sendEmailNotification = async (email, teamName, action) => {
 };
 
 const teamService = {
+    getAllTeams,
     getTeamById,
     getTeamMembers,
     addTeamMember,

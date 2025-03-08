@@ -7,6 +7,11 @@ const { teamController } = require("../controllers");
 const teamRouter = express.Router({mergeParams: true});
 teamRouter.use(bodyParser.json());
 
+teamRouter.get("/teams", 
+    authMiddleware.verifyAccessToken, 
+    siteMiddleware.isInSite,
+    teamController.getAllTeams
+);
 
 teamRouter.get("/team-members", 
     authMiddleware.verifyAccessToken, 

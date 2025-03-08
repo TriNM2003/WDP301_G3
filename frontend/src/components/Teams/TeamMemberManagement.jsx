@@ -12,7 +12,7 @@ const { Option } = Select;
 
 
 const TeamMemberManagement = () => {
-    const {showNotification,siteAPI,site, accessToken, setProjects, user} = useContext(AppContext);
+    const {showNotification,siteAPI,site, accessToken, user} = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
@@ -26,6 +26,7 @@ const TeamMemberManagement = () => {
     const [allMembers, setAllMembers] = useState([]); 
     const [isLeader, setIsLeader] = useState(false);
     const [loading, setLoading] = useState(true);
+    const { teamSlug } = useParams();
     const nav = useNavigate();
 
     useEffect(() => {
@@ -44,10 +45,10 @@ const TeamMemberManagement = () => {
 
             if (Array.isArray(response.data)) {
                 setAllMembers(response.data);
-
+                setMembers(response.data)
                 // Lọc danh sách, chỉ hiển thị teamMember (ẩn teamLeader)
-                const filteredMembers = response.data.filter(member => member.role !== "teamLeader");
-                setMembers(filteredMembers);
+                // const filteredMembers = response.data.filter(member => member.role !== "teamLeader");
+                // setMembers(filteredMembers);
 
                 // Kiểm tra user hiện tại có phải là teamLeader không
                 const currentUser = response.data.find(member => member._id === user?._id);
@@ -224,18 +225,20 @@ const TeamMemberManagement = () => {
                         title="Action"
                         key="actions"
                         render={(text, record) => (
-                            <Dropdown
-                            overlay={
-                                <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
-                                    <Button type="link" danger onClick={() => showKickMemberModal(record)}>
-                                        Kick Member
-                                    </Button>
-                                </div>
-                            }
-                            trigger={["click"]}
-                        >
-                            <Button icon={<MoreOutlined />} type="text" />
-                        </Dropdown>
+                            record.access[0] !== "teamLeader" && (
+                                <Dropdown
+                                    overlay={
+                                        <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
+                                            <Button type="link" danger onClick={() => showKickMemberModal(record)}>
+                                                Kick Member
+                                            </Button>
+                                        </div>
+                                    }
+                                    trigger={["click"]}
+                                >
+                                    <Button icon={<MoreOutlined />} type="text" />
+                                </Dropdown>
+                            )
                         )}
                     />
                 )}
