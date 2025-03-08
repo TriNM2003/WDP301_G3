@@ -9,50 +9,64 @@ const { Title } = Typography;
 
 const ProjectTrash = () => {
     const [projects, setProjects] = useState([]);
-    const {showNotification,siteAPI,site, accessToken, user} = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, user } = useContext(AppContext);
     const [selectedProject, setSelectedProject] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [modalType, setModalType] = useState("");
     const [searchText, setSearchText] = useState("");
     const [confirmProjectName, setConfirmProjectName] = useState("");
-    const navigate = useNavigate(); 
+    const [hasAccess, setHasAccess] = useState(true);
+    const navigate = useNavigate();
 
-      useEffect(() => {
-            if(site._id && accessToken){
-                fetchProjects();
-            }
-            
-        }, [site, accessToken]);
+    useEffect(() => {
+        if (site._id && accessToken) {
+            fetchProjects();
+        }
 
-        const fetchProjects = async () => {
-            try {
-                const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/trash`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-                });
-        
-                const processedProjects = response.data.map(project => {
-                    const manager = project.projectMember?.find(member => member.roles.includes("projectManager")) || null;
-        
-                    return {
-                        ...project,
-                        projectManager: manager && manager._id ? manager._id.username : "Unknown",
-                        isUserManager: manager && manager._id && manager._id._id === user._id // Kiểm tra nếu user là projectManager
-                    };
-                });
-        
+    }, [site, accessToken]);
+
+    const fetchProjects = async () => {
+        try {
+            const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/trash`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+            });
+
+            const processedProjects = response.data.map(project => {
+                const manager = project.projectMember?.find(member => member.roles.includes("projectManager")) || null;
+
+                return {
+                    ...project,
+                    projectManager: manager && manager._id ? manager._id.username : "Unknown",
+                    isUserManager: manager && manager._id && manager._id._id === user._id // Kiểm tra nếu user là projectManager
+                };
+            });
+
+            // Kiểm tra user có role gì trong site
+            const userInSite = site.siteMember.find(member => member._id === user._id);
+            const userSiteRoles = userInSite ? userInSite.roles : [];
+
+            console.log("User Site Roles:", userSiteRoles); // Debug xem có lấy được role hay không
+
+            // Nếu user là siteOwner, hiển thị tất cả project
+            if (userSiteRoles.includes("siteOwner")) {
                 setProjects(processedProjects);
-        
-                // Nếu người dùng không phải projectManager của bất kỳ project nào, chuyển hướng về trang site
-                const userIsManager = processedProjects.some(project => project.isUserManager);
-                if (!userIsManager) {
-                    showNotification("error", "Access Denied", "You don't have permission to access Project Trash.");
-                    navigate(`/site`); // Chuyển hướng về trang site
-                }
-        
-            } catch (error) {
-                console.error("Error fetching projects:", error);
+                return;
             }
-        };
+
+            // Nếu user là projectManager, chỉ hiển thị các project mà họ quản lý
+            const userManagedProjects = processedProjects.filter(project => project.isUserManager);
+
+            if (userManagedProjects.length > 0) {
+                setProjects(userManagedProjects);
+                return;
+            }
+
+            // Nếu user không có quyền, ẩn bảng và hiển thị "Nothing to see"
+            setHasAccess(false);
+        } catch (error) {
+            console.error("Error fetching projects:", error);
+        }
+    };
 
     const showModal = (record, type) => {
         setSelectedProject(record);
@@ -130,9 +144,9 @@ const ProjectTrash = () => {
                     overlay={
                         <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
                             {record.isUserManager && (
-                            <div style={{ borderBottom: "1px solid #f0f0f0", paddingBottom: "5px" }}>
-                                <Button type="link" onClick={() => showModal(record, "Restore")}>Restore Project</Button>
-                            </div>
+                                <div style={{ borderBottom: "1px solid #f0f0f0", paddingBottom: "5px" }}>
+                                    <Button type="link" onClick={() => showModal(record, "Restore")}>Restore Project</Button>
+                                </div>
                             )}
                             <div style={{ paddingTop: "5px" }}>
                                 <Button type="link" danger onClick={() => showModal(record, "Delete")}>Delete Project</Button>
@@ -157,22 +171,29 @@ const ProjectTrash = () => {
             <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>
                 <Col><Title level={3}>Project Trash</Title></Col>
             </Row>
+            {hasAccess ? (
+                <>
+                    <Input
+                        placeholder="Search"
+                        prefix={<SearchOutlined />}
+                        style={{ width: 250, marginBottom: "16px" }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                    />
 
-            <Input
-                placeholder="Search"
-                prefix={<SearchOutlined />}
-                style={{ width: 250, marginBottom: "16px" }}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-            />
-
-            <Table
-                style={{ border: '1px solid #d9d9d9', borderRadius: '5px', boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
-                dataSource={filteredProjects}
-                columns={columns}
-                pagination={{ pageSize: 6 }}
-                rowKey="_id"
-            />
+                    <Table
+                        style={{ border: '1px solid #d9d9d9', borderRadius: '5px', boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+                        dataSource={filteredProjects}
+                        columns={columns}
+                        pagination={{ pageSize: 6 }}
+                        rowKey="_id"
+                    />
+                </>
+            ) : (
+                <div style={{ textAlign: "center", marginTop: "50px" }}>
+                    <Title level={1} style={{ color: "#bbb" }}>Nothing to see</Title>
+                </div>
+            )}
 
             <Modal
                 title={

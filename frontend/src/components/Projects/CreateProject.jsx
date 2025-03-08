@@ -16,7 +16,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
   useEffect(() => {
     if (site._id && accessToken) {
       axios
-        .get(`http://localhost:9999/sites/${site._id}/members`, {
+        .get(`http://localhost:9999/sites/${site._id}/get-site-members`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
         .then((res) => {

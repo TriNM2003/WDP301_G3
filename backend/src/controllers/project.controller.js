@@ -119,7 +119,10 @@ const restoreProject = async (req, res, next) => {
 
 const getProjectTrash = async (req, res, next) => {
     try {
-        const projects = await projectService.getProjectTrash();
+        const { siteId } = req.params;
+        const userId = req.payload.id;
+
+        const projects = await projectService.getProjectTrash(siteId, userId);
         res.status(200).json(projects);
     } catch (error) {
         next(error);

@@ -112,25 +112,56 @@ const restoreProject = async (projectId) => {
     return await project.save();
 };
 
-const getProjectTrash = async () => {
-    return await db.Project.find({ projectStatus: "archived" }).populate({
-        path: "projectMember._id",
-        select: "fullName username email"
-    });
+const getProjectTrash = async (siteId, userId) => {
+    try {
+        // Tìm site và populate thành viên site
+        const site = await db.Site.findById(siteId).populate("siteMember._id");
+        if (!site) throw new Error("Site not found");
+
+        // Tìm user trong siteMember để lấy roles
+        const userInSite = site.siteMember.find(member => member._id._id.toString() === userId);
+        const userSiteRoles = userInSite ? userInSite.roles : [];
+
+        console.log("User Site Roles:", userSiteRoles); // Debug xem có lấy được role hay không
+
+        // Nếu user là siteOwner, lấy tất cả project trong site
+        if (userSiteRoles.includes("siteOwner")) {
+            return await db.Project.find({ site: siteId, projectStatus: "archived" }).populate({
+                path: "projectMember._id",
+                select: "fullName username email"
+            });
+        }
+
+        // Nếu không phải siteOwner, tìm user trong projectMember của các project trong site
+        const projects = await db.Project.find({ site: siteId, projectStatus: "archived" }).populate({
+            path: "projectMember._id",
+            select: "fullName username email"
+        });
+
+        // Lọc project mà user có vai trò projectManager
+        const userManagedProjects = projects.filter(project =>
+            project.projectMember.some(member =>
+                member._id._id.toString() === userId && member.roles.includes("projectManager")
+            )
+        );
+
+        console.log("User Managed Projects:", userManagedProjects.length); // Debug xem có lấy được project không
+
+        return userManagedProjects;
+
+    } catch (error) {
+        console.error("Error fetching project trash:", error);
+        throw error;
+    }
 };
 
 const deleteProject = async (projectId) => {
     const project = await db.Project.findById(projectId);
     if (!project) throw new Error("Project not found");
     
-    // Xóa project khỏi collection User
-    await db.User.updateMany(
-        { projects: projectId },
-        { $pull: { projects: projectId } }
-    );
-    
-    // Xóa project khỏi database
-    return await db.Project.deleteOne({ _id: projectId });
+    // chuyen project sang trang thai destroyed
+    project.projectStatus = "destroyed";
+    await project.save();
 };
 
 
