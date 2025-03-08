@@ -21,8 +21,9 @@ const getActivityByProjectId = async (req, res, next) => {
 
 const createActivity = async (req, res, next) => {
     try {
-        const { activityTitle, stage, type, createBy } = req.body;
+        const { activityTitle, stage, type,sprint, createBy, parent } = req.body;
         const {projectId} = req.params;
+
         if (!activityTitle) {
 
             return res.status(400).json({ error: { status: 400, message: "Missing required field: activityTitle"  }})
@@ -31,6 +32,11 @@ const createActivity = async (req, res, next) => {
         if (!projectId) {
 
             return res.status(400).json({ error: { status: 400, message: "Missing required field: project"  }})
+
+        }
+        const checkProject =await db.Project.findById(projectId)
+        if(!checkProject){
+            return res.status(400).json({ error: { status: 400, message: "Project not found!"  }})
 
         }
         if (!stage) {
@@ -47,14 +53,19 @@ const createActivity = async (req, res, next) => {
 
         }
 
-        const newActivity = await activityService.create(req,projectId);
+        const newActivity = await activityService.create(req.body,projectId);
         if (!newActivity) {
             return res.status(400).json({ error: { status: 400, message: "Activity created fail" }})
 
-
         }
-        return res.status(201).json({  status: 201,  message: "Activity created successfully", activity: newActivity  })
 
+        const updatedSprint = await db.Sprint.findByIdAndUpdate(sprint,{$addToSet:{activities: newActivity._id}});
+        const updatedStage = await db.Stage.findByIdAndUpdate(stage,{$addToSet:{activities: newActivity._id}});
+        const updatedParent = await db.Activity.findByIdAndUpdate(parent,{$addToSet:{child: newActivity._id}});
+        
+
+
+        return res.status(201).json({  status: 201,  message: "Activity created successfully", activity: newActivity  })
     } catch (error) {
         next(error);
     }
@@ -86,7 +97,7 @@ const editActivity = async (req, res, next) => {
             
         }
 
-        const updatedActivity = await activityService.edit(req,activityId)
+        const updatedActivity = await activityService.edit(req.body,activityId)
         if (!updatedActivity) {
             return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
 

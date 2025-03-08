@@ -10,15 +10,21 @@ const activitySchema = new mongoose.Schema({
     description: {
         type: String
     },
-    description: {
+    priority: {
         type: String,
         default:"medium",
         enum:["lowest","low","medium","high","highest"]
     },
     parent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'activity'
+        ref: 'activity',
+        default: null
     },
+    child: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'activity',
+        default:[]
+    }],
     project: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'project',
@@ -26,7 +32,8 @@ const activitySchema = new mongoose.Schema({
     },
     sprint: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'sprint'
+        ref: 'sprint',
+        default:null
     },
     stage: {
         type: mongoose.Schema.Types.ObjectId,
@@ -45,7 +52,8 @@ const activitySchema = new mongoose.Schema({
     },
     assignee: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'user',
+        default:[]
     }],
     comments: [{
         _id: {

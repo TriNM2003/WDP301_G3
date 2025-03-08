@@ -13,13 +13,14 @@ import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 
 function _id() {
-    const { project, setProject, projects, setProjects,siteAPI, site,activties, setActivities,accessToken ,sprints,setSprints} = useContext(AppContext);
+    const { project, setProject, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
     const { projectSlug } = useParams();
     useEffect(() => {
-        const project = projects?.find((p) => p.projectSlug == projectSlug)
+        const selectedProject = projects?.find((p) => p.projectSlug == projectSlug)
+        setProject(selectedProject);
         // console.log('Selected project:', projectSlug);
-        if (project && site) {
-            axios.get(`${siteAPI}/${site._id}/projects/${project?._id}/activities/get-by-project-id`, {
+        if (selectedProject && site) {
+            axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/activities/get-by-project-id`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
@@ -30,21 +31,22 @@ function _id() {
                 .catch((err) => {
                     console.error("Error fetching projects in site:", err);
                 });
-                axios.get(`${siteAPI}/${site._id}/projects/${project?._id}/sprints/get-by-project`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
+
+            axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/sprints/get-by-project`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+                .then((res) => {
+                    setSprints(res.data.sprints);
                 })
-                    .then((res) => {
-                        setSprints(res.data.sprints);
-                    })
-                    .catch((err) => {
-                        console.error("Error fetching projects in site:", err);
-                    });    
+                .catch((err) => {
+                    console.error("Error fetching projects in site:", err);
+                });
 
         }
-
-    }, [projectSlug, site, projects]);
+        // console.log("da chay lai");
+    }, [projectSlug, site, projects, createActivityModal, createSubActivity]);
     return (
         <Flex vertical style={{ height: "100%" }}>
             <Outlet />

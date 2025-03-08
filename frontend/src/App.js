@@ -111,8 +111,8 @@ function App() {
                     <Route index element={<ProjectList />} />
                     <Route path=':projectSlug' element={<P_id />}>
                       <Route path='' element={<ProjectLayout />}  >
-                        <Route index element={<Summary />} />
-                        <Route path='summary' element={<KanbanBoard />} />
+                        <Route index element={<KanbanBoard />} />
+                        <Route path='summary' element={<Summary />} />
                         <Route path='sprint' element={<SprintBoard />} />
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>

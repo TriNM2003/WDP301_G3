@@ -14,6 +14,7 @@ const AppProvider = ({ children }) => {
 
   const accessToken = localStorage.getItem("accessToken");
 
+  const [createSubActivity, setCreateSubActivity] = useState(false);
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
   const [site, setSite] = useState({})
@@ -22,27 +23,28 @@ const AppProvider = ({ children }) => {
 
   const location = useLocation();
   const nav = useNavigate();
+  const [activityTypes, setActivityTypes] = useState([]);
 
   // Activity
   const [deleteActivity, setDeleteActivity] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState("");
   const [confirmActivity, setConfirmActivity] = useState("");
-  const [activityModal, setActivityModal] = useState({ visible: false, activityName: "" });
+  const [activityModal, setActivityModal] = useState(false);
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
 
-  const [activities,setActivities]=useState([]);
-  const [activity,setActivity]=useState({});
+  const [activities, setActivities] = useState([]);
+  const [activity, setActivity] = useState({});
 
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
-  const [sprints,setSprints] = useState([])
+  const [sprints, setSprints] = useState([])
 
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
   const siteAPI = "http://localhost:9999/sites";
-  const projectAPI = "http://localhost:9999/projects";
+  const activityTypeAPI = "http://localhost:9999/activityTypes";
 
   // State lưu thông tin user & accessToken
 
@@ -98,6 +100,21 @@ const AppProvider = ({ children }) => {
       });
 
   }, [accessToken]);
+  useEffect(() => {
+
+    axios.get(`${activityTypeAPI}/get-all`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+      .then((res) => {
+        setActivityTypes(res.data.types);
+      })
+      .catch((err) => {
+        console.error("Error fetching site:", err);
+      });
+
+  }, [accessToken]);
 
   useEffect(() => {
     if (site._id) {
@@ -115,7 +132,7 @@ const AppProvider = ({ children }) => {
     }
   }, [site]);
 
-  
+
 
 
   //fuction
@@ -128,13 +145,45 @@ const AppProvider = ({ children }) => {
     });
   };
   //create activity
-  const handleActivityCreate = () => {
-    if (activityName.trim()) {
-      message.success(`Activity "${activityName}" created successfully!`);
-      showNotification(`Project update`, `User1 just created activity "${activityName}".`);
-      setActivityName("");
-      setCreateActivityModal(false);
+  const handleActivityCreate = (sprint,stage,type,parent) => {
+    if (activityName.trim().length < 3) {
+      message.warning("Activity title must be at least 3 characters!");
+      return;
     }
+    const stageId = "67c56083dbc95aae6823267d";
+    const typeId = activityTypes?.find(t=>t.typeName.trim().toUpperCase()==type.trim().toUpperCase())?._id
+    const sprintId = sprints?.find((s)=> s.sprintName?.trim().toUpperCase() == sprint?.trim().toUpperCase())?._id
+    axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
+      {
+        activityTitle: activityName,
+        sprint: sprintId? sprintId : null,
+        stage: stageId,
+        type: typeId,
+        parent: parent ? parent : null ,
+        createBy: user?._id,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+
+    )
+      .then((res) => {
+
+        message.success(`Activity "${res.data?.activity.activityTitle}" created successfully!`);
+        showNotification(`Project update`, `User1 just created activity "${res.data.activity?.activityTitle}".`);
+        setActivityName("");
+
+        setCreateActivityModal(false);
+      })
+      .catch((err) => {
+        message.error(`Activity created failed!`);
+        setActivityName("");
+      
+        setCreateActivityModal(false);
+      })
+      
   };
   // delete Activity
   const showDeleteActivity = (activityName) => {
@@ -179,11 +228,12 @@ const AppProvider = ({ children }) => {
   const showActivity = (activity) => {
     setActivityModal(true);
     setActivity(activity)
+    
 
   };
 
   const closeActivity = () => {
-    setActivityModal( false);
+    setActivityModal(false);
     setActivity()
   };
 
@@ -212,13 +262,13 @@ const AppProvider = ({ children }) => {
 
   };
 
-const handleAddTeamMember = () => {
+  const handleAddTeamMember = () => {
     showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
-}
+  }
 
-const handleKickTeamMember = () => {
+  const handleKickTeamMember = () => {
     showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
-}
+  }
 
   return (
     <AppContext.Provider value={{
@@ -234,8 +284,8 @@ const handleKickTeamMember = () => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site,activities,setActivities,sprints,setSprints,activity,setActivity
-
+      project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity,
+      createSubActivity, setCreateSubActivity
     }}>
       {children}
     </AppContext.Provider>

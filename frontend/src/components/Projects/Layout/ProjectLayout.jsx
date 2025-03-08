@@ -7,6 +7,7 @@ import { red } from '@ant-design/colors'
 import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutlined, SettingOutlined, SyncOutlined, TableOutlined, UserAddOutlined } from '@ant-design/icons'
 import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import DeleteActivityModal from '../Detail/DeleteActivityModal'
 function ProjectLayout() {
     const nav = useNavigate();
     const location = useLocation();
@@ -16,7 +17,7 @@ function ProjectLayout() {
         if (location.pathname.includes("summary")) return "summary";
         if (location.pathname.includes("sprint")) return "sprint";
         if (location.pathname.includes("board")) return "board";
-        return "summary"; 
+        return "board"; 
     };
     return (
         <div style={{ height: "100%" }}>
@@ -65,6 +66,7 @@ function ProjectLayout() {
                     <Outlet />
                 </Col>
             </Row>
+            <DeleteActivityModal/>
         </div>
     )
 }

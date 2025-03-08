@@ -7,10 +7,9 @@ import { AppContext } from "../../context/AppContext";
 
 
 function SprintActivity({ activity }) {
-    const { activities, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
-
+    const { showDeleteActivity, activities, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
     return (
-        <Flex onClick={() => showActivity()} justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" }}>
+        <Flex onClick={() => showActivity(activity)} justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" }}>
             <Space>
                 {activity.type.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
@@ -43,31 +42,33 @@ function SprintActivity({ activity }) {
 
                 {/* Priority */}
                 {activity?.priority == "highest" && <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />}
-                {activity?.priority == "high" && <UpOutlined rotate="-90" style={{ color: orange[6] }} />}
-                {activity?.priority == "medium" && <MinusOutlined rotate="-90" style={{ color: blue[6] }} />}
-                {activity?.priority == "low" && <DownOutlined rotate="-90" style={{ color: cyan[6] }} />}
+                {activity?.priority == "high" && <UpOutlined style={{ color: orange[6] }} />}
+                {activity?.priority == "medium" && <MinusOutlined style={{ color: blue[6] }} />}
+                {activity?.priority == "low" && <DownOutlined style={{ color: cyan[6] }} />}
                 {activity?.priority == "lowest" && <DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} />}
 
                 {activity?.assignee.length > 0 ?
-                    <Avatar.Group max={{ count: 2 }} size={25}>
+                    <Avatar.Group max={{ count: 2 }} >
                         {activity?.assignee?.map((a) => {
                             return (
                                 <Tooltip title={a.username} placement="top" >
                                     <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" size="small" />
                                 </Tooltip>
 
+
                             )
                         })}
+                        
                     </Avatar.Group > :
-                    <Tooltip title="Unassigned" size={25}>
+                    <Tooltip title="Unassigned">
                         <Avatar icon={<UserOutlined />} size="small" />
                     </Tooltip>
                 }
                 <Dropdown
                     overlay={
                         <Menu onClick={(e) => e.domEvent.stopPropagation()}>
-                            <Menu.Item onClick={() => { showActivity() }}>Show activity detail</Menu.Item>
-                            <Menu.Item danger>Delete activity</Menu.Item>
+                            <Menu.Item onClick={() => { showActivity(activity) }}>Show activity detail</Menu.Item>
+                            <Menu.Item onClick={() => { showDeleteActivity(activity?.activityTitle) }} danger>Delete activity</Menu.Item>
                         </Menu>
                     }
                     trigger={["click"]}

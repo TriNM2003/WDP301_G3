@@ -40,17 +40,18 @@ import Title from "antd/es/typography/Title";
 import { Option } from "antd/es/mentions";
 import TextArea from "antd/es/input/TextArea";
 import ActivityDetail from "../../../Activity/ActivityDetail";
+import DeleteActivityModal from "../DeleteActivityModal";
 
 function KanbanBody() {
-    const {handleActivityCreate,createActivityModal, setCreateActivityModal,activityName, setActivityName,activityModal, setActivityModal,showActivity,closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal,deleteActivity, setDeleteActivity,activityToDelete, setActivityToDelete,confirmActivity, setConfirmActivity,showNotification } = useContext(AppContext);
-    
+    const { activity, setActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
 
 
-    
 
-    
 
-    
+
+
+
+
 
     return (
         <Col span={6}>
@@ -62,7 +63,7 @@ function KanbanBody() {
                         style={{ width: "100%", borderRadius: "1%", margin: "5% 0" }}
                         bodyStyle={{ padding: "2%" }}
                         headStyle={{ padding: "2%", border: "0" }}
-                        onClick={() => showActivity()}
+                        onClick={() => showActivity(activity)}
                         cover={
                             <img
                                 src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"
@@ -76,7 +77,7 @@ function KanbanBody() {
                                     overlay={
                                         <Menu>
                                             <Menu.Item key="1" icon={<DeleteOutlined />} danger onClick={(e) => {
-                                               e.domEvent.stopPropagation();
+                                                e.domEvent.stopPropagation();
                                                 showDeleteActivity(`${a}`);
                                             }}>
                                                 Delete activity
@@ -135,58 +136,11 @@ function KanbanBody() {
                 )}
             </Card>
 
-            {/* Modal xác nhận xóa */}
-            <Modal
-                title={
-                    <Flex align="center">
-                        <ExclamationCircleOutlined style={{ color: "red", marginRight: 8 }} />
-                        Confirm Delete Activity
-                    </Flex>
-                }
-                open={deleteActivity}
-                onCancel={handleCloseDeleteActivityModal}
-                footer={[
-                    <Button key="cancel" onClick={handleCloseDeleteActivityModal}>
-                        Cancel
-                    </Button>,
-                    <Button key="delete" type="primary" danger onClick={handleDelete} disabled={confirmActivity !== activityToDelete}>
-                        Delete
-                    </Button>,
-                ]}
-            >
-                <p>Are you sure you want to delete <strong>{activityToDelete}</strong>?</p>
-                <p>Please type <strong>"{activityToDelete}"</strong> to confirm:</p>
-                <Input placeholder="Enter activity name" value={confirmActivity} onChange={(e) => setConfirmActivity(e.target.value)} />
-            </Modal>
 
             {/* Modal hiển thị chi tiết Activity */}
-            <Modal
-                width={{
-                    xs: '100%',
-                    sm: '95%',
-                    md: '90%',
-                    lg: '85%',
-                    xl: '80%',
-                    xxl: '75%',
-                }}
 
-                open={activityModal}
-                footer={[]}
-                onClose={closeActivity}
-                closeIcon={null}
-                style={{ borderRadius: "0" }}
-                modalRender={(node) => (
-                    <div>
-                        {React.cloneElement(node, {
-                            style: { padding: 0, borderRadius: "2px" },
-                        })}
-                    </div>
-                )}
-                centered
-            >
-                <ActivityDetail />
+            <ActivityDetail />
 
-            </Modal>
         </Col>
     );
 }
