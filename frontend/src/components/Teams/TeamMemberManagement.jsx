@@ -224,9 +224,18 @@ const TeamMemberManagement = () => {
                         title="Action"
                         key="actions"
                         render={(text, record) => (
-                            <Button danger onClick={() => { setSelectedUser(record); setIsKickMemberModalVisible(true); }}>
-                                Kick Member
-                            </Button>
+                            <Dropdown
+                            overlay={
+                                <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
+                                    <Button type="link" danger onClick={() => showKickMemberModal(record)}>
+                                        Kick Member
+                                    </Button>
+                                </div>
+                            }
+                            trigger={["click"]}
+                        >
+                            <Button icon={<MoreOutlined />} type="text" />
+                        </Dropdown>
                         )}
                     />
                 )}
