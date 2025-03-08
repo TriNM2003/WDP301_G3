@@ -121,7 +121,6 @@ const getProjectTrash = async (req, res, next) => {
     try {
         const { siteId } = req.params;
         const userId = req.payload.id;
-
         const projects = await projectService.getProjectTrash(siteId, userId);
         res.status(200).json(projects);
     } catch (error) {

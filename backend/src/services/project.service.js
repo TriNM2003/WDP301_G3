@@ -122,8 +122,6 @@ const getProjectTrash = async (siteId, userId) => {
         const userInSite = site.siteMember.find(member => member._id._id.toString() === userId);
         const userSiteRoles = userInSite ? userInSite.roles : [];
 
-        console.log("User Site Roles:", userSiteRoles); // Debug xem có lấy được role hay không
-
         // Nếu user là siteOwner, lấy tất cả project trong site
         if (userSiteRoles.includes("siteOwner")) {
             return await db.Project.find({ site: siteId, projectStatus: "archived" }).populate({
@@ -144,11 +142,7 @@ const getProjectTrash = async (siteId, userId) => {
                 member._id._id.toString() === userId && member.roles.includes("projectManager")
             )
         );
-
-        console.log("User Managed Projects:", userManagedProjects.length); // Debug xem có lấy được project không
-
         return userManagedProjects;
-
     } catch (error) {
         console.error("Error fetching project trash:", error);
         throw error;

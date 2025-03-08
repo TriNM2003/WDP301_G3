@@ -45,8 +45,6 @@ const ProjectTrash = () => {
             const userInSite = site.siteMember.find(member => member._id === user._id);
             const userSiteRoles = userInSite ? userInSite.roles : [];
 
-            console.log("User Site Roles:", userSiteRoles); // Debug xem có lấy được role hay không
-
             // Nếu user là siteOwner, hiển thị tất cả project
             if (userSiteRoles.includes("siteOwner")) {
                 setProjects(processedProjects);

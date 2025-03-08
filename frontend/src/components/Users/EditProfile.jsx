@@ -70,7 +70,6 @@ const EditProfile = () => {
             }
         })
         .then(response => {
-            console.log(response.data);
             message.success("Profile updated successfully");
             setImagePreview(response.data.userAvatar);
             setTimeout(window.location.reload(), 3000);
