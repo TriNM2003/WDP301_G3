@@ -10,32 +10,46 @@ import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutl
 import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
+import axios from 'axios'
 
 function _id() {
-    const {project, setProject,projects, setProjects}= useContext(AppContext);
-    const {projectSlug} = useParams()
-    // useEffect(() => {
-    //     const currentProject = projects?.find((p)=>{
-    //       return p.projectSlug == projectSlug;
-    //     })
-    //     console.log(projects);
-    //     axios.get(`${projectAPI}/${currentProject._id}`,
-    //       {
-    //         headers: {
-    //           'Authorization': `Bearer ${accessToken}`
-    //         }
-    //       })
-    //       .then((res)=>{
-    //         setProject(res.data);
-    //         console.log(res.data);  
-    //       })
-    //       .catch((err)=>{
-    //         console.log(err);
-    //       })
-    //   },[projectSlug])
+    const {activity, project, setProject, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
+    const { projectSlug } = useParams();
+    useEffect(() => {
+        const selectedProject = projects?.find((p) => p.projectSlug == projectSlug)
+        setProject(selectedProject);
+        // console.log('Selected project:', projectSlug);
+        if (selectedProject && site) {
+            axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/activities/get-by-project-id`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+                .then((res) => {
+                    setActivities(res.data.activities);
+                })
+                .catch((err) => {
+                    console.error("Error fetching projects in site:", err);
+                });
+
+            axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/sprints/get-by-project`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+                .then((res) => {
+                    setSprints(res.data.sprints);
+                })
+                .catch((err) => {
+                    console.error("Error fetching projects in site:", err);
+                });
+
+        }
+        // console.log("da chay lai");
+    }, [projectSlug, site, projects, createActivityModal, createSubActivity]);
     return (
-        <Flex vertical  style={{ height: "100%"}}>
-            <Outlet/>
+        <Flex vertical style={{ height: "100%" }}>
+            <Outlet />
         </Flex>
     )
 }
