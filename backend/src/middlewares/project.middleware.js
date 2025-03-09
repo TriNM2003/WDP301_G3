@@ -9,9 +9,7 @@ const isInProject = async (req, res, next) => {
         const { projectId, siteId } = req.params;
         const user = await db.User.findOne({ _id: id, projects:{$in:projectId} });
         const site = await db.Site.findOne({_id:siteId, "siteMember._id":id},{ "siteMember.$": 1 })
-        if(site.siteMember[0].roles.includes("siteOwner")){
-            next()
-        }
+        
 
         if(!user){
             return res.status(400).json({ error: { status: 400, message: "User is not permitted to access the project." } })

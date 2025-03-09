@@ -41,7 +41,7 @@ function ActivityDetail() {
   // fetch activity
   useEffect(() => {
     if (activity) {
-      const updatedActivity = activities.find(a => a._id === activity._id);
+      const updatedActivity = activities?.find(a => a._id === activity._id);
       if (updatedActivity) {
         setActivity(updatedActivity);
         // setChild(updatedActivity?.child?.map((c) => activities.find((a) => c === a._id)));

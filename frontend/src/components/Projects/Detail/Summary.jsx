@@ -27,7 +27,7 @@ function Summary() {
     return activity?.stage?.stageStatus == "done";
 
   });
-  const upcomingTasks = activities.filter(activities => { 
+  const upcomingTasks = activities?.filter(activities => { 
     const dueDate = new Date(activities?.dueDate);
     const diffTime = dueDate.getTime() - now.getTime();
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
@@ -50,7 +50,7 @@ function Summary() {
   const capacityOverview = uniqueAssignees.map(assignee => {
     const count = activities?.filter(activity =>
       activity.assignee?.some(a => a._id === assignee._id)
-    ).length;
+    )?.length;
     const percentage = activities?.length > 0 ? (count / activities?.length) * 100 : 0;
     return {
       name: assignee.username,
@@ -83,7 +83,7 @@ function Summary() {
           <Card style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", textAlign: "start" }}>
             <Statistic
               title="Created"
-              value={`${newCreated.length}`}
+              value={`${newCreated?.length}`}
               // valueStyle={{ color: blue.primary }}
               prefix={<ProfileOutlined style={{ color: blue.primary }} />}
             />
@@ -95,7 +95,7 @@ function Summary() {
           <Card style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", textAlign: "start" }}>
             <Statistic
               title="Completed"
-              value={`${completedActivitties.length}`}
+              value={`${completedActivitties?.length}`}
               // valueStyle={{ color: green.primary }}
               prefix={<CheckCircleOutlined style={{ color: green.primary }} />}
             />
@@ -107,7 +107,7 @@ function Summary() {
           <Card style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", textAlign: "start" }}>
             <Statistic
               title="Bug"
-              value={`${bugCreated.length}`}
+              value={`${bugCreated?.length}`}
               // valueStyle={{ color: orange[6] }}
               prefix={<BugOutlined style={{ color: orange[6] }} />}
             />
@@ -118,7 +118,7 @@ function Summary() {
           <Card style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", textAlign: "start" }} >
             <Statistic
               title="Upcoming"
-              value={`${upcomingTasks.length}`}
+              value={`${upcomingTasks?.length}`}
               // valueStyle={{ color: red[6] }}
               prefix={<CloseCircleOutlined style={{ color: red[6] }} />}
             />
