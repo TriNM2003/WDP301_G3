@@ -20,7 +20,6 @@ const AppProvider = ({ children }) => {
   const [site, setSite] = useState({})
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
-
   const location = useLocation();
   const nav = useNavigate();
   const [activityTypes, setActivityTypes] = useState([]);
@@ -33,12 +32,19 @@ const AppProvider = ({ children }) => {
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
 
+  const [userActivities, setUserActivities] = useState([]);
+  // Team
+
+  const [teams, setTeams] = useState({});
+
+
   const [activities, setActivities] = useState([]);
   const [activity, setActivity] = useState({});
 
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
   const [sprints, setSprints] = useState([])
+
 
   // api
   const authAPI = "http://localhost:9999/auth";
@@ -131,6 +137,42 @@ const AppProvider = ({ children }) => {
         });
     }
   }, [site]);
+
+// get activities by userId
+    useEffect(() => {
+      if (user._id) {
+        axios.get(`${userApi}/user-activities`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+          .then((res) => {
+            setUserActivities(res.data.activities);
+          })
+          .catch((err) => {
+            console.error("Error fetching projects in site:", err);
+          });
+      }
+    }, [user]);
+
+
+// get teams in site
+  useEffect(() => {
+    if (site._id) {
+      axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setTeams(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching projects in site:", err);
+        });
+    }
+  }, [site]);
+
 
 
 
@@ -286,7 +328,9 @@ const AppProvider = ({ children }) => {
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
       project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity,
-      createSubActivity, setCreateSubActivity
+      createSubActivity, setCreateSubActivity,
+      userActivities, setUserActivities, teams, setTeams
+
     }}>
       {children}
     </AppContext.Provider>

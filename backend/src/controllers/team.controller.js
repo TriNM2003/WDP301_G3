@@ -1,6 +1,7 @@
 const db = require('../models');
 const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
+const teamService = require("../services/team.service");
 
 const getTeamMembers = async (req, res) => {
     try {
@@ -146,6 +147,45 @@ const sendEmailNotification = async (email, teamName) => {
            await transporter.sendMail(mailOptions);
 };
 
+const getTeamsInSite = async (req, res, next) => {
+    try {
+        const { siteId } = req.params;
+
+        const teams = await teamService.getTeamsInSite(siteId); 
+        if (!teams || teams.length === 0) {
+            return res.status(404).json({ error: { status: 404, message: "Team not found" } });
+        }
+
+    const populateTeams = await db.User.populate(teams, {
+                path: "teamMembers._id",
+                select: "username userAvatar email fullName"
+            });
+
+
+        res.status(200).json(populateTeams);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// create team 
+
+const createTeam = async (req, res, next) => {
+    try {
+        const creatorId = req.payload.id;
+        const siteId = req.params.siteId;
+
+        const newTeam = await teamService.createTeam(req.body, creatorId, siteId);
+
+        res.status(201).json({
+            message: "Project created successfully!",
+            team: newTeam
+        });
+    } catch (error) {
+        res.status(400).json({ error: { status: 400, message: error.message } });
+    }
+};
+
 
 
 
@@ -153,7 +193,9 @@ const sendEmailNotification = async (email, teamName) => {
 const teamController = {
     getTeamMembers,
     addTeamMember,
-    kickTeamMember
+    kickTeamMember,
+    getTeamsInSite,
+    createTeam
 };
 
 module.exports = teamController;

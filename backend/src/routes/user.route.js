@@ -39,4 +39,10 @@ userRouter.delete("/confirm-delete",
     UserController.confirmDeleteAccount
 );
 
+// get activity by userId
+userRouter.get("/user-activities", 
+    authMiddleware.verifyAccessToken, 
+    UserController.getUserActivities
+);
+
 module.exports = userRouter

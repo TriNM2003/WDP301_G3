@@ -23,6 +23,17 @@ teamRouter.post("/kick-team-member",
     teamController.kickTeamMember
 );
 
+// get team in site
+teamRouter.get("/get-teams-in-site", 
+    authMiddleware.verifyAccessToken, 
+    teamController.getTeamsInSite
+);
+
+// create team 
+teamRouter.post("/create-team", 
+    authMiddleware.verifyAccessToken, 
+    teamController.createTeam
+);
 
 
 module.exports = teamRouter
