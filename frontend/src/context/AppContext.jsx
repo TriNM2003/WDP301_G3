@@ -145,21 +145,21 @@ const AppProvider = ({ children }) => {
     });
   };
   //create activity
-  const handleActivityCreate = (sprint,stage,type,parent) => {
+  const handleActivityCreate =  (sprint, stage, type, parent) => {
     if (activityName.trim().length < 3) {
       message.warning("Activity title must be at least 3 characters!");
       return;
     }
     const stageId = "67c56083dbc95aae6823267d";
-    const typeId = activityTypes?.find(t=>t.typeName.trim().toUpperCase()==type.trim().toUpperCase())?._id
-    const sprintId = sprints?.find((s)=> s.sprintName?.trim().toUpperCase() == sprint?.trim().toUpperCase())?._id
+    const typeId = activityTypes?.find(t => t.typeName.trim().toUpperCase() == type.trim().toUpperCase())?._id
+    const sprintId = sprints?.find((s) => s.sprintName?.trim().toUpperCase() == sprint?.trim().toUpperCase())?._id
     axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
       {
         activityTitle: activityName,
-        sprint: sprintId? sprintId : null,
+        sprint: sprintId ? sprintId : null,
         stage: stageId,
         type: typeId,
-        parent: parent ? parent : null ,
+        parent: parent ,
         createBy: user?._id,
       },
       {
@@ -180,10 +180,11 @@ const AppProvider = ({ children }) => {
       .catch((err) => {
         message.error(`Activity created failed!`);
         setActivityName("");
-      
+
         setCreateActivityModal(false);
       })
-      
+    
+
   };
   // delete Activity
   const showDeleteActivity = (activityName) => {
@@ -228,7 +229,7 @@ const AppProvider = ({ children }) => {
   const showActivity = (activity) => {
     setActivityModal(true);
     setActivity(activity)
-    
+
 
   };
 

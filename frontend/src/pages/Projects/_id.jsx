@@ -13,7 +13,7 @@ import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 
 function _id() {
-    const { project, setProject, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
+    const {activity, project, setProject, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
     const { projectSlug } = useParams();
     useEffect(() => {
         const selectedProject = projects?.find((p) => p.projectSlug == projectSlug)

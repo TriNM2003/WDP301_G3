@@ -25,6 +25,7 @@ const create = async (data, project) => {
             activityTitle,
             sprint,
             stage,
+            parent,
             type,
             createBy,
         } = data;
@@ -33,6 +34,7 @@ const create = async (data, project) => {
             activityTitle,
             project,
             sprint,
+            parent,
             stage,
             type,
             createBy,

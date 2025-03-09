@@ -18,12 +18,10 @@ function SprintActivity({ activity }) {
 
                     {activity?.activityTitle}
                 </text>
+                <Avatar shape="square" size={16} style={{ borderRadius: 0 }}>{activity?.child.length}</Avatar>
             </Space>
             <Space align="center">
-                <Tooltip title={`38 of 38 activity completed`} placement="top">
-                    <Progress type="circle" percent={100} size={15} showInfo={false} />
 
-                </Tooltip>
                 <Button size="small" variant="outlined" color="default" style={{ borderRadius: 0 }}>{activity?.stage?.stageName?.toUpperCase()}</Button>
 
                 {/* Due date */}
@@ -41,11 +39,11 @@ function SprintActivity({ activity }) {
                 )}
 
                 {/* Priority */}
-                {activity?.priority == "highest" && <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />}
-                {activity?.priority == "high" && <UpOutlined style={{ color: orange[6] }} />}
-                {activity?.priority == "medium" && <MinusOutlined style={{ color: blue[6] }} />}
-                {activity?.priority == "low" && <DownOutlined style={{ color: cyan[6] }} />}
-                {activity?.priority == "lowest" && <DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} />}
+                {activity?.priority == "highest" && <Tooltip title="highest"><DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />    </Tooltip>}
+                {activity?.priority == "high" && <Tooltip title="high"><UpOutlined style={{ color: orange[6] }} />  </Tooltip>}
+                {activity?.priority == "medium" && <Tooltip title="medium"><MinusOutlined style={{ color: blue[6] }} />   </Tooltip>}
+                {activity?.priority == "low" && <Tooltip title="low"><DownOutlined style={{ color: cyan[6] }} />   </Tooltip>}
+                {activity?.priority == "lowest" && <Tooltip title="lowest"><DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> </Tooltip>}
 
                 {activity?.assignee.length > 0 ?
                     <Avatar.Group max={{ count: 2 }} >
@@ -58,7 +56,7 @@ function SprintActivity({ activity }) {
 
                             )
                         })}
-                        
+
                     </Avatar.Group > :
                     <Tooltip title="Unassigned">
                         <Avatar icon={<UserOutlined />} size="small" />

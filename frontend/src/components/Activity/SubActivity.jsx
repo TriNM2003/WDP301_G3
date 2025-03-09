@@ -7,8 +7,8 @@ import { Option } from 'antd/es/mentions'
 import React, { useContext, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
 
-function    SubActivity({ activity }) {
-    const {showActivity} = useContext(AppContext)
+function SubActivity({ activity }) {
+    const { showActivity } = useContext(AppContext)
     return (
         <List.Item style={{ width: "100%", }} >
             <Row style={{ width: "100%" }}>
@@ -20,35 +20,13 @@ function    SubActivity({ activity }) {
                 <Col span={12} align="end">
 
                     <Space align='center'>
-                        <Dropdown
-                            overlay={
-                                <Menu>
-                                    <Menu.Item key="1" icon={<DoubleRightOutlined rotate="-90" />} style={{ color: red[6] }} >
-                                        Highest
-                                    </Menu.Item>
-                                    <Menu.Item key="2" icon={<UpOutlined />} style={{ color: orange[6] }} >
-                                        High
-                                    </Menu.Item>
-                                    <Menu.Item key="3" icon={<MinusOutlined />} style={{ color: blue[6] }} >
-                                        Medium
-                                    </Menu.Item>
-                                    <Menu.Item key="4" icon={<DownOutlined />} style={{ color: cyan[6] }} >
-                                        Low
-                                    </Menu.Item>
-                                    <Menu.Item key="5" icon={<DoubleRightOutlined rotate="90" />} style={{ color: cyan[4] }} >
-                                        Lowest
-                                    </Menu.Item>
-                                </Menu>
-                            }
-                        >
-                            <span>
-                                {activity?.priority == "highest" && <span><DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />    </span>}
-                                {activity?.priority == "high" && <span><UpOutlined style={{ color: orange[6] }} />  </span>}
-                                {activity?.priority == "medium" && <span><MinusOutlined style={{ color: blue[6] }} />   </span>}
-                                {activity?.priority == "low" && <span><DownOutlined style={{ color: cyan[6] }} />   </span>}
-                                {activity?.priority == "lowest" && <span><DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> </span>}
-                            </span>
-                        </Dropdown>
+
+                        {activity?.priority == "highest" && <Tooltip title="highest"><DoubleRightOutlined rotate="-90" style={{ color: red[6] }} />    </Tooltip>}
+                        {activity?.priority == "high" && <Tooltip title="high"><UpOutlined style={{ color: orange[6] }} />  </Tooltip>}
+                        {activity?.priority == "medium" && <Tooltip title="medium"><MinusOutlined style={{ color: blue[6] }} />   </Tooltip>}
+                        {activity?.priority == "low" && <Tooltip title="low"><DownOutlined style={{ color: cyan[6] }} />   </Tooltip>}
+                        {activity?.priority == "lowest" && <Tooltip title="lowest"><DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> </Tooltip>}
+
                         {activity?.assignee?.length > 0 ? (
                             <Avatar.Group max={2} size={25}>
                                 {activity.assignee.map((a) => (
@@ -65,24 +43,13 @@ function    SubActivity({ activity }) {
                                 <Avatar icon={<UserAddOutlined />} size="small" />
                             </Tooltip>
                         )}
-                        <Select
+                        <Button size="small" variant="outlined" color="default" style={{ borderRadius: 0 }}>{activity?.stage?.stageName?.toUpperCase()}</Button>
 
-                            value={`${activity?.stage.stageName.toUpperCase()}`}
-                            onChange="{setMoveTo}"
-                            style={{ borderRadius: "0" }}
-                            size="small"
-                            dropdownStyle={{ borderRadius: 0 }}
-
-                        >
-                            <Option value="Todo">Todo</Option>
-                            <Option value="Doing">Doing</Option>
-                            <Option value="Done">Done</Option>
-                        </Select>
                         <Dropdown
                             overlay={
                                 <Menu>
                                     <Menu.Item onClick={() => { showActivity(activity) }}>Show activity detail</Menu.Item>
-                                    <Menu.Item icon={<DeleteOutlined />} danger > 
+                                    <Menu.Item icon={<DeleteOutlined />} danger >
 
                                         Remove subactivity
                                     </Menu.Item>

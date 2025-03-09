@@ -74,7 +74,7 @@ const createActivity = async (req, res, next) => {
 const editActivity = async (req, res, next) => {
     try {
         const {activityId} = req.params;
-        const { activityTitle, stage } = req.body;
+        const { activityTitle } = req.body;
         const activity = await db.Activity.findById(activityId).populate("project");
 
         if (!activity) {
@@ -86,15 +86,6 @@ const editActivity = async (req, res, next) => {
 
             return res.status(400).json({ error: { status: 400, message: "Missing required field: activityTitle"  }})
 
-        }
-        if (!stage) {
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: stage" }})
-
-        }
-        const isStage = await db.Stage.findById(stage)
-        if(!isStage){
-            return res.status(400).json({ error: { status: 400, message: "Stage does not exist" }})
-            
         }
 
         const updatedActivity = await activityService.edit(req.body,activityId)

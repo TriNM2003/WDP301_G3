@@ -9,10 +9,11 @@ import moment from "moment";
 import { AppContext } from '../../context/AppContext'
 import dayjs from 'dayjs'
 import SubActivity from './SubActivity'
+import axios from 'axios'
 
 
 function ActivityDetail() {
-  const { createSubActivity, setCreateSubActivity, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI, site, project, createSubActivity, setCreateSubActivity, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
@@ -34,7 +35,8 @@ function ActivityDetail() {
   const [editedComment, setEditedComment] = useState("");
   const [isDescription, setIsDescription] = useState(false)
   const [newDescription, setNewDescription] = useState("");
-  
+  const [editActivity, setEditActivity] = useState({})
+
 
   // fetch activity
   useEffect(() => {
@@ -43,10 +45,40 @@ function ActivityDetail() {
       if (updatedActivity) {
         setActivity(updatedActivity);
         // setChild(updatedActivity?.child?.map((c) => activities.find((a) => c === a._id)));
+        setEditActivity({
+          activityTitle: activity?.activityTitle,
+          description: activity?.description || "",
+          parent: activity?.parent || null,
+          startDate: activity?.startDate || null,
+          dueDate: activity?.dueDate || null
+        })
       }
     }
 
   }, [activities, activity, createSubActivity])
+
+  // edit activity
+  const [isTitle, setIsTitle] = useState(false)
+
+  console.log(editActivity);
+
+  const handleEditActivity = async () => {
+    console.log(editActivity);
+    await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/edit`,
+      { ...editActivity },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+
+    )
+      .then((res) => { setActivity(res?.data?.activity) })
+      .catch((err) => {
+        console.log(err?.response?.data?.error?.message);
+        message.error(err?.response?.data?.error?.message)
+      })
+  }
   //Subactivity
   const child = activity?.child?.map((c) => activities.find((a) => c == a._id));
   const [selectedType, setSelectedType] = useState("subtask")
@@ -115,7 +147,7 @@ function ActivityDetail() {
     setEditComment(false);
   };
 
-  
+
   return (
     <Modal
       width={{
@@ -173,18 +205,38 @@ function ActivityDetail() {
             <Row justify="space-between" style={{ padding: "1% 0" }}>
               <Col span={15} style={{ padding: "0 1%" }}>
                 <Space style={{ width: "60%", textAlign: "center", padding: "2% 0" }} >
-                  {activity?.type?.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
-                  {activity?.type?.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
-                  {activity?.type?.typeName == "bug" && <BugOutlined style={{ color: yellow[6] }} />}
-                  <Title level={5} style={{ margin: "0" }} > {activity?.activityTitle}</Title>
-
+                  {isTitle == false ? (<Space onClick={() => setIsTitle(true)}>
+                    {activity?.type?.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
+                    {activity?.type?.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
+                    {activity?.type?.typeName == "bug" && <BugOutlined style={{ color: yellow[6] }} />}
+                    <Title level={5} style={{ margin: "0" }} > {activity?.activityTitle}</Title>
+                  </Space>) :
+                    (<Input
+                      autoFocus
+                      value={editActivity.activityTitle}
+                      onChange={(e) => setEditActivity({
+                        ...editActivity,
+                        activityTitle: e.target.value
+                      })}
+                      onPressEnter={handleEditActivity}
+                      onBlur={() => {
+                        setIsTitle(false);
+                        setEditActivity({
+                          ...editActivity,
+                          activityTitle: activity?.activityTitle
+                        })
+                      }}
+                      placeholder="Enter activity name"
+                      prefix={<EditOutlined style={{ color: blue[6] }} />}
+                      style={{ width: "100%", borderRadius: "0", margin: "1% 0", padding: "0.5% 1%" }}
+                    />)}
                 </Space>
                 <Space direction="vertical" style={{ width: "60%", textAlign: "center", padding: "2% 0" }}>
 
-                  <Flex justify="space-between" align="center" style={{ width: "100%" }}>
+                  {child?.length > 0 && <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><PieChartOutlined /> Progress </small>
-                    <text ><Progress type="circle" percent={100} size={15} showInfo={false} /> 100%</text>
-                  </Flex>
+                    <text ><Progress type="circle" percent={(child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100} size={15} showInfo={false} /> {(child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100 || 0}%</text>
+                  </Flex>}
                   {/* Priority */}
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><Tag />Priority </small>
