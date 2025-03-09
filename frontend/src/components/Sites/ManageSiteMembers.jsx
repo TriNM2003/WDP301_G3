@@ -92,7 +92,7 @@ useEffect(() => {
   console.clear();
 
   fetchData();
-},[])
+},[site])
 
 const fetchData = async () => {
   try {
@@ -101,7 +101,7 @@ const fetchData = async () => {
   // setSite(siteData.data);
   setSiteRoles(site.siteRoles);
 
-  const siteMemberData = await authAxios.get(`${siteAPI}/${site._id}/get-site-members`);
+  const siteMemberData = await authAxios.get(`${siteAPI}/${site?._id}/get-site-members`);
   const memberData = siteMemberData.data.map((member, index) => {
     return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
   })
@@ -208,7 +208,7 @@ const handleRoleChange = (siteMemberId, oldRole, newRole) => {
           onChange={(e) => handleRoleChange(record.siteMemberId, record.siteMemberRole, e.target.value)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
-          {siteRoles.map((role, index) => {
+          {siteRoles?.map((role, index) => {
             return (
               <Radio key={index} value={role} disabled={role === "siteOwner"}>
                 {formatRole(role)}
@@ -325,7 +325,7 @@ const handleRoleChange = (siteMemberId, oldRole, newRole) => {
             onChange={(value) => setSelectedFilterRole(value)}
           >
             <Option value="All">All</Option>
-            {siteRoles.map(role => {
+            {siteRoles?.map(role => {
               const formattedRole = formatRole(role);
               return <Option value={role}>{formattedRole}</Option>
             })}

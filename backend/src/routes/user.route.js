@@ -43,6 +43,7 @@ userRouter.delete("/confirm-delete",
 userRouter.put("/change-password",
     authMiddleware.verifyAccessToken,
     UserController.changePassword
+);
 
 // get activity by userId
 userRouter.get("/user-activities", 

@@ -90,17 +90,20 @@ const sendDeleteAccountEmail = async (userId, email) => {
 
         await transporter.sendMail(mailOptions);
         return { message: "A confirmation email has been sent. Please check your inbox." };
-
+    } catch (error) {
+        throw error;
+    }
+};
 // get activity by userId
 const getActivitiesByUserId = async (userId) => {
     try {
         const user = await db.User.findById(userId).populate({
             path: "activities",
             populate: [
-                { path: "createBy", select: "fullName email" }, 
-                { path: "assignee", select: "_id" }, 
-                { path: "type", select: "name" }, 
-                { path: "project", select: "projectName" }, 
+                { path: "createBy", select: "fullName email" },
+                { path: "assignee", select: "_id" },
+                { path: "type", select: "name" },
+                { path: "project", select: "projectName" },
                 { path: "sprint", select: "title" },
                 { path: "stage", select: "title" }
             ]
@@ -137,7 +140,7 @@ const userService = {
     changePassword,
     editProfile,
     sendDeleteAccountEmail,
-    confirmDeleteAccount, 
+    confirmDeleteAccount,
     getActivitiesByUserId
 }
 
