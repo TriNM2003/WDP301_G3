@@ -62,6 +62,41 @@ const createSite = async (req, res, next) => {
     }
 }
 
+const editSite = async (req, res, next) => {
+    try {
+        const { siteId } = req.params;
+        const updateData = req.body;
+        const hasFile = req.file;
+        let updatedSite;
+
+        if (hasFile) {
+            updatedSite = await siteService.editSite(siteId, updateData, hasFile);
+        } else {
+            updatedSite = await siteService.editSite(siteId, updateData, null);
+        }
+
+        res.status(200).json(updatedSite);
+    } catch (error) {
+        res.status(403).json({
+            message: error.message
+        });
+    }
+};
+
+const deactivateSite = async (req, res, next) => {
+    try {
+        const { siteId } = req.params;
+
+        const response = await siteService.deactivateSite( siteId);
+
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(403).json({
+            message: error.message
+        });
+    }
+};
+
 const getSiteByUserId = async (req, res, next) => {
     try {
         const {id} = req.payload;
@@ -112,8 +147,9 @@ const siteController = {
     inviteMembersByEmail,
     getAllSites,
     getSiteMembersById,
-    getAllUsersInSite
-
+    getAllUsersInSite,
+    editSite,
+    deactivateSite,
 }
 
 module.exports = siteController;

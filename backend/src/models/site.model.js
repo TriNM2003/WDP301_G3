@@ -33,13 +33,12 @@ const siteSchema = new mongoose.Schema({
         sender: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
-            required: true
-           // required
+            required: true,
         },
         receiver: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
-            required: true
+            required: true,
         },
         status: {
             type: String,

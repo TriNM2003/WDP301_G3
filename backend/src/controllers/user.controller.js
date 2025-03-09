@@ -51,7 +51,7 @@ const changePassword = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
     try {
         const userId = req.payload.id;
-        const user = await db.User.findById(userId);
+        const user = await userService.getUserById(userId);
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }

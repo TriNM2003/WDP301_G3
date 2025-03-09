@@ -19,7 +19,15 @@ siteRouter.get("/:siteId/get-by-id",verifyAccessToken, SiteController.getSiteByI
 siteRouter.get("/:siteId/get-site-members", [verifyAccessToken, siteMiddleware.isInSite], siteController.getSiteMembersById) //hung
 siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin],cloudinary.upload.single("userAvatar"), SiteController.createSite)  //hung
 siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite], siteController.inviteMembersByEmail) //hung
-
+siteRouter.put("/:siteId/edit",
+    [verifyAccessToken, siteMiddleware.isInSite],
+    cloudinary.upload.single("siteAvatar"),
+    siteController.editSite
+);
+siteRouter.put("/:siteId/deactivate",
+    [verifyAccessToken, siteMiddleware.isInSite],
+    siteController.deactivateSite
+);
 siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],
     siteController.getSiteByUserId

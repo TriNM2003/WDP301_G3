@@ -11,7 +11,7 @@ const getAllUsers = async () => {
 }
 const getUserById = async(userId)=>{
     try {
-        const user = await db.User.findById(userId);
+        const user = await db.User.findById(userId).populate('roles');
         return user;
     } catch (error) {
         throw(error)
