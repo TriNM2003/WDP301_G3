@@ -7,7 +7,7 @@ import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
-const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password"];
+const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password", "/processing-invitation"];
 
 const AppProvider = ({ children }) => {
   //parameter
@@ -218,7 +218,6 @@ const handleKickTeamMember = () => {
     <AppContext.Provider value={{
       accessToken,
       authAPI, siteAPI, userApi, projectAPI,
-      accessToken,
       user, setUser,
       //setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,

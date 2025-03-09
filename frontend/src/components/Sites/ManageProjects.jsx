@@ -171,7 +171,7 @@ const ManageProjects = () => {
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button danger type="text">Remove</Button>
+                  <Button danger type="text" >Move to trash</Button>
                 </Popconfirm>
               </Menu.Item>
               <Menu.Item key="projectSettings">

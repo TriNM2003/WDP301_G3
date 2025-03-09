@@ -45,16 +45,9 @@ const getSiteMembersById = async (req, res, next) => {
 
 const createSite = async (req, res, next) => {
     try {
-        const hasFile= req.file;
-        const requestData = req.body;
-        let site;
-        if(hasFile){
-            site = await SiteService.createSite(requestData, hasFile);
-        }else{
-            site = await SiteService.createSite(requestData, null);
-        }
-        
-        res.status(200).json(site);
+        const {siteName, siteOwner} = req.body;
+        const newSite = await SiteService.createSite(siteName, siteOwner);
+        res.status(200).json(newSite);
     } catch (error) {
         res.status(400).json({ 
             message: error.message 
@@ -75,16 +68,38 @@ const getSiteByUserId = async (req, res, next) => {
     }
 }
 
-const inviteMembersByEmail = async (req, res, next) => {
+const inviteMemberByEmail = async (req, res, next) => {
     try {
         const {id} = req.payload;
         const {siteId} = req.params;
-        const receiver = req.body.receiver;
-        console.log(id, siteId, receiver);
-        const message = await siteService.inviteMembersByEmail(id, receiver, siteId)
-        res.status(200).json({message: message});
+        const receiverId = req.body.receiverId;
+        console.log(id, siteId, receiverId);
+        const result = await siteService.inviteMemberByEmail(id, receiverId, siteId)
+        res.status(200).json({
+            message: "Send invitation successfully!",
+            invitation: result
+        });
     } catch (error) {
         next(error);
+    }
+}
+
+const processingInvitation = async (req, res, next) => {
+    try {
+        // const {id} = req.payload;
+        const {invitationId, decision} = req.body;
+        // console.log(id, invitationId);
+        const result = await siteService.processingInvitation(invitationId, decision)
+        res.status(200).json({
+            message: "Processing invitation successfully!",
+            decision: result.decision,
+            invitation: result.invitation
+        });
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({ 
+            message: error.message 
+        });
     }
 }
 
@@ -120,11 +135,12 @@ const siteController = {
     getSiteById,
     createSite,
     getSiteByUserId,
-    inviteMembersByEmail,
+    inviteMemberByEmail, processingInvitation,
     getAllSites,
     getSiteMembersById,
     getAllUsersInSite,
     revokeSiteMemberAccess,
+
 }
 
 module.exports = siteController;

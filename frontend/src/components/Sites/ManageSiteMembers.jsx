@@ -70,7 +70,7 @@ const [filterStatus, setFilterStatus] = useState(null);
 const [searchTerm, setSearchTerm] = useState("");
 const [selectedFilterRole, setSelectedFilterRole] = useState(null);
 const [inviteModalVisible, setInviteModalVisible] = useState(false);
-const [selectedEmails, setSelectedEmails] = useState([]);
+const [selectedEmail, setSelectedEmail] = useState();
 const [messageApi, contexHolder] = message.useMessage();
 const nav = useNavigate();
 const emailRegex = /^[a-zA-Z0-9._%+-]+[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -89,23 +89,37 @@ const formatRole = (memberRole) => {
 }
 
 useEffect(() => {
-  // get site member
-  fetchSiteMembers();
-}, [])
+  console.clear();
 
-useEffect(() => {
+  fetchData();
+},[])
+
+const fetchData = async () => {
+  try {
+    //get site member
+  // const siteData = await authAxios.get(`${siteAPI}/get-by-user-id`);
+  // setSite(siteData.data);
+  setSiteRoles(site.siteRoles);
+
+  const siteMemberData = await authAxios.get(`${siteAPI}/${site._id}/get-site-members`);
+  const memberData = siteMemberData.data.map((member, index) => {
+    return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
+  })
+  setSiteMembers(memberData)
+
+  // console.log("site roles: ",site.siteRoles)
+  // console.log("site member: ",memberData)
   // get user emails
-  authAxios.get(`${userApi}/all`)
-  .then(res => {
-    const emails = res.data.reduce((acc, currUser) => {
+    const allEmailData = await authAxios.get(`${userApi}/all`);
+    const emails = allEmailData.data.reduce((acc, currUser) => {
       // laoi bo user khong active
-      if(currUser.status !== "active"){
-        return acc;
-      }
+      const isActive = currUser.status === "active"
       // loai bo user la thanh vien cua site
       const isSiteMember = currUser.site === user.site;
-      if(!isSiteMember){
-        acc.push ({
+      // loai bo user co site roi
+      const isNotInSite = currUser.site === undefined;
+      if (!isSiteMember && isActive && isNotInSite) {
+        acc.push({
           value: currUser.email,
           label: currUser.email,
           avatar: currUser.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
@@ -114,51 +128,31 @@ useEffect(() => {
       }
       return acc;
     }, [])
-    console.log(emails);
     setUserEmails(emails);
-  })
-  .catch(err => console.log(err))
-},[])
+    console.log(emails);
 
-const fetchSiteMembers = () => {
-  authAxios.get(`${siteAPI}/get-by-user-id`).then(res => {
-    setSite(res.data);
-    setSiteRoles(res.data.siteRoles)
-    authAxios.get(`${siteAPI}/${res.data._id}/get-site-members`).then(resMember => {
-      // console.log(resMember.data)
-      const memberData = resMember.data.map((member, index) => {
-        return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
-      })
-      setSiteMembers(memberData)
-    }).catch(err => console.log(err));
-  }).catch(err => console.log(err));
+  } catch (error) {
+    console.log(error)
+  }
  }
 
   const handleInviteMember = async () => {
-    setInviteModalVisible(false);
-    for(let i=0; i< selectedEmails.length; i++){
-      if(!emailRegex.test(selectedEmails[i])){
-        await messageApi.open({
-          type: "error",
-          content: `Email ${selectedEmails[i]} is not a valid email!`,
-          duration: 2
-        });
-        return;
-      }
-    }
+    const invitedUserId = userEmails.find(item => item.value === selectedEmail).userId;
+    console.log(selectedEmail)
 
     // goi api den backend
-    authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiver: selectedEmails})
-    .then(res => console.log(res.data))
-    .catch(err => console.log(err));
+    await authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiverId: invitedUserId})
 
     messageApi.open({
       type: "success",
-      content: `Send invitation to ${selectedEmails.toString()} successfully !`,
+      content: `Send invitation to ${selectedEmail.toString()} successfully !`,
       duration: 2
     });
-    showNotification(`👋 Invitation have been sent to ${selectedEmails.toString()} ✉`);
-    setSelectedEmails([]);
+    showNotification(`👋 Invitation have been sent to ${selectedEmail.toString()} ✉`);
+    setSelectedEmail();
+
+    setInviteModalVisible(false);
+    await fetchData();
   }
 
   // Xử lý tìm kiếm
@@ -317,7 +311,7 @@ const handleRoleChange = (siteMemberId, oldRole, newRole) => {
         </div>
 
         <Button type="primary" icon={<UserAddOutlined />} onClick={() => setInviteModalVisible(true)}>
-          Invite more
+          Invite
         </Button>
 
       </div>
@@ -366,12 +360,11 @@ const handleRoleChange = (siteMemberId, oldRole, newRole) => {
     >
       <Title level={5}>User email addresses</Title>
       <Select
-        mode="multiple" // Chỉ cho phép chọn từ danh sách có sẵn
         showSearch // Hiển thị ô tìm kiếm
         style={{ width: "100%" }}
         placeholder="Select user email"
-        value={selectedEmails}
-        onChange={setSelectedEmails}
+        value={selectedEmail}
+        onChange={setSelectedEmail}
         options={userEmails}
         filterOption={(input, option) =>
           option.label?.toLowerCase().includes(input?.toLowerCase())

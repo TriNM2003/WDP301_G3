@@ -56,27 +56,27 @@ async function sendEmail(type, email, link) {
 
 
 // unfinished
-const sendInvitations = async (senderId, siteId, receiver) => {
-    const acceptUrl = `http://localhost:3000/site/processing-invitations?isAccept=true&siteId=${siteId}&senderId`;
-    const declineUrl = `http://localhost:3000/site/processing-invitations?isAccept=false&siteId=${siteId}`;
+const sendInvitation = async (receiverEmail, invitationId, siteName) => {
+    const acceptUrl = `http://localhost:3000/processing-invitation?invitationId=${invitationId}&decision=accepted`;
+    const declineUrl = `http://localhost:3000/processing-invitation?invitationId=${invitationId}&decision=declined`;
     const emailBody = `
                     
-                    <p>Click the button below to be a site member:</p>
-                    <a href="#"
+                    <p>You have been invited to site ${siteName}, click the button below to become it's member</p>
+                    <a href="${acceptUrl}"
                        style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
                         Accept invitation
                     </a>
                     <p>Or click the button below to decline the invitation:</p>
-                    <a href="#"
+                    <a href="${declineUrl}"
                        style="padding: 10px 20px; background:rgb(255, 24, 24); color: #fff; text-decoration: none; border-radius: 5px;">
                         Decline invitation
                     </a>
                 `;
-    // Gửi đến tất cả người nhận cùng lúc
+
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: receivers.join(","), // Chuyển mảng email thành chuỗi
-        subject: `You have been invited to site`,
+        to: receiverEmail,
+        subject: `You have been invited to site ${siteName}`,
         html: emailBody,
     };
 
@@ -85,7 +85,7 @@ const sendInvitations = async (senderId, siteId, receiver) => {
 
 const mailer = {
     sendEmail,
-    sendInvitations,
+    sendInvitation,
 }
 
 module.exports = mailer;
