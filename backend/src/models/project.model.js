@@ -24,7 +24,7 @@ const projectSchema = new mongoose.Schema({
     },
     projectStatus: {
         type: String,
-        enum: ['active', 'archived'],
+        enum: ['active', 'archived', 'destroyed'],
         default: 'active'
     },
     projectRoles: [{
