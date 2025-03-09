@@ -32,6 +32,22 @@ projectRouter.get("/:projectId",
 
     projectController.getProjectById
 )
+projectRouter.get("/:projectId/get-project-members",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.getProjectMembersById
+)
+projectRouter.post("/:projectId/add-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.addProjectMember
+)
+projectRouter.put("/:projectId/edit-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.editProjectMemberRole
+)
+projectRouter.delete("/:projectId/remove-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.removeProjectMember
+)
 projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,

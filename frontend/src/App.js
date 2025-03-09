@@ -48,6 +48,9 @@ import S_id from './pages/Sites/_id';
 import SitePage from './pages/Sites/SitePage';
 import ManageSites from './pages/Sites/ManageSites';
 import CreateSite from './pages/Sites/CreateSite';
+import ProcessingInvitation from './pages/Sites/ProcessingInvitation';
+import TeamListLayout from './components/Teams/Layout/TeamListLayout';
+
 
 function App() {
 
@@ -59,7 +62,7 @@ function App() {
     <div className="App">
       <Layout>
         <Header style={{ padding: "0", borderBottom: `solid 1px ${cyan[`1`]}` }}>
-          <AppHeader/>
+          <AppHeader />
         </Header>
         <Content>
           <Routes>
@@ -92,7 +95,7 @@ function App() {
               <Route path="/profile/confirm-delete" element={<ConfirmDelete />} />
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
-                <Route path="site-page" element={<SitePage />} />
+
                 <Route path='recycle' element={<RestoreProject />} />
                 <Route path="site-setting" element={<EditSite />} />
                 <Route path='manage' >
@@ -111,7 +114,7 @@ function App() {
                     <Route index element={<ProjectList />} />
                     <Route path=':projectSlug' element={<P_id />}>
                       <Route path='' element={<ProjectLayout />}  >
-                        <Route index element={<Summary />} />
+                        <Route index element={<KanbanBoard />} />
                         <Route path='summary' element={<Summary />} />
                         <Route path='sprint' element={<SprintBoard />} />
                         <Route path='board' element={<KanbanBoard />} />
@@ -126,12 +129,16 @@ function App() {
                   <Route path="teams" element={<TeamList />} />
                 </Route>
 
-                <Route path='team'>
+                <Route path="teams">
                   <Route index element={<TeamPerformance />} />
-                  <Route path="manage-member" element={<TeamMemberManagement />} />
-                  <Route path="performance" element={<TeamPerformance />} />
-                  <Route path="member-performance" element={<TeamMemberPerformance />} />
+                  <Route path=":teamSlug" element={<TeamListLayout />}>
+                    <Route index element={<TeamPerformance />} />
+                    <Route path="manage-member" element={<TeamMemberManagement />} />
+                    <Route path="performance" element={<TeamPerformance />} />
+                    <Route path="member-performance" element={<TeamMemberPerformance />} />
+                  </Route>
                 </Route>
+
               </Route>
 
               <Route path='/create-site' element={<CreateSite />} />
@@ -140,6 +147,9 @@ function App() {
 
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
+
+            {/* xu ly invitation ko can dang nhap */}
+            <Route path="/processing-invitation" element={<ProcessingInvitation />} />
 
           </Routes>
         </Content>

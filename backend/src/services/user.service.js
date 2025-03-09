@@ -64,6 +64,7 @@ const editProfile = async (userId, fullName, address, dob, phoneNumber, file) =>
     }
 };
 
+
 const sendDeleteAccountEmail = async (userId, email) => {
     try {
         const user = await db.User.findById(userId);
@@ -89,10 +90,32 @@ const sendDeleteAccountEmail = async (userId, email) => {
 
         await transporter.sendMail(mailOptions);
         return { message: "A confirmation email has been sent. Please check your inbox." };
+
+// get activity by userId
+const getActivitiesByUserId = async (userId) => {
+    try {
+        const user = await db.User.findById(userId).populate({
+            path: "activities",
+            populate: [
+                { path: "createBy", select: "fullName email" }, 
+                { path: "assignee", select: "_id" }, 
+                { path: "type", select: "name" }, 
+                { path: "project", select: "projectName" }, 
+                { path: "sprint", select: "title" },
+                { path: "stage", select: "title" }
+            ]
+        });
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        return user.activities;
     } catch (error) {
         throw error;
     }
 };
+
 
 const confirmDeleteAccount = async (token) => {
     try {
@@ -114,7 +137,9 @@ const userService = {
     changePassword,
     editProfile,
     sendDeleteAccountEmail,
-    confirmDeleteAccount
-};
+    confirmDeleteAccount, 
+    getActivitiesByUserId
+}
+
 
 module.exports = userService;

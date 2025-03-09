@@ -66,13 +66,33 @@ const confirmDeleteAccount = async (req, res) => {
     }
 };
 
+
+
+// get activity by userId
+const getUserActivities = async (req, res, next) => {
+    try {
+        const userId = req.payload.id;
+        const activities = await userService.getActivitiesByUserId(userId);      
+        if (!activities|| activities.length === 0) {
+            return res.status(404).json({ error: { status: 404, message: "Activities not found" } });
+        }
+        return res.status(200).json({ status: 200, activities });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 const UserControllers = {
     getAllUsers,
     getUserById,
+
     changePassword,
     editProfile,
     sendDeleteAccountEmail,
-    confirmDeleteAccount
+    confirmDeleteAccount,
+     getUserActivities
+
 };
 
 module.exports = UserControllers;

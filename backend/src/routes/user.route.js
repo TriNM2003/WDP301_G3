@@ -39,9 +39,16 @@ userRouter.delete("/confirm-delete",
     UserController.confirmDeleteAccount
 );
 
+
 userRouter.put("/change-password",
     authMiddleware.verifyAccessToken,
     UserController.changePassword
+
+// get activity by userId
+userRouter.get("/user-activities", 
+    authMiddleware.verifyAccessToken, 
+    UserController.getUserActivities
+
 );
 
 module.exports = userRouter

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Table,
   Button,
@@ -55,7 +55,7 @@ const breadCrumbItems = [
     title: <a href="/site">Site</a>
   },
   {
-    title: "Manage Member"
+    title: "Manage site members"
   }
 ]
 
@@ -68,9 +68,9 @@ const ManageSiteMembers = () => {
   const [searchEmail, setSearchEmail] = useState("");
 const [filterStatus, setFilterStatus] = useState(null);
 const [searchTerm, setSearchTerm] = useState("");
-const [selectedRole, setSelectedRole] = useState(null);
+const [selectedFilterRole, setSelectedFilterRole] = useState(null);
 const [inviteModalVisible, setInviteModalVisible] = useState(false);
-const [selectedEmails, setSelectedEmails] = useState([]);
+const [selectedEmail, setSelectedEmail] = useState();
 const [messageApi, contexHolder] = message.useMessage();
 const nav = useNavigate();
 const emailRegex = /^[a-zA-Z0-9._%+-]+[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -78,9 +78,9 @@ const emailRegex = /^[a-zA-Z0-9._%+-]+[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
 
 const formatRole = (memberRole) => {
   let role;
-      if(memberRole === "siteOwner"){
+      if(memberRole === "siteOwner" || memberRole === "Owner"){
         role = "Site Owner"
-      }else if(memberRole === "siteMember"){
+      }else if(memberRole === "siteMember" || memberRole === "Member"){
         role = "Site Member"
       }else{
         role = "Undefined?"
@@ -89,16 +89,37 @@ const formatRole = (memberRole) => {
 }
 
 useEffect(() => {
-  // get site member
-  fetchSiteMembers();
+  console.clear();
 
+  fetchData();
+},[])
+
+const fetchData = async () => {
+  try {
+    //get site member
+  // const siteData = await authAxios.get(`${siteAPI}/get-by-user-id`);
+  // setSite(siteData.data);
+  setSiteRoles(site.siteRoles);
+
+  const siteMemberData = await authAxios.get(`${siteAPI}/${site._id}/get-site-members`);
+  const memberData = siteMemberData.data.map((member, index) => {
+    return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
+  })
+  setSiteMembers(memberData)
+
+  // console.log("site roles: ",site.siteRoles)
+  // console.log("site member: ",memberData)
   // get user emails
-  authAxios.get(`${userApi}/all`)
-  .then(res => {
-    const emails = res.data.reduce((acc, currUser) => {
+    const allEmailData = await authAxios.get(`${userApi}/all`);
+    const emails = allEmailData.data.reduce((acc, currUser) => {
+      // laoi bo user khong active
+      const isActive = currUser.status === "active"
       // loai bo user la thanh vien cua site
-      if(currUser.site !== user.site){
-        acc.push ({
+      const isSiteMember = currUser.site === user.site;
+      // loai bo user co site roi
+      const isNotInSite = currUser.site === undefined;
+      if (!isSiteMember && isActive && isNotInSite) {
+        acc.push({
           value: currUser.email,
           label: currUser.email,
           avatar: currUser.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
@@ -107,74 +128,68 @@ useEffect(() => {
       }
       return acc;
     }, [])
-    console.log(emails);
     setUserEmails(emails);
-  })
-  .catch(err => console.log(err))
-}, [])
+    console.log(emails);
 
-
-const fetchSiteMembers = () => {
-  authAxios.get(`${siteAPI}/get-by-user-id`).then(res => {
-    setSite(res.data);
-    setSiteRoles(res.data.siteRoles)
-    authAxios.get(`${siteAPI}/${res.data._id}/get-site-members`).then(resMember => {
-      console.log(resMember.data)
-      const memberData = resMember.data.map((member, index) => {
-        return { key: index+1, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: formatRole(member.roles[0]), siteMemberAvatar: member._id.userAvatar }
-      })
-      setSiteMembers(memberData)
-    }).catch(err => console.log(err));
-  }).catch(err => console.log(err));
+  } catch (error) {
+    console.log(error)
+  }
  }
 
   const handleInviteMember = async () => {
-    setInviteModalVisible(false);
-    for(let i=0; i< selectedEmails.length; i++){
-      if(!emailRegex.test(selectedEmails[i])){
-        await messageApi.open({
-          type: "error",
-          content: `Email ${selectedEmails[i]} is not a valid email!`,
-          duration: 2
-        });
-        return;
-      }
-    }
+    const invitedUserId = userEmails.find(item => item.value === selectedEmail).userId;
+    console.log(selectedEmail)
 
     // goi api den backend
-    authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiver: selectedEmails})
-    .then(res => console.log(res.data))
-    .catch(err => console.log(err));
+    await authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiverId: invitedUserId})
 
     messageApi.open({
       type: "success",
-      content: `Send invitation to ${selectedEmails.toString()} successfully !`,
+      content: `Send invitation to ${selectedEmail.toString()} successfully !`,
       duration: 2
     });
-    showNotification(`👋 Invitation have been sent to ${selectedEmails.toString()} ✉`);
-    setSelectedEmails([]);
+    showNotification(`👋 Invitation have been sent to ${selectedEmail.toString()} ✉`);
+    setSelectedEmail();
+
+    setInviteModalVisible(false);
+    await fetchData();
   }
 
   // Xử lý tìm kiếm
   let filteredMembers;
-  if(selectedRole !== "All"){
+  if(selectedFilterRole !== "All"){
     filteredMembers = siteMembers.filter(
         (member) =>
-          member.siteMemberName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          (!selectedRole || member.siteMemberRole === selectedRole)
+          member.siteMemberName?.toLowerCase().includes(searchTerm?.toLowerCase()) &&
+          (!selectedFilterRole || member.siteMemberRole === selectedFilterRole)
       );
   }else{
-    filteredMembers = siteMembers
+    filteredMembers = siteMembers.filter(
+      (member) =>
+        member.siteMemberName?.toLowerCase().includes(searchTerm?.toLowerCase())
+    );
   }
 
   // Xử lý đổi vai trò
-  const handleRoleChange = (key, newRole) => {
-    setSiteMembers(siteMembers.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
-  };
+const handleRoleChange = (siteMemberId, oldRole, newRole) => {
+  console.log("role changed", siteMemberId, oldRole, newRole)
+  // setSiteMembers(siteMembers.map((member) => (member.key === key ? { ...member, siteMemberRole: formatRole(newRole) } : member)));
+};
 
   // Xử lý xóa thành viên bằng Popconfirm
-  const handleRevokeAccess = (key, name) => {
-    setSiteMembers(siteMembers.filter((member) => member.key !== key));
+  const handleRevokeAccess = async (key, name, sitememberid) => {
+    //call api
+    await authAxios.delete(`${siteAPI}/${site._id}/revoke-site-member-access/${sitememberid}`)
+    .then(res => {
+      // console.log(res.data);
+      if(res.data.site){
+        const siteMember = res.data.site.siteMember;
+        setSiteMembers(siteMember);
+      }
+      
+    })
+    .catch(err => console.log(err))
+    
     // show thong bao
     messageApi.open({
       type: "success",
@@ -189,17 +204,16 @@ const fetchSiteMembers = () => {
     <Menu>
       <Menu.ItemGroup title="Select role">
         <Radio.Group
-          value={record.role}
-          onChange={(e) => handleRoleChange(record.key, e.target.value)}
+          value={record.siteMemberRole}
+          onChange={(e) => handleRoleChange(record.siteMemberId, record.siteMemberRole, e.target.value)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
-          {siteRoles.map(role => {
-            const formattedRole = formatRole(role);
-            if(formattedRole === "Site Owner"){
-              return <Radio value={formattedRole} disabled>{formattedRole}</Radio>
-            }else{
-              return <Radio value={formattedRole}>{formattedRole}</Radio>
-            }
+          {siteRoles.map((role, index) => {
+            return (
+              <Radio key={index} value={role} disabled={role === "siteOwner"}>
+                {formatRole(role)}
+              </Radio>
+            );
           })}
         </Radio.Group>
       </Menu.ItemGroup>
@@ -232,16 +246,14 @@ const fetchSiteMembers = () => {
           dataIndex: "siteMemberRole",
           key: "siteMemberRole",
           render: (_, record) => (
-              <Dropdown overlay={roleMenu(record)} trigger={["click"]}>
-                {record.siteMemberRole === "Site Owner" ? 
-                <Button style={{ width: "100%", textAlign: "left" }} disabled>
-                      {record.siteMemberRole} <DownOutlined style={{ float: "right" }} />
-                  </Button>
-                  :
-                  <Button style={{ width: "100%", textAlign: "left" }}>
-                      {record.siteMemberRole} <DownOutlined style={{ float: "right" }} />
-                  </Button>
-                }
+              <Dropdown overlay={roleMenu(record)} trigger={["click"]} 
+              disabled={record.siteMemberRole === "siteOwner"}
+              >
+                <Button style={{ width: "100%", textAlign: "left" }}>
+            { 
+              formatRole(record.siteMemberRole)
+            } <DownOutlined style={{ float: "right" }} />
+          </Button>
               </Dropdown>
           ),
           sorter: (a, b) => a.siteMemberRole.localeCompare(b.siteMemberRole),
@@ -259,7 +271,7 @@ const fetchSiteMembers = () => {
                 <Popconfirm
                   title="Are you sure to revoke access?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleRevokeAccess(record.key, record.siteMemberName)}
+                  onConfirm={() => handleRevokeAccess(record.key, record.siteMemberName, record.siteMemberId)}
                   okText="Yes"
                   cancelText="No"
                 >
@@ -270,7 +282,7 @@ const fetchSiteMembers = () => {
           }
           trigger={["click"]}
         >
-          {record.role === "Member" && <Button icon={<MoreOutlined />} type="text" />}
+          {record.siteMemberRole === "siteMember" && <Button icon={<MoreOutlined />} type="text" />}
         </Dropdown>
       )
       ,
@@ -299,7 +311,7 @@ const fetchSiteMembers = () => {
         </div>
 
         <Button type="primary" icon={<UserAddOutlined />} onClick={() => setInviteModalVisible(true)}>
-          Invite more
+          Invite
         </Button>
 
       </div>
@@ -310,12 +322,12 @@ const fetchSiteMembers = () => {
             placeholder="All"
             allowClear
             style={{ width: 150, marginLeft: "20px",  alignItems: "center", marginTop: "8px", marginBottom: "10px" }}
-            onChange={(value) => setSelectedRole(value)}
+            onChange={(value) => setSelectedFilterRole(value)}
           >
             <Option value="All">All</Option>
             {siteRoles.map(role => {
               const formattedRole = formatRole(role);
-              return <Option value={formattedRole}>{formattedRole}</Option>
+              return <Option value={role}>{formattedRole}</Option>
             })}
           </Select>
       </div>
@@ -348,15 +360,14 @@ const fetchSiteMembers = () => {
     >
       <Title level={5}>User email addresses</Title>
       <Select
-        mode="multiple" // Chỉ cho phép chọn từ danh sách có sẵn
         showSearch // Hiển thị ô tìm kiếm
         style={{ width: "100%" }}
         placeholder="Select user email"
-        value={selectedEmails}
-        onChange={setSelectedEmails}
+        value={selectedEmail}
+        onChange={setSelectedEmail}
         options={userEmails}
         filterOption={(input, option) =>
-          option.label.toLowerCase().includes(input.toLowerCase())
+          option.label?.toLowerCase().includes(input?.toLowerCase())
         } // Lọc email theo từ khóa nhập vào
         optionRender={(item) => (
           <div style={{ display: "flex", alignItems: "center" }}>
