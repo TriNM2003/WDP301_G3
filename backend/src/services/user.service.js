@@ -18,10 +18,35 @@ const getUserById = async(userId)=>{
     }
 }
 
+// get activity by userId
+const getActivitiesByUserId = async (userId) => {
+    try {
+        const user = await db.User.findById(userId).populate({
+            path: "activities",
+            populate: [
+                { path: "createBy", select: "fullName email" }, 
+                { path: "assignee", select: "_id" }, 
+                { path: "type", select: "name" }, 
+                { path: "project", select: "projectName" }, 
+                { path: "sprint", select: "title" },
+                { path: "stage", select: "title" }
+            ]
+        });
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        return user.activities;
+    } catch (error) {
+        throw error;
+    }
+};
+
 const userService = {
     getAllUsers,    
-
-    getUserById
+    getUserById,
+    getActivitiesByUserId
 }
 
 module.exports = userService;

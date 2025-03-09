@@ -58,7 +58,7 @@ const createSite = async (req, res, next) => {
 const getSiteByUserId = async (req, res, next) => {
     try {
         const {id} = req.payload;
-            const site = await siteService.getSiteByUserId(id);
+        const site = await siteService.getSiteByUserId(id);
             if(!site){
                 return res.status(404).json({ error: { status: 404, message: "Site not found" } })
             }
@@ -72,6 +72,7 @@ const inviteMemberByEmail = async (req, res, next) => {
     try {
         const {id} = req.payload;
         const {siteId} = req.params;
+
         const receiverId = req.body.receiverId;
         console.log(id, siteId, receiverId);
         const result = await siteService.inviteMemberByEmail(id, receiverId, siteId)
@@ -79,6 +80,7 @@ const inviteMemberByEmail = async (req, res, next) => {
             message: "Send invitation successfully!",
             invitation: result
         });
+
     } catch (error) {
         next(error);
     }

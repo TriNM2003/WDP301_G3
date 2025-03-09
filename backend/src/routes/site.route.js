@@ -27,6 +27,7 @@ siteRouter.get("/get-by-user-id",
     siteController.getSiteByUserId
 )
 
-
+// get all user in site
+siteRouter.get("/:siteId/members", verifyAccessToken, siteController.getAllUsersInSite)
 
 module.exports = siteRouter;

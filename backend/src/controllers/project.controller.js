@@ -49,17 +49,17 @@ const getProjectsInSite = async (req, res, next) => {
 
 const createProject = async (req, res, next) => {
     try {
-        const creatorId = req.payload.id; 
+        const creatorId = req.payload.id;
         const siteId = req.params.siteId;
 
-        const newProject = await projectService.createProject(req.body, creatorId,siteId);
+        const newProject = await projectService.createProject(req.body, creatorId, siteId);
 
         res.status(201).json({
             message: "Project created successfully!",
             project: newProject
         });
     } catch (error) {
-        next(error);
+        res.status(400).json({ error: { status: 400, message: error.message } });
     }
 };
 
