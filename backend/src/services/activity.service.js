@@ -19,29 +19,31 @@ const getActivitiesByProjectId = async (projectId) => {
     }
 }
 
-const create = async (data,project) => {
+const create = async (data, project) => {
     try {
         const {
             activityTitle,
             sprint,
             stage,
+            parent,
             type,
             createBy,
-        } = data.body;
+        } = data;
 
         const newActivity = new db.Activity({
             activityTitle,
             project,
             sprint,
+            parent,
             stage,
             type,
             createBy,
         });
         const createdActivity = await newActivity.save();
         await db.User.findByIdAndUpdate(
-            createBy,{
-                $addToSet:{activities:createdActivity._id}
-            }
+            createBy, {
+            $addToSet: { activities: createdActivity._id }
+        }
         )
         return createdActivity;
     } catch (error) {
@@ -49,7 +51,7 @@ const create = async (data,project) => {
     }
 }
 
-const edit = async (data,activityId) => {
+const edit = async (data, activityId) => {
     try {
         const {
             activityTitle,
@@ -59,7 +61,8 @@ const edit = async (data,activityId) => {
             stage,
             startDate,
             dueDate,
-        } = data.body;
+            child,
+        } = data;
 
         const updatedActivity = await db.Activity.findByIdAndUpdate(
             activityId,
@@ -71,8 +74,10 @@ const edit = async (data,activityId) => {
                 stage,
                 startDate,
                 dueDate,
+                child,
+
             },
-            {new:true, runValidators: true }
+            { new: true, runValidators: true }
 
         )
         if (!updatedActivity) {
@@ -92,7 +97,7 @@ const assignMember = async (data, activityId) => {
             { $addToSet: { assignee: data } }, // Tránh trùng lặp thành viên
             { new: true, runValidators: true }
         );
-        
+
         if (!updatedActivity) {
             throw new Error("Activity not found");
         }
