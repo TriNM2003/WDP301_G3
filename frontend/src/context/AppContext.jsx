@@ -7,7 +7,7 @@ import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
-const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password"];
+const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password", "/processing-invitation"];
 
 const AppProvider = ({ children }) => {
   //parameter
@@ -46,19 +46,23 @@ const AppProvider = ({ children }) => {
   const [sprints, setSprints] = useState([])
 
 
+
+  //parameter
+  const [user, setUser] = useState({});
+
+
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
   const siteAPI = "http://localhost:9999/sites";
+  const projectAPI = `http://localhost:9999/sites/${user.site || "notFound"}/projects`;
   const activityTypeAPI = "http://localhost:9999/activityTypes";
+
 
   // State lưu thông tin user & accessToken
 
 
 
-
-  //parameter
-  const [user, setUser] = useState({});
 
 
 
@@ -316,8 +320,7 @@ const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{
       accessToken,
-      authAPI, siteAPI, userApi,
-      accessToken,
+      authAPI, siteAPI, userApi, projectAPI,
       user, setUser,
       //setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,

@@ -4,7 +4,7 @@ import { AppContext } from '../context/AppContext';
 
 function ProtectedRoute() {
     const { accessToken } = useContext(AppContext) || null;
-    return accessToken != null ? <Outlet/>:<Navigate to="login" replace/>
+    return accessToken != null ? <Outlet/>:<Navigate to="/auth/login" replace/>
 }
 
 export default ProtectedRoute

@@ -17,8 +17,10 @@ siteRouter.use(bodyParser.json());
 siteRouter.get("/get-all", [verifyAccessToken, adminMiddleware.isAdmin], siteController.getAllSites)  //hung
 siteRouter.get("/:siteId/get-by-id",verifyAccessToken, SiteController.getSiteById) //hung
 siteRouter.get("/:siteId/get-site-members", [verifyAccessToken, siteMiddleware.isInSite], siteController.getSiteMembersById) //hung
-siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin],cloudinary.upload.single("userAvatar"), SiteController.createSite)  //hung
-siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite], siteController.inviteMembersByEmail) //hung
+siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin], SiteController.createSite)  //hung
+siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite], siteController.inviteMemberByEmail) //hung
+siteRouter.post("/processing-invitation", siteController.processingInvitation) //hung
+siteRouter.delete("/:siteId/revoke-site-member-access/:siteMemberId", [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.revokeSiteMemberAccess) //hung
 
 siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],

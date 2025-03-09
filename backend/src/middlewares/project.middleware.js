@@ -14,7 +14,6 @@ const isInProject = async (req, res, next) => {
         if(!user){
             return res.status(400).json({ error: { status: 400, message: "User is not permitted to access the project." } })
         }
-        console.log(user);
         next();
     } catch (error) {
         next(error)
@@ -32,6 +31,21 @@ const isProjectManager = async (req, res, next) => {
         }
         if(!project.projectMember[0].roles.includes("projectManager")){
             return res.status(400).json({ error: { status: 400, message: "User does not have permission." } })
+        }
+        next();
+    } catch (error) {
+        next(error)
+    }
+}
+
+const isProjectManager = async (req, res, next) => {
+    try {
+        const { id } = req.payload;     
+        const { projectId } = req.params;
+        const project = await db.Project.findById(projectId);
+        const isProjectManager = project.projectMember.find(member => member.roles.includes("projectManager"))._id.toString() === id;
+        if(!isProjectManager){
+            return res.status(400).json({ error: { status: 400, message: "User is not project manager! Request cancelled!" } })
         }
         next();
     } catch (error) {
