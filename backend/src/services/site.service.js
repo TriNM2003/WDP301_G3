@@ -208,27 +208,76 @@ const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
         throw new Error(`User ${siteMemberId} still has ${incompleteActivities.length} incomplete activities.`);
     }
 
-    site.siteMember = site.siteMember.filter(member => member._id.toString() !== siteMemberId);
-    const updatedSite = await site.save();
+    const updateSiteMember = await Site.findOneAndUpdate(
+        { "siteMember._id": siteMemberId },
+        { $pull: { siteMember: { _id: siteMemberId } } }, // Xóa member khỏi danh sách
+        { new: true } // Trả về tài liệu sau khi cập nhật
+      ).select("siteMember").populate("siteMember._id");
+      
+    await User.findOneAndUpdate(
+        { _id: siteMemberId }, // Tìm user theo _id
+        { $unset: { site: "" } } // Xóa trường site
+      );
+      
 
     return {
         message:`Revoke site memeber ${siteMemberId} from site ${siteId} successfully!`,
-        site: updatedSite
+        siteMember: updateSiteMember
     };
 }
+
+const getInvitaionsBySiteId = async (siteId) => {
+    const allInvitations = await Site.findOne(
+        {_id: siteId},
+        {invitations: 1, _id: 0}
+    ).populate("invitations.receiver");
+    if(allInvitations === null){
+        throw new Error("Site not found!")
+    } 
+    return allInvitations || [];
+}
+
+
+const cancelInvitationById = async (siteId, invitationId) => {
+    // Tìm site trước để kiểm tra invitation
+    const site = await Site.findOne(
+        { _id: siteId, "invitations._id": invitationId },
+        { "invitations.$": 1 } // Chỉ lấy invitation có _id tương ứng
+    ).lean();
+
+    // Kiểm tra nếu không tìm thấy invitation
+    if (!site || !site.invitations || site.invitations.length === 0) {
+        throw new Error(`Invitation with ID ${invitationId} not found in site ${siteId}`);
+    }
+
+    // Kiểm tra nếu invitation không ở trạng thái "pending"
+    if (site.invitations.find(item => item._id.toString() === invitationId).status !== "pending") {
+        throw new Error(`Only invitation with status 'pending' can be canceled.`);
+    }
+
+    // Nếu kiểm tra xong, tiến hành xóa invitation
+    const updateInvitations = await Site.findOneAndUpdate(
+        { _id: siteId },
+        { $pull: { invitations: { _id: invitationId, status: "pending" } } },
+        { new: true }
+    ).select("invitations");
+
+    return updateInvitations;
+};
+
 
 
 const siteService = {
     getSiteById,
     createSite,
     getSiteByUserId,
-    inviteMemberByEmail, processingInvitation,
+    inviteMemberByEmail, processingInvitation, 
     getAllSites,
     revokeSiteMemberAccess,
     getSiteMembersById,
-
-    getAllUsersInSite
-
+    getAllUsersInSite,
+    getInvitaionsBySiteId,
+    cancelInvitationById,
 }
 
 module.exports = siteService;

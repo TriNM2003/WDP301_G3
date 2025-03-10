@@ -237,7 +237,7 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
     }
 }
 
-const editProjectMemberRole = async (projectId, projectMemberId, newRole) => {
+const editProjectMemberRole = async (projectId, projectMemberId, updatedRoleList) => {
     try {
         // console.log(projectId, projectMemberId, newRole); return "ok"
         const project = await db.Project.findById(projectId);
@@ -257,13 +257,13 @@ const editProjectMemberRole = async (projectId, projectMemberId, newRole) => {
 
 
         //edit project member from project
-        const memberToEdit = project.projectMember.find(member => member._id.toString() === projectMemberId)
-        memberToEdit.roles = [newRole];
-        await project.save();
-        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
+        const projectMemberList = await db.Project.findOneAndUpdate(
+            { "projectMember._id": projectMemberId },
+            { $set: { "projectMember.$.roles":  updatedRoleList} }, 
+            { new: true } 
+        ).select("projectMember")
 
-
-        return updatedProject.projectMember;
+        return projectMemberList;
     } catch (error) {
         throw error;
     }
@@ -304,17 +304,19 @@ const removeProjectMember = async (projectId, projectMemberId) => {
         }
 
         //remove project member from project
-        const filteredList = project.projectMember.filter(member => member._id.toString() !== projectMemberId)
-        project.projectMember = filteredList;
-        await project.save();
+        const updatedProjectMember = await db.Project.findOneAndUpdate(
+            { "projectMember._id": projectMemberId },
+            { $pull: { projectMember: { _id: projectMemberId } } },
+            { new: true}
+        ).select("projectMember").populate("projectMember._id");
 
         // remove project from member
-        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
-        const filteredProjectList = projectMember.projects.filter(project => project._id.toString() !== updatedProject._id.toString())
-        projectMember.projects = filteredProjectList;
-        await projectMember.save();
+        await db.User.findOneAndUpdate(
+            {_id: projectMemberId },
+            {$pull: {projects: projectId}}
+        )
 
-        return updatedProject.projectMember;
+        return updatedProjectMember;
     } catch (error) {
         throw error;
     }
