@@ -63,6 +63,8 @@ const EditProfile = () => {
             formData.append("userAvatar", selectedFile);  // Gửi file ảnh
         }
 
+        setLoading(true)
+
         axios.put('http://localhost:9999/users/edit-profile', formData, {
             headers: { 
                 Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -76,7 +78,8 @@ const EditProfile = () => {
         })
         .catch(error => {
             message.error(error.response?.data?.message );
-        });
+        })
+        .finally(() => setLoading(false));
     };
 
     const handleDiscard = () => {
@@ -197,7 +200,7 @@ const EditProfile = () => {
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" onClick={handleSave} style={{ marginRight: '10px' }}>Save</Button>
+                                <Button type="primary" onClick={handleSave} loading={loading} style={{ marginRight: '10px' }}>Save</Button>
                                 <Button danger onClick={handleDiscard}>Discard</Button>
                             </Form.Item>
                         </Form>

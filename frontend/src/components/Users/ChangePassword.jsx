@@ -54,7 +54,7 @@ const ChangePassword = () => {
 
     const handleSave = async () => {
         if (!validateForm()) return;
-
+        setLoading(true);
         await axios.put('http://localhost:9999/users/change-password',
             {
                 oldPassword: form.oldPassword,
@@ -69,7 +69,8 @@ const ChangePassword = () => {
                 setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
                 setErrors({});
             })
-            .catch(error => setErrors({ oldPassword: error.response?.data?.message }));
+            .catch(error => setErrors({ oldPassword: error.response?.data?.message }))
+            .finally(() => setLoading(false));
     };
 
     const handleDiscard = () => {
@@ -156,7 +157,7 @@ const ChangePassword = () => {
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" onClick={handleSave} style={{ marginRight: '10px' }}>Save changes</Button>
+                                <Button type="primary" loading={loading} onClick={handleSave} style={{ marginRight: '10px' }}>Save changes</Button>
                                 <Button danger onClick={handleDiscard}>Discard changes</Button>
                             </Form.Item>
                         </Form>

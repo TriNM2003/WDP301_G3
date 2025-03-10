@@ -87,7 +87,7 @@ const ProjectTrash = () => {
                     alert("Project name does not match!");
                     return;
                 }
-                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/delete`, {
+                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                 });
                 message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);

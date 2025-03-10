@@ -72,10 +72,10 @@ projectRouter.put("/:projectId/restore",
     projectController.restoreProject
 );
 
-projectRouter.delete("/:projectId/delete",
+projectRouter.delete("/:projectId/destroy",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
-    projectController.deleteProject
+    projectController.destroyProject
 );
 
 
