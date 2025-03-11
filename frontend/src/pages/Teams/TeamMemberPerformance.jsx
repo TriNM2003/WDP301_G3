@@ -164,12 +164,7 @@ const [startDate, endDate] = getFilteredDateRange();
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={200} theme="light">
-        <Menu mode="inline" defaultSelectedKeys={["team"]}>
-          <Menu.Item key="team" icon={<TeamOutlined />}>Team</Menu.Item>
-          <Menu.Item key="projects" icon={<ProjectOutlined />}>Projects</Menu.Item>
-        </Menu>
-      </Sider>
+  
 
       <Layout style={{ padding: "24px" }}>
         <Content>

@@ -133,7 +133,7 @@ function App() {
                     <Route index element={<TeamPerformance />} />
                     <Route path="manage-member" element={<TeamMemberManagement />} />
                     <Route path="performance" element={<TeamPerformance />} />
-                    <Route path="member-performance" element={<TeamMemberPerformance />} />
+                    <Route path="member-performance/:memberId" element={<TeamMemberPerformance />} />
                   </Route>
                 </Route>
 

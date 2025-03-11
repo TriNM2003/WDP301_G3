@@ -30,6 +30,7 @@ const AppProvider = ({ children }) => {
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
   const [userActivities, setUserActivities] = useState([]);
+
   //Sprint
   const [completedSprint, setCompletedSprint] = useState(false);
 

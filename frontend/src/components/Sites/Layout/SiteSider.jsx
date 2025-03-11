@@ -10,16 +10,41 @@ import { blue, cyan, grey, magenta } from '@ant-design/colors';
 
 function SiteSider() {
 
-  const { defaultSelectedKeys, setDefaultSelectedKeys , site} = useContext(AppContext)
+  const { defaultSelectedKeys, setDefaultSelectedKeys, site, projects, user , teams} = useContext(AppContext)
   const navigate = useNavigate();
 
+  // Tìm 4 project có thời gian cập nhật gần nhất của tài khoản hiện tại
+  const recentProjects = Array.isArray(projects)
+    ? projects
+      .filter(project => project.projectMember.some(member => member._id?._id === user._id))
+      .map(project => ({
+        ...project,
+        lastUpdated: project?.updatedAt || null
+      }))
+      .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+      .slice(0, 4)
+    : [];
+
+// Tìm 4 teams có thời gian cập nhật gần nhất của tài khoản hiện tại
+ const recentTeams = Array.isArray(teams)
+ ? teams
+ .filter(team => 
+  team.teamMembers?.some(member => 
+      member._id?._id === user._id && member.roles.includes("teamLeader")
+  )
+ )
+ .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+   .slice(0, 4)
+ : [];
+
+
   const handleMenuClick = (e) => {
-    console.log(e.key);
+
     setDefaultSelectedKeys(e.key);
   };
   return (
     <>
-      <Title level={4} onClick={()=>{navigate("/site")}} style={{cursor:"pointer"}}>{site?.siteName}</Title>
+      <Title level={4} onClick={() => { navigate("/site") }} style={{ cursor: "pointer" }}>{site?.siteName}</Title>
       <Divider />
       <Menu
         mode="inline"
@@ -29,33 +54,74 @@ function SiteSider() {
       >
         {/* Projects */}
         <SubMenu key="project" icon={<ProjectTwoTone />} title="Projects">
-          <Menu.ItemGroup style={{"text-align":"start"}} key="p">
-            <Menu.Item icon={<ProjectOutlined style={{color:magenta[4]}}/>} key="p1" onClick={()=>navigate("project")}>Project 1</Menu.Item>
-            <Menu.Item icon={<ProjectOutlined style={{color:magenta[4]}}/>} key="p2" onClick={()=>navigate("project")}>Project 2</Menu.Item>
-            <Menu.Item  key="pp"  onClick={()=>{navigate("list/projects")}}>View all projects</Menu.Item>
-            <Menu.Item  key="cycle"  onClick={()=>{navigate("recycle")}}><UndoOutlined />  Recycle</Menu.Item>
-            
+          <Menu.ItemGroup style={{ textAlign: 'start' }} key="p">
+            {recentProjects?.length > 0 ? (
+              recentProjects?.map((project) => (
+                <Menu.Item
+                  key={`project-${project._id}`}
+                  icon={
+                    <img
+                      src={project.projectAvatar}
+                      style={{ width: 35, height: 24, objectFit: 'cover' }}
+                    />
+                  }
+                  onClick={() => navigate(`list/projects/${project.projectSlug}`)}
+                >
+                  {project.projectName}
+                </Menu.Item>
+              ))
+            ) : (
+              <Menu.Item key="no-projects" disabled>
+                No recent projects
+              </Menu.Item>
+            )}
+            <Menu.Item key="pp" onClick={() => navigate('list/projects')}>
+              View all projects
+            </Menu.Item>
+            <Menu.Item key="cycle" onClick={() => navigate('recycle')}>
+              <UndoOutlined /> Project trash
+            </Menu.Item>
           </Menu.ItemGroup>
         </SubMenu>
 
+
         {/* Teams */}
-        <SubMenu key="team" icon={<TeamOutlined style={{color:blue[5]}} />} title="Teams">
-          <Menu.ItemGroup style={{"text-align":"start"}} key="t" >
-            <Menu.Item icon={<GroupOutlined style={{color:cyan[4]}}/>} key="t1">Team 1</Menu.Item>
-            <Menu.Item icon={<GroupOutlined style={{color:cyan[4]}}/>} key="t2">Team 2</Menu.Item>
-            <Menu.Item  key="pt" onClick={()=>{navigate("list/teams")}} >View all teams</Menu.Item>
+        <SubMenu key="team" icon={<TeamOutlined style={{ color: blue[5] }} />} title="Teams">
+          <Menu.ItemGroup style={{ "text-align": "start" }} key="t" >
+          {recentTeams?.length > 0 ? (
+              recentTeams?.map((team) => (
+                <Menu.Item
+                  key={`project-${team._id}`}
+                  icon={
+                    <img
+                      src={team.teamAvatar}
+                      style={{ width: 35, height: 24, objectFit: 'cover' }}
+                    />
+                  }
+                  onClick={() => navigate(`teams/${team.teamSlug}`)}
+
+                >
+                  {team.teamName}
+                </Menu.Item>
+              ))
+            ) : (
+              <Menu.Item key="no-projects" disabled>
+                No recent teams
+              </Menu.Item>
+            )}
+            <Menu.Item key="pt" onClick={() => { navigate("list/teams") }} >View all teams</Menu.Item>
 
           </Menu.ItemGroup>
         </SubMenu>
 
         {/* Settings */}
         <SubMenu key="setting" icon={<SettingTwoTone />} title="Settings">
-          <Menu.ItemGroup style={{"text-align":"start"}} key="s" >
-            <Menu.Item icon={<SettingOutlined style={{color:grey[6]}}/>} key="s1" onClick={()=>{navigate("site-setting")}}>Setting</Menu.Item>
-            <Menu.Item icon={<UserOutlined style={{color:blue[3]}}/>} key="s2" onClick={()=>{navigate("manage/members")}}>Manage Access</Menu.Item>
-            <Menu.Item icon={<ProjectOutlined style={{color:blue[3]}}/>} key="s3" onClick={()=>{navigate("manage/projects")}}>Manage Projects</Menu.Item>
-            <Menu.Item icon={<TeamOutlined style={{color:blue[3]}}/>} key="s4" onClick={()=>{navigate("manage/teams")}}>Manage Teams</Menu.Item>
-            <Menu.Item icon={<MailOutlined style={{color:blue[3]}}/>} key="s5" onClick={()=>{navigate("manage/invitations")}}>Manage Invitations</Menu.Item>
+          <Menu.ItemGroup style={{ "text-align": "start" }} key="s" >
+            <Menu.Item icon={<SettingOutlined style={{ color: grey[6] }} />} key="s1" onClick={() => { navigate("site-setting") }}>Setting</Menu.Item>
+            <Menu.Item icon={<UserOutlined style={{ color: blue[3] }} />} key="s2" onClick={() => { navigate("manage/members") }}>Manage Access</Menu.Item>
+            <Menu.Item icon={<ProjectOutlined style={{ color: blue[3] }} />} key="s3" onClick={() => { navigate("manage/projects") }}>Manage Projects</Menu.Item>
+            <Menu.Item icon={<TeamOutlined style={{ color: blue[3] }} />} key="s4" onClick={() => { navigate("manage/teams") }}>Manage Teams</Menu.Item>
+            <Menu.Item icon={<MailOutlined style={{ color: blue[3] }} />} key="s5" onClick={() => { navigate("manage/invitations") }}>Manage Invitations</Menu.Item>
           </Menu.ItemGroup>
         </SubMenu>
       </Menu>

@@ -186,8 +186,23 @@ const createTeam = async (req, res, next) => {
     }
 };
 
+// get team activities
 
+const getTeamActivities = async (req, res, next) => {
+    try {
+        const { teamSlug } = req.params;
 
+        const activities = await teamService.getTeamActivities(teamSlug);
+
+        if (!activities || activities.length === 0) {
+            return res.status(404).json({ error: { status: 404, message: "No activities found for this team" } });
+        }
+
+        res.status(200).json({ status: 200, activities });
+    } catch (error) {
+        next(error);
+    }
+};
 
 
 const teamController = {
@@ -195,7 +210,8 @@ const teamController = {
     addTeamMember,
     kickTeamMember,
     getTeamsInSite,
-    createTeam
+    createTeam,
+    getTeamActivities
 };
 
 module.exports = teamController;

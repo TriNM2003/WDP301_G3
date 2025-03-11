@@ -141,10 +141,19 @@ const ProjectList = () => {
     }).length;
 
 
-
     return (
         <Layout>
-            <Content style={{ padding: "10px 10px", textAlign: "left" }}>
+            <Content 
+            style={{ 
+                padding: "10px 10px",
+                textAlign: "left",
+                width: "100%",
+                maxWidth: "100vw",
+                overflowX: "hidden",
+                minHeight: "100vh", 
+                display: "flex",
+                flexDirection: "column", 
+                }}>
                 <Row gutter={[16, 16]}>
                     <Col xs={24} md={15}>
                         <div style={{ display: "flex", flexDirection: "column" }}>

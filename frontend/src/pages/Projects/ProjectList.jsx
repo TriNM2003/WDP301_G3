@@ -100,7 +100,17 @@ const ProjectList = () => {
   return (
     
       <Layout>
-        <Content style={{ padding: "0px 20px", textAlign: "left" }}>
+        <Content   
+        style={{
+        padding: "20px",
+        textAlign: "left",
+        width: "100%",
+        maxWidth: "100vw",
+        overflowX: "hidden",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+    }}>
 
           <div style={{
             display: "flex",

@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const { slugify } = require('../utils/slugify.util');
+const userService = require('../services/user.service');
 
 
 const getTeamsInSite = async(siteId)=>{
@@ -42,7 +43,7 @@ const createTeam = async (teamData, creatorId, siteId) => {
 
         // Định dạng danh sách teamMembers
         const teamMembers = [
-            { _id: creatorId, roles: ["teamLeader"] }, 
+            { _id: creatorId, roles: ["teamLeader", "teamMember"] }, 
             ...(teamData.teamMembers?.map(memberId => ({
                 _id: memberId,
                 roles: ["teamMember"]
@@ -75,11 +76,56 @@ const createTeam = async (teamData, creatorId, siteId) => {
     }
 };
 
+// Get team activities 
+const getTeamActivities = async (teamSlug) => {
+    try {
+
+        const team = await db.Team.findOne({ teamSlug }).populate("teamMembers._id");
+
+        if (!team) {
+            throw new Error("Team not found");
+        }
+
+        // Lấy danh sách userId của các thành viên trong team
+        const userIds = team.teamMembers.map(member => member._id._id.toString());
+
+        // Gọi userService để lấy activities của từng thành viên
+        const activitiesPromises = userIds.map(userId => userService.getActivitiesByUserId(userId));
+        const activitiesResults = await Promise.all(activitiesPromises);
+
+        // Gộp tất cả activities lại thành một danh sách duy nhất
+        const allActivities = activitiesResults.flat();
+
+           // Dùng Map để loại bỏ các activities trùng nhau dựa trên `_id`
+        const uniqueActivities = new Map();
+           allActivities.forEach(activity => {
+               uniqueActivities.set(activity._id.toString(), activity);
+           });
+
+        const filterActivities = Array.from(uniqueActivities.values());   
+            // **Populate stage để lấy stageName và stageStatus**
+        const populatedActivities = await db.Activity.populate(filterActivities, [
+            {
+            path: "stage",
+            select: "stageName stageStatus"
+            } ,
+            { 
+            path: "assignee",
+            select: "username" 
+            }
+    ]);
+           return populatedActivities;
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 
 const teamService = {
     getTeamsInSite,
-    createTeam
+    createTeam,
+    getTeamActivities
 }
 
 module.exports = teamService;
