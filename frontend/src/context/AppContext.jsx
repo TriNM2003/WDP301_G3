@@ -31,6 +31,8 @@ const AppProvider = ({ children }) => {
   const [activityModal, setActivityModal] = useState(false);
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
+  const [isActivityTitle, setIsActivityTitle] = useState(false)
+  const [activityLoading, setActivityLoading] = useState(false)
 
   const [userActivities, setUserActivities] = useState([]);
   // Team
@@ -330,8 +332,8 @@ const AppProvider = ({ children }) => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity,
-      createSubActivity, setCreateSubActivity,
+      project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity,activityLoading, setActivityLoading,
+      createSubActivity, setCreateSubActivity,isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams
 
     }}>

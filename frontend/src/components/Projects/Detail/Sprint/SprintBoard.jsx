@@ -50,7 +50,7 @@ const SprintBoard = () => {
               autoFocus
               value={activityName}
               onChange={(e) => setActivityName(e.target.value)}
-              onPressEnter={() => { handleActivityCreate("", "to do", "task", "") }}
+              onPressEnter={() => { handleActivityCreate("", "to do", "task", null) }}
               onBlur={() => setCreateActivityModal(false)}
               placeholder="Enter activity name"
               prefix={<FormOutlined style={{ color: blue[6] }} />}
