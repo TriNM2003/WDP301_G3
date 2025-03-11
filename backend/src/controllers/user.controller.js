@@ -82,17 +82,26 @@ const getUserActivities = async (req, res, next) => {
     }
 };
 
+const getOtherUserById = async (req, res , next) => {
+    try {
+        const userId = req.params.userId;
+        const user = await userService.getUserById(userId);
+        res.status(200).json({ status: 200, user });
+    } catch (error) {
+        next(error)
+    }
+}
+
 
 const UserControllers = {
     getAllUsers,
     getUserById,
-
     changePassword,
     editProfile,
     sendDeleteAccountEmail,
     confirmDeleteAccount,
-     getUserActivities
-
+     getUserActivities,
+     getOtherUserById,
 };
 
 module.exports = UserControllers;

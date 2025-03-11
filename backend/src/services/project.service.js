@@ -99,6 +99,42 @@ const createProject = async (projectData, creatorId, siteId) => {
     }
 };
 
+// site owner tao project va assign project manager
+const createProjectV2 = async (siteId, projectManagerId, projectName) => {
+    const site = await db.Site.findById(siteId);
+    if(!site){
+        throw new Error("Site does not exist");
+    }
+    const projectManager = await db.User.findById(projectManagerId);
+    if(!projectManager){
+        throw new Error("User does not exist");
+    }
+
+    const siteMember = site.siteMember.find(member => member._id?.toString() === projectManager._id?.toString());
+    if(!siteMember){
+        throw new Error("Assigned user is not a member of site");
+    }
+
+    const projectSlug = slugify(projectName);
+    const newProject = await db.Project.create({
+        projectName: projectName,
+        projectSlug: projectSlug,
+        projectStatus: "active",
+        projectMember: [{_id: projectManager._id, roles:["projectManager"]}],
+        site: site._id,
+        projectRoles: ["projectManager", "projectMember"],
+        projectAvatar: "https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg",
+    })
+
+    //theo project vao user
+    await db.User.findOneAndUpdate(
+        {_id: projectManager._id},
+        {$addToSet: {projects: newProject._id}}
+    )
+
+    return newProject;
+}
+
 const editProject = async (projectId, projectName, file) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
@@ -329,7 +365,7 @@ const projectService = {
     getProjectById,
     getAllProjects,
     getProjectsInSite,
-    createProject,
+    createProject, createProjectV2,
     editProject,
     removeToTrash,
     restoreProject,

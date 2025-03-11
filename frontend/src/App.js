@@ -21,7 +21,7 @@ import EditProject from './components/Projects/EditProject';
 import ManageTeams from './components/Teams/ManageTeams';
 import ManageSiteMembers from './components/Sites/ManageSiteMembers/ManageSiteMembers';
 import ManageInvitations from './components/Sites/ManageInvitations/ManageInvitations';
-import ManageProjects from './components/Sites/ManageProjects';
+import ManageProjects from './components/Sites/ManageProjects/ManageProjects';
 import { cyan } from '@ant-design/colors';
 import Login from './pages/Auth/Login';
 import LoginForm from './components/Auth/LoginForm';

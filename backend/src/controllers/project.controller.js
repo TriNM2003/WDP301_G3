@@ -64,7 +64,19 @@ const createProject = async (req, res, next) => {
 };
 
 
-
+const createProjectV2 = async (req, res ,next) => {
+    try {
+        const siteId = req.params.siteId;
+        const {projectManagerId, projectName} = req.body;
+        const newProject = await projectService.createProjectV2(siteId, projectManagerId, projectName);
+        res.status(201).json({
+            message: "Project created successfully!",
+            project: newProject || "Error?"
+        });
+    } catch (error) {
+        next(error)
+    }
+}
 
 
 
@@ -197,7 +209,7 @@ const projectController = {
     deleteProject,
     getAllProjects,
     getProjectsInSite,
-    createProject,
+    createProject, createProjectV2,
     getProjectMembersById,
     addProjectMember,
     removeProjectMember,

@@ -6,6 +6,7 @@ const { projectController } = require("../controllers");
 const cloudinary = require("../configs/cloudinary");
 const authMiddleware = require("../middlewares/auth.middleware");
 const { projectMiddleware, siteMiddleware } = require("../middlewares");
+const { isSiteOwner } = require("../middlewares/site.middleware");
 
 
 const projectRouter = express.Router({ mergeParams: true });
@@ -85,6 +86,10 @@ projectRouter.post("/create",
     projectController.createProject
 )
 
-
+// for site owner
+projectRouter.post("/create-v2",
+    [authMiddleware.verifyAccessToken, isSiteOwner],
+    projectController.createProjectV2
+)
 
 module.exports = projectRouter;
