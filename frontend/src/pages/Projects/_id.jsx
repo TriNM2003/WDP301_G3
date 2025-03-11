@@ -13,7 +13,7 @@ import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 
 function _id() {
-    const {activity, project, setProject, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
+    const {activity, project, setProject,activityLoading,isActivityTitle, setIsActivityTitle, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
     const { projectSlug } = useParams();
     useEffect(() => {
         const selectedProject = projects?.find((p) => p.projectSlug == projectSlug)
@@ -46,7 +46,7 @@ function _id() {
 
         }
         // console.log("da chay lai");
-    }, [projectSlug, site, projects, createActivityModal, createSubActivity]);
+    }, [projectSlug, site, projects, createActivityModal, createSubActivity,activityLoading]);
     return (
         <Flex vertical style={{ height: "100%" }}>
             <Outlet />

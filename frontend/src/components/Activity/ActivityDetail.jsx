@@ -1,6 +1,6 @@
 import { blue, cyan, gray, orange, red, yellow } from '@ant-design/colors'
-import { BugOutlined, CalendarOutlined, CloseOutlined, CommentOutlined, DeleteOutlined, DoubleRightOutlined, DownOutlined, EditOutlined, EllipsisOutlined, FireOutlined, FormOutlined, MinusOutlined, MoreOutlined, PaperClipOutlined, PieChartOutlined, PlusOutlined, SendOutlined, UpOutlined, UserAddOutlined, UserOutlined } from '@ant-design/icons'
-import { Avatar, Button, Col, DatePicker, Dropdown, Flex, Input, List, Menu, Modal, Popconfirm, Progress, Row, Select, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { BugOutlined, CalendarOutlined, CloseOutlined, CommentOutlined, DeleteOutlined, DoubleRightOutlined, DownOutlined, EditOutlined, EllipsisOutlined, FireOutlined, FormOutlined, MinusOutlined, MoreOutlined, PaperClipOutlined, PieChartOutlined, PlusOutlined, SearchOutlined, SendOutlined, UpOutlined, UserAddOutlined, UserOutlined } from '@ant-design/icons'
+import { Avatar, Button, Col, DatePicker, Dropdown, Flex, Form, Input, List, Menu, Modal, Popconfirm, Progress, Row, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { Option } from 'antd/es/mentions'
 import Title from 'antd/es/typography/Title'
@@ -10,10 +10,11 @@ import { AppContext } from '../../context/AppContext'
 import dayjs from 'dayjs'
 import SubActivity from './SubActivity'
 import axios from 'axios'
+import SubMenu from 'antd/es/menu/SubMenu'
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI, site, project, createSubActivity, setCreateSubActivity, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI, site, project, setActivities, activityLoading, setActivityLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
@@ -35,53 +36,126 @@ function ActivityDetail() {
   const [editedComment, setEditedComment] = useState("");
   const [isDescription, setIsDescription] = useState(false)
   const [newDescription, setNewDescription] = useState("");
-  const [editActivity, setEditActivity] = useState({})
-
-
-  // fetch activity
+  const [selectedType, setSelectedType] = useState("subtask")
+  const [projectMembers, setProjectMembers] = useState([])
+  const [assigneeFilter, setAssigneeFilter] = useState("");
+  // fetch site members
   useEffect(() => {
-    if (activity) {
-      const updatedActivity = activities?.find(a => a._id === activity._id);
-      if (updatedActivity) {
-        setActivity(updatedActivity);
-        // setChild(updatedActivity?.child?.map((c) => activities.find((a) => c === a._id)));
-        setEditActivity({
-          activityTitle: activity?.activityTitle,
-          description: activity?.description || "",
-          parent: activity?.parent || null,
-          startDate: activity?.startDate || null,
-          dueDate: activity?.dueDate || null
-        })
-      }
-    }
-
-  }, [activities, activity, createSubActivity])
-
-  // edit activity
-  const [isTitle, setIsTitle] = useState(false)
-
-  console.log(editActivity);
-
-  const handleEditActivity = async () => {
-    console.log(editActivity);
-    await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/edit`,
-      { ...editActivity },
+    axios.get(
+      `${siteAPI}/${site?._id}/projects/${project?._id}/get-project-members`,
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       }
-
     )
-      .then((res) => { setActivity(res?.data?.activity) })
-      .catch((err) => {
-        console.log(err?.response?.data?.error?.message);
-        message.error(err?.response?.data?.error?.message)
+      .then((res) => {
+        setProjectMembers(res.data);
+
       })
+      .catch((err) => {
+        console.log(err);
+      })
+  }, [site, project])
+  // fetch activity
+  useEffect(() => {
+    const updatedActivity = activities.find((a) => a._id == activity?._id)
+    if (updatedActivity) {
+      setActivity(updatedActivity);
+
+    }
+
+  }, [activities, assigneeFilter])
+
+  // edit activity
+
+
+  const handleEditActivity = async (field, updateData) => {
+
+    try {
+      const res = await axios.put(
+        `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/edit`,
+        { [field]: updateData },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      activityModalLoading();
+      setActivity(res?.data?.activity);
+      const updateActivities = activities.map((a) =>
+        a._id === res?.data?.activity?._id ? res?.data?.activity : a
+      );
+      setActivities(updateActivities)
+      setIsActivityTitle(false);
+      setIsDescription(false);
+      setNewDescription("")
+      message.success("Edit activity successfully");
+      showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
+    } catch (err) {
+      console.error(err?.response?.data?.error?.message);
+    }
+  };
+
+  //Asign member
+  const assignMember = async (memberId) => {
+    
+      await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
+        { member: memberId },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+        .then((res) => {
+          activityModalLoading();
+          setActivity(res?.data?.activity);
+          const updateActivities = activities.map((a) =>
+            a._id === res?.data?.activity?._id ? res?.data?.activity : a
+          );
+          setActivities(updateActivities)
+          setIsActivityTitle(false);
+          setIsDescription(false);
+          setNewDescription("")
+          message.success("Assign member successfully");
+          showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+    
+  }
+  const removeAssign = async (memberId) => {
+    if (memberId) {
+      await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/removeAssignee`,
+        { member: memberId },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+        .then((res) => {
+          activityModalLoading();
+          setActivity(res?.data?.activity);
+          const updateActivities = activities.map((a) =>
+            a._id === res?.data?.activity?._id ? res?.data?.activity : a
+          );
+          setActivities(updateActivities)
+          setIsActivityTitle(false);
+          setIsDescription(false);
+          setNewDescription("")
+          message.success("Remove assignee successfully");
+          showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+    }
   }
   //Subactivity
   const child = activity?.child?.map((c) => activities.find((a) => c == a._id));
-  const [selectedType, setSelectedType] = useState("subtask")
   // const [child, setChild] = useState([])
 
   // const subtasks = child?.filter(c => c.type?.typeName == "subtask");
@@ -146,7 +220,12 @@ function ActivityDetail() {
   const handleEditCommentCancel = () => {
     setEditComment(false);
   };
-
+  const activityModalLoading = () => {
+    setActivityLoading(true);
+    setTimeout(() => {
+      setActivityLoading(false);
+    }, 1000);
+  }
 
   return (
     <Modal
@@ -204,27 +283,33 @@ function ActivityDetail() {
           <Col span={16} style={{ height: "100%", borderRight: `solid 1px ${cyan[`1`]}`, overflow: "auto" }}>
             <Row justify="space-between" style={{ padding: "1% 0" }}>
               <Col span={15} style={{ padding: "0 1%" }}>
-                <Space style={{ width: "60%", textAlign: "center", padding: "2% 0" }} >
-                  {isTitle == false ? (<Space onClick={() => setIsTitle(true)}>
-                    {activity?.type?.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
-                    {activity?.type?.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
-                    {activity?.type?.typeName == "bug" && <BugOutlined style={{ color: yellow[6] }} />}
-                    <Title level={5} style={{ margin: "0" }} > {activity?.activityTitle}</Title>
-                  </Space>) :
+                <Space style={{ width: "60%", textAlign: "center", padding: "2% 0" }}  >
+                  {isActivityTitle == false ?
+                    (<Space onClick={() => setIsActivityTitle(true)}>
+
+                      <Title level={5} style={{ margin: "0" }} >
+                        {activityLoading ? (
+                          <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                        ) : (
+                          <>
+                            {activity?.type?.typeName === "task" && <FormOutlined style={{ color: blue[6] }} />}
+                            {activity?.type?.typeName === "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
+                            {activity?.type?.typeName === "bug" && <BugOutlined style={{ color: yellow[6] }} />}
+                            {activity?.activityTitle}
+                          </>
+                        )}
+                      </Title>
+                    </Space>) :
                     (<Input
                       autoFocus
-                      value={editActivity.activityTitle}
-                      onChange={(e) => setEditActivity({
-                        ...editActivity,
-                        activityTitle: e.target.value
-                      })}
-                      onPressEnter={handleEditActivity}
+                      defaultValue={activity?.activityTitle}
+                      onPressEnter={(e) => {
+                        console.log(e.target.value);
+                        handleEditActivity("activityTitle", e.target.value)
+                      }}
                       onBlur={() => {
-                        setIsTitle(false);
-                        setEditActivity({
-                          ...editActivity,
-                          activityTitle: activity?.activityTitle
-                        })
+                        setIsActivityTitle(false);
+
                       }}
                       placeholder="Enter activity name"
                       prefix={<EditOutlined style={{ color: blue[6] }} />}
@@ -240,84 +325,293 @@ function ActivityDetail() {
                   {/* Priority */}
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><Tag />Priority </small>
-                    <Dropdown
-                      overlay={
-                        <Menu>
-                          <Menu.Item key="1" icon={<DoubleRightOutlined rotate="-90" />} style={{ color: red[6] }} >
-                            Highest
-                          </Menu.Item>
-                          <Menu.Item key="2" icon={<UpOutlined />} style={{ color: orange[6] }} >
-                            High
-                          </Menu.Item>
-                          <Menu.Item key="3" icon={<MinusOutlined />} style={{ color: blue[6] }} >
-                            Medium
-                          </Menu.Item>
-                          <Menu.Item key="4" icon={<DownOutlined />} style={{ color: cyan[6] }} >
-                            Low
-                          </Menu.Item>
-                          <Menu.Item key="5" icon={<DoubleRightOutlined rotate="90" />} style={{ color: cyan[4] }} >
-                            Lowest
-                          </Menu.Item>
-                        </Menu>
-                      }
-                    >
-                      <span>
-                        {activity?.priority == "highest" && <span><DoubleRightOutlined rotate="-90" style={{ color: red[6] }} /> Highest</span>}
-                        {activity?.priority == "high" && <span><UpOutlined style={{ color: orange[6] }} /> High</span>}
-                        {activity?.priority == "medium" && <span><MinusOutlined style={{ color: blue[6] }} /> Medium</span>}
-                        {activity?.priority == "low" && <span><DownOutlined style={{ color: cyan[6] }} /> Low</span>}
-                        {activity?.priority == "lowest" && <span><DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> Lowest</span>}
-                      </span>
-                    </Dropdown>
+                    {activityLoading ? (
+                      <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                    ) : (
+                      <Dropdown
+                        overlay={
+                          <Menu
+                            defaultSelectedKeys={activity?.priority}
+                            onClick={(e) => {
+
+                              handleEditActivity("priority", e.key)
+
+                              // console.log(editActivity);
+                              // handleEditActivity();
+
+
+                            }}
+                          >
+                            <Menu.Item key="highest" icon={<DoubleRightOutlined rotate="-90" />} style={{ color: red[6] }}>
+                              Highest
+                            </Menu.Item>
+                            <Menu.Item key="high" icon={<UpOutlined />} style={{ color: orange[6] }}>
+                              High
+                            </Menu.Item>
+                            <Menu.Item key="medium" icon={<MinusOutlined />} style={{ color: blue[6] }}>
+                              Medium
+                            </Menu.Item>
+                            <Menu.Item key="low" icon={<DownOutlined />} style={{ color: cyan[6] }}>
+                              Low
+                            </Menu.Item>
+                            <Menu.Item key="lowest" icon={<DoubleRightOutlined rotate="90" />} style={{ color: cyan[4] }}>
+                              Lowest
+                            </Menu.Item>
+                          </Menu>
+                        }
+                      >
+                        <span>
+                          {activity?.priority === "highest" && (
+                            <span>
+                              <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} /> Highest
+                            </span>
+                          )}
+                          {activity?.priority === "high" && (
+                            <span>
+                              <UpOutlined style={{ color: orange[6] }} /> High
+                            </span>
+                          )}
+                          {activity?.priority === "medium" && (
+                            <span>
+                              <MinusOutlined style={{ color: blue[6] }} /> Medium
+                            </span>
+                          )}
+                          {activity?.priority === "low" && (
+                            <span>
+                              <DownOutlined style={{ color: cyan[6] }} /> Low
+                            </span>
+                          )}
+                          {activity?.priority === "lowest" && (
+                            <span>
+                              <DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> Lowest
+                            </span>
+                          )}
+                        </span>
+                      </Dropdown>
+                    )}
                   </Flex>
 
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><UserOutlined /> Assignee </small>
-                    {activity?.assignee?.length > 0 ? (
-                      <Avatar.Group max={2} size={25}>
-                        {activity.assignee.map((a) => (
-                          <Tooltip key={a._id} title={a.username} placement="top">
-                            <Avatar
-                              src={a.userAvatar || "https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"}
-                              size="small"
-                            />
-                          </Tooltip>
-                        ))}
-                        <Tooltip title="Assign member" placement="top"  >
-                          <Avatar icon={<UserAddOutlined />} size="small" style={{ cursor: "pointer" }} onClick={() => { console.log("assign member"); }} />
-                        </Tooltip>
-                      </Avatar.Group>
+                    {activityLoading ? (
+                      <Skeleton.Avatar active size="small" shape="circle" />
                     ) : (
-                      <Tooltip title="Unassigned">
-                        <Avatar icon={<UserAddOutlined />} size="small" />
-                      </Tooltip>
+                      activity?.assignee?.length > 0 ? (
+                        <Avatar.Group max={2} size={25}>
+                          {activity.assignee.map((a) => (
+                            <Tooltip key={a._id} title={a.username} placement="top">
+                              <Avatar
+                                src={a.userAvatar || "https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"}
+                                size="small"
+                              />
+                            </Tooltip>
+                          ))}
+                          <Dropdown
+                            trigger={['click']}
+
+                            overlay={
+                              <Menu style={{ maxHeight: "300px", width: "200px", padding: "5% 0", overflow: "auto" }}>
+                                <Menu.ItemGroup title={<small>Assignnees</small>}>
+
+
+                                  {activity?.assignee?.length > 0 ?
+                                    activity?.assignee?.map((a) => {
+                                      return <Menu.Item onClick={() => removeAssign(a?._id)} >
+                                        <Tooltip title="Remove assignee" placement="top">
+                                          <Space>
+                                            <Avatar
+                                              src={a?.userAvatar}
+                                              size="small"
+                                            />
+                                            <text>{a?.username}</text>
+                                          </Space>
+                                        </Tooltip>
+                                      </Menu.Item>
+
+                                    })
+                                    : (<Menu.Item >
+                                      <Tooltip title="Remove assignee" placement="top">
+                                        <Space>
+                                          <Avatar
+                                            src={"https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"}
+                                            size="small"
+                                          />
+                                          <text>Unassigned</text>
+                                        </Space>
+                                      </Tooltip>
+                                    </Menu.Item>)}
+
+                                </Menu.ItemGroup>
+                                <Menu.ItemGroup title={<small>Assign member</small>} >
+                                  <Menu.Item disabled >
+                                    <Input
+                                      placeholder="Search project member"
+                                      allowClear
+                                      size="middle"
+                                      onChange={(e) => { setAssigneeFilter(e.target.value); console.log(assigneeFilter); }}
+                                      style={{ width: "100%", borderRadius: "2%" }}
+                                      prefix={<SearchOutlined />}
+                                    />
+                                  </Menu.Item>
+                                  {projectMembers?.filter((m) => m && !activity?.assignee?.some((a) => a?._id == m?.projectMember?._id))
+                                    .filter((m) => m && (m.projectMember?.username.toUpperCase().includes(assigneeFilter.toUpperCase()) || m.projectMember?.email.toUpperCase().includes(assigneeFilter.toUpperCase())))
+                                    .map((member) => {
+                                      return (
+                                        <Menu.Item onClick={() => assignMember(member?.projectMember?._id)}  >
+                                          <Tooltip title="Assign assignee" placement="top">
+                                            <Space>
+
+                                              <Avatar
+                                                src={member?.projectMember?.userAvatar}
+                                                size="small"
+                                              />
+                                              <text>{member?.projectMember?.username}</text>
+                                            </Space>
+                                          </Tooltip>
+                                        </Menu.Item>
+
+                                      )
+                                    })}
+                                </Menu.ItemGroup>
+                              </Menu>
+                            }
+                          ><Tooltip title="Assign member" placement="top">
+                              <Avatar icon={<UserAddOutlined />} size="small" style={{ cursor: "pointer" }} />
+                            </Tooltip>
+                          </Dropdown>
+
+                        </Avatar.Group>
+                      ) : (
+                        <Dropdown
+                          trigger={['click']}
+
+                          overlay={
+                            <Menu style={{ maxHeight: "300px", width: "200px", padding: "5% 0", overflow: "auto" }}>
+                              <Menu.ItemGroup title={<small>Assignnees</small>}>
+
+
+                                <Menu.Item >
+                                  <Tooltip title="Remove assignee" placement="top">
+                                    <Space>
+
+                                      <Avatar
+                                        icon={<UserOutlined />}
+                                        size="small"
+                                      />
+                                      <text>Unassigned</text>
+                                    </Space>
+                                  </Tooltip>
+                                </Menu.Item>
+
+                              </Menu.ItemGroup>
+                              <Menu.ItemGroup title={<small>Assign member</small>} >
+                                <Menu.Item disabled >
+                                  <Input
+                                    placeholder="Search project member"
+                                    allowClear
+                                    size="middle"
+                                    onChange={(e) => { setAssigneeFilter(e.target.value) }}
+                                    style={{ width: "100%", borderRadius: "2%" }}
+                                    prefix={<SearchOutlined />}
+                                  />
+                                </Menu.Item>
+                                {projectMembers?.filter((m) => m && !activity?.assignee?.some((a) => a?._id == m?.projectMember?._id))
+                                  .filter((m) => m && (m.projectMember?.username.toUpperCase().includes(assigneeFilter.toUpperCase()) || m.projectMember?.email.toUpperCase().includes(assigneeFilter.toUpperCase())))
+                                  .map((member) => {
+                                    return (
+                                      <Menu.Item onClick={() => assignMember(member?.projectMember?._id)}>
+                                        <Tooltip title="Assign assignee" placement="top">
+                                          <Space>
+
+                                            <Avatar
+                                              src={member?.projectMember?.userAvatar}
+                                              size="small"
+                                            />
+                                            <text>{member?.projectMember?.username}</text>
+                                          </Space>
+                                        </Tooltip>
+                                      </Menu.Item>
+
+                                    )
+                                  })}
+                              </Menu.ItemGroup>
+                            </Menu>
+                          }
+                        ><Tooltip title="Assign member" placement="top">
+                            <Space>
+                              <Avatar icon={<UserOutlined />} size="small" style={{ cursor: "pointer" }} />
+
+                              <text>Unassigned</text>
+                            </Space>
+                          </Tooltip>
+                        </Dropdown>
+
+                      )
+                    )}
+                  </Flex>
+                  <Flex justify="space-between" align="center" style={{ width: "100%" }}>
+                    <small style={{ fontWeight: "bolder", color: gray[4] }}><UserOutlined />Created by:  </small>
+                    {activityLoading ? (
+                      <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                    ) : (
+
+                      <Space>
+                        <Avatar src={activity?.createBy?.userAvatar} size="small" style={{ cursor: "pointer" }} />
+
+                        <text>{activity?.createBy?.username}</text>
+                      </Space>
+
                     )}
                   </Flex>
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><CalendarOutlined />Start date  </small>
-                    <DatePicker variant="underlined" value={activity?.startDate ? dayjs(activity.dueDate) : null} />
+                    {activityLoading ? (
+                      <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                    ) : (
+                      <DatePicker
+                        variant="underlined"
+                        defaultValue={activity?.startDate ? dayjs(activity.startDate) : null}
+                        disabledDate={(current) => activity?.dueDate && current && current.isAfter(activity?.dueDate, "day")}
+                        onChange={(value) => {
+                          handleEditActivity("startDate", value);
+                        }}
+                      />
+                    )}
                   </Flex>
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><CalendarOutlined />Due date </small>
-                    <DatePicker variant="underlined" value={activity?.dueDate ? dayjs(activity.dueDate) : null} />
+                    {activityLoading ? (
+                      <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                    ) : (
+                      <DatePicker
+                        variant="underlined"
+                        defaultValue={activity?.dueDate ? dayjs(activity.dueDate) : null}
+                        disabledDate={(current) => activity?.startDate && current && current.isBefore(activity?.startDate, "day")}
+                        onChange={(value) => {
+                          handleEditActivity("dueDate", value);
+                        }}
+                      />
+                    )}
                   </Flex>
 
 
                 </Space>
               </Col>
               <Col span={5} align="center" style={{ padding: "0 1%" }}>
-                <Select
-
-                  value={`${activity?.stage?.stageName?.toUpperCase()}`}
-                  onChange="{setMoveTo}"
-                  style={{ width: "60%", borderRadius: "0" }}
-                  dropdownStyle={{ borderRadius: 0 }}
-
-                >
-                  <Option value="Todo">Todo</Option>
-                  <Option value="Doing">Doing</Option>
-                  <Option value="Done">Done</Option>
-                </Select>
+                {activityLoading ? (
+                  <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                ) : (
+                  <Select
+                    value={activity?.stage?.stageName?.toUpperCase() || ""}
+                    onChange={"setMoveTo"}
+                    style={{ width: "60%", borderRadius: "0" }}
+                    dropdownStyle={{ borderRadius: 0 }}
+                  >
+                    <Option value="Todo">Todo</Option>
+                    <Option value="Doing">Doing</Option>
+                    <Option value="Done">Done</Option>
+                  </Select>
+                )}
               </Col>
               <Col span={22} style={{ padding: "0 1%" }}>
                 <Space direction="vertical" style={{ width: "100%", textAlign: "center", padding: "2% 0" }}>
@@ -325,58 +619,99 @@ function ActivityDetail() {
 
                   <Flex justify="space-between" align="center" wrap={true} style={{ width: "100%" }}>
                     <text style={{ fontWeight: "bolder" }}> Description </text>
-                    {isDescription ?
-                      (<Flex wrap={true} style={{ width: "100%" }}>
-                        <TextArea rows={5} style={{ borderRadius: "2px", marginBottom: "2%" }} placeholder="Add a description ..."
+                    {activityLoading ? (
+                      <Skeleton active paragraph={{ rows: 3 }} />
+                    ) : isDescription ? (
+                      <Flex wrap={true} style={{ width: "100%" }}>
+                        <Form
+                          style={{ width: "100%" }}
+                          onFinish={(values) => {
+                            handleEditActivity("description", values.description);
+                          }}>
+                          <Form.Item
+                            name="description"
+                            style={{ margin: 0 }}
+
+                          >
+                            <TextArea
+                              rows={5}
+                              autoFocus={true}
+                              style={{ borderRadius: "2px", marginBottom: "2%" }}
+                              placeholder="Add a description ..."
+                              defaultValue={activity?.description}
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            style={{ textAlign: "end", margin: 0 }}
+                          >
+                            <Space>
+                              <Button style={{ borderRadius: "0" }} onClick={() => { setIsDescription(false) }}>Close</Button>
+                              <Button style={{ borderRadius: "0" }} variant="solid" color="primary" htmlType='submit'>
+                                Save
+                              </Button>
+                            </Space>
+                          </Form.Item>
+
+                        </Form>
+                      </Flex>
+                    ) : (
+                      <Flex wrap={true} style={{ width: "100%", marginBottom: "5%", cursor: "pointer" }}>
+                        <TextArea
+                          placeholder="Add a description ..."
+                          variant="filled"
+                          style={{ minHeight: "10vh", border: 0, cursor: "pointer", borderRadius: "2px", marginBottom: "2%" }}
                           defaultValue={activity?.description}
-                          onChange={(e) => setNewDescription(e.target.value)}
+                          onClick={() => { setIsDescription(true) }}
                         />
-                        <Flex justify="end" style={{ width: "100%", marginBottom: "2%" }}>
-                          <Space>
-                            <Button style={{ borderRadius: "0" }} onClick={() => { setIsDescription(false); setNewDescription("") }}>Close</Button>
-                            <Button style={{ borderRadius: "0" }} variant="solid" color="primary">Save</Button>
-                          </Space>
-                        </Flex>
-                      </Flex>) : (
-                        <Flex wrap={true} style={{ width: "100%", marginBottom: "5%", cursor: "pointer" }}>
-                          <TextArea placeholder="Add a description ..." variant="filled"
-                            style={{ minHeight: "10vh", border: 0, cursor: "pointer", borderRadius: "2px", marginBottom: "2%" }}
-                            defaultValue={activity?.description}
-                            onClick={() => { setIsDescription(true) }}
-                          />
-                        </Flex>
-                      )}
+                      </Flex>
+                    )}
                   </Flex>
 
 
                   <Flex justify="space-between" align="start" wrap={true} style={{ width: "100%" }}>
                     <text style={{ fontWeight: "bolder", marginBottom: "2%" }}> Subactivities </text>
                     <Space>
-                      <Select style={{ width: "12vh" }} placeholder="Order by" size='small' variant='borderless' disabled={child?.length <= 0}>
-                        <Option key='created'>Created at</Option>
-                        <Option key='assignee'>Assignee</Option>
-                        <Option key='status'>Status</Option>
-                        <Option key='priority'>Priority</Option>
-                        <Option key='priority'>Activity type</Option>
-                      </Select>
+                      {activityLoading ? (
+                        <Skeleton.Input active size="small" style={{ width: "12vh" }} />
+                      ) : (
+                        <Select
+                          style={{ width: "12vh" }}
+                          placeholder="Order by"
+                          size='small'
+                          variant='borderless'
+                          disabled={child?.length <= 0}
+                        >
+                          <Option key='created'>Created at</Option>
+                          <Option key='assignee'>Assignee</Option>
+                          <Option key='status'>Status</Option>
+                          <Option key='priority'>Priority</Option>
+                          <Option key='type'>Activity type</Option>
+                        </Select>
+                      )}
                       <Tooltip title="Add a sub activity...">
-                        <PlusOutlined onClick={showCreateSubactivity} />
+                        {activityLoading ? (
+                          <Skeleton.Avatar active size="small" shape="circle" />
+                        ) : (
+                          <PlusOutlined onClick={showCreateSubactivity} />
+                        )}
                       </Tooltip>
                     </Space>
-                    {child?.length > 0 ? (
+                    {activityLoading ? (
+                      <Skeleton active paragraph={{ rows: 4 }} />
+                    ) : child?.length > 0 ? (
                       <List bordered style={{ width: "100%", borderRadius: "0" }} size='small'>
-                        {child?.map((c) => {
-
-                          return (<SubActivity activity={c} />)
-                        }
-
-                        )}
-
+                        {child?.map((c) => (
+                          <SubActivity key={c._id} activity={c} />
+                        ))}
                       </List>
                     ) : (
                       <Tooltip title="Add a sub activity...">
-                        <List bordered style={{ maxHeight: "30vh", width: "100%", borderRadius: "0", overflowY: "auto", cursor: "pointer" }} size='small' onClick={showCreateSubactivity}>
-                        </List>
+                        <List
+                          bordered
+                          style={{ maxHeight: "30vh", width: "100%", borderRadius: "0", overflowY: "auto", cursor: "pointer" }}
+                          size='small'
+                          onClick={showCreateSubactivity}
+                        />
                       </Tooltip>
                     )}
                   </Flex>
@@ -402,6 +737,7 @@ function ActivityDetail() {
                 <Button><SendOutlined /></Button>
               </Space.Compact>
               <List
+                loading={activityLoading}
                 dataSource={comments}
                 style={{ height: "90%", padding: "5% 3%", overflow: "auto", margin: "2% 0 0 0" }}
                 renderItem={(comment) => (
@@ -471,7 +807,7 @@ function ActivityDetail() {
                 <Input
                   placeholder="Enter activity title"
                   value={activityName}
-
+                  autoFocus={true}
                   style={{ borderRadius: 0, width: "75%" }}
                   onChange={(e) => setActivityName(e.target.value)}
                 />
