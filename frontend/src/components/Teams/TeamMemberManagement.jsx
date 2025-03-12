@@ -14,50 +14,71 @@ const { Option } = Select;
 const TeamMemberManagement = () => {
     const {showNotification,siteAPI,site, accessToken, user} = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
+    const [teamId, setTeamId] = useState(null); 
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [members, setMembers] = useState([]);
     const [searchUser, setSearchUser] = useState("");
-    const [foundUser, setFoundUser] = useState(null);
-    const [loadingUser, setLoadingUser] = useState(false);
     const [selectedRole, setSelectedRole] = useState("teamMember");
+    const [loadingAdd, setLoadingAdd] = useState(false);
     const [loadingKick, setLoadingKick] = useState(false);
-    const [allMembers, setAllMembers] = useState([]); 
     const [isLeader, setIsLeader] = useState(false);
     const [loading, setLoading] = useState(true);
     const { teamSlug } = useParams();
     const nav = useNavigate();
 
     useEffect(() => {
-        if(site._id && accessToken){
-            fetchTeamMembers();
+        if (site._id && accessToken) {
+            fetchTeamIdBySlug();
         }
-        
-    }, [site, accessToken]);
+    }, [site, accessToken, teamSlug]);
 
-    const fetchTeamMembers = async () => {
+    // 🔹 Fetch team ID bằng slug
+    const fetchTeamIdBySlug = async () => {
+        try {
+            const response = await axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
+            const teams = response.data;
+            if (!teams || teams.length === 0) {
+                message.error("No teams found!");
+                return;
+            }
+
+            const team = teams.find(t => t.teamSlug === teamSlug);
+            if (!team) {
+                message.error("Team not found!");
+                nav('/site');
+                return;
+            }
+
+            setTeamId(team._id);
+            fetchTeamMembers(team._id);
+        } catch (error) {
+            console.error("Error fetching teams:", error);
+            message.error("Failed to fetch teams.");
+        }
+    };
+
+    // 🔹 Fetch thành viên của team bằng `teamId`
+    const fetchTeamMembers = async (teamId) => {
         try {
             setLoading(true);
-            const response = await axios.get(`${siteAPI}/${site._id}/teams/team-members`, {
+            const response = await axios.get(`${siteAPI}/${site._id}/teams/${teamId}/team-members`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
 
             if (Array.isArray(response.data)) {
-                setAllMembers(response.data);
-                setMembers(response.data)
-                // Lọc danh sách, chỉ hiển thị teamMember (ẩn teamLeader)
-                // const filteredMembers = response.data.filter(member => member.role !== "teamLeader");
-                // setMembers(filteredMembers);
+                setMembers(response.data);
 
-                // Kiểm tra user hiện tại có phải là teamLeader không
                 const currentUser = response.data.find(member => member._id === user?._id);
                 setIsLeader(currentUser?.role === "teamLeader");
 
-                // Nếu user không phải leader, điều hướng về trang khác
                 if (!currentUser || currentUser.role !== "teamLeader") {
                     message.warning("You are not a team leader. Access is restricted!");
-                    nav('/site')
+                    nav('/site');
                 }
             } else {
                 setMembers([]);
@@ -65,7 +86,6 @@ const TeamMemberManagement = () => {
         } catch (error) {
             console.error("Error fetching team members:", error);
             message.error("Failed to load team members.");
-            setMembers([]);
         } finally {
             setLoading(false);
         }
@@ -74,18 +94,15 @@ const TeamMemberManagement = () => {
     const handleSearch = (e) => {
         const value = e.target.value.toLowerCase();
         setSearchText(value);
-    
+
         if (value) {
-            const filteredMembers = allMembers.filter(member => {
-                return (
-                    (member.username && member.username.toLowerCase().includes(value)) ||
-                    (member.email && member.email.toLowerCase().includes(value)) ||
-                    (member.fullName && member.fullName.toLowerCase().includes(value))
-                );
-            });
-            setMembers(filteredMembers);
+            setMembers(members.filter(member => 
+                member.username.toLowerCase().includes(value) || 
+                member.email.toLowerCase().includes(value) || 
+                member.fullName.toLowerCase().includes(value)
+            ));
         } else {
-            setMembers(allMembers); // Reset danh sách từ allMembers thay vì gọi API
+            fetchTeamMembers(teamId);
         }
     };
 
@@ -102,20 +119,22 @@ const TeamMemberManagement = () => {
             message.error("Error: User ID is missing");
             return;
         }
-    
+        setLoadingKick(true);
         try {
             const response = await axios.post(
-                `http://localhost:9999/sites/${site._id}/teams/kick-team-member`,
+                `http://localhost:9999/sites/${site._id}/teams/${teamId}/kick-team-member`,
                 { userId },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
             message.success(`Successfully removed ${selectedUser.username} from the team`);
             showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
             setIsKickMemberModalVisible(false);
-            fetchTeamMembers(); // Cập nhật danh sách
+            fetchTeamMembers(teamId); // Cập nhật danh sách
         } catch (error) {
             console.error("Kick Member Error:", error.response ? error.response.data : error);
             message.error(error.response?.data?.message || "Failed to remove user.");
+        } finally {
+            setLoadingKick(false);
         }
     };
 
@@ -125,19 +144,22 @@ const TeamMemberManagement = () => {
             message.error("Please enter a username or email.");
             return;
         }
+        setLoadingAdd(true);
         try {
             await axios.post(
-                `http://localhost:9999/sites/${site._id}/teams/add-team-member`,
+                `http://localhost:9999/sites/${site._id}/teams/${teamId}/add-team-member`,
                 { username: searchUser, email: searchUser, role: selectedRole },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
             message.success(`Successfully added ${searchUser} to the team`);
             showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
             setIsAddMemberModalVisible(false);
-            fetchTeamMembers();
+            fetchTeamMembers(teamId);
         } catch (error) {
             console.error("Error adding team member:", error);
             message.error(error.response?.data?.message || "Failed to add user.");
+        } finally {
+            setLoadingAdd(false);
         }
     };
 
@@ -172,7 +194,7 @@ const TeamMemberManagement = () => {
                             value={searchText}
                             onChange={handleSearch}
                         />
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>
+                        <Button type="primary" icon={<PlusOutlined />}  onClick={() => setIsAddMemberModalVisible(true)}>
                             Add Member
                         </Button>
                     </Col>
@@ -251,7 +273,7 @@ const TeamMemberManagement = () => {
                 onCancel={() => setIsAddMemberModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsAddMemberModalVisible(false)}>Cancel</Button>,
-                    <Button key="ok" type="primary" onClick={handleAddMember}>Add</Button>
+                    <Button key="ok" type="primary" loading={loadingAdd} onClick={handleAddMember}>Add</Button>
                 ]}
             >
                 <div style={{ marginBottom: "10px" }}>Enter Username or Email</div>

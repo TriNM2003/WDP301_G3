@@ -13,20 +13,20 @@ teamRouter.get("/teams",
     teamController.getAllTeams
 );
 
-teamRouter.get("/team-members", 
+teamRouter.get("/:teamId/team-members", 
     authMiddleware.verifyAccessToken, 
     siteMiddleware.isInSite,
     teamController.getTeamMembers
 );
 
 
-teamRouter.post("/add-team-member", 
+teamRouter.post("/:teamId/add-team-member", 
     authMiddleware.verifyAccessToken,
     siteMiddleware.isInSite,
     teamController.addTeamMember
 );
 
-teamRouter.post("/kick-team-member", 
+teamRouter.post("/:teamId/kick-team-member", 
     authMiddleware.verifyAccessToken, 
     siteMiddleware.isInSite,
     teamController.kickTeamMember

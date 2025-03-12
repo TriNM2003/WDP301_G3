@@ -5,6 +5,7 @@ const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const nodemailer = require("nodemailer");
 const { slugify } = require('../utils/slugify.util');
+
 const getAllTeams = async () => {
     const teams = await db.Team.find();
     return teams;
@@ -22,7 +23,9 @@ const getTeamMembers = async (teamId) => {
     try {
         const team = await getTeamById(teamId);
 
-        return team.teamMembers.map(member => ({
+        return team.teamMembers
+        .filter(member => member._id.status === "active") // Lọc chỉ lấy thành viên active
+        .map(member => ({
             _id: member._id._id,
             username: member._id.username,
             email: member._id.email,
@@ -54,11 +57,15 @@ const addTeamMember = async (teamId, username, email, role) => {
         const isMember = team.teamMembers.some(member => member._id.toString() === user._id.toString());
         if (isMember) throw new Error("User is already a member of the team");
 
-        team.teamMembers.push({ _id: user._id, roles: [role || 'teamMember'] });
-        await team.save();
+        await db.Team.updateOne(
+            { _id: teamId },
+            { $push: { teamMembers: { _id: user._id, roles: [role] } } }
+        );
 
-        user.teams.push(team._id);
-        await user.save();
+        await db.User.updateOne(
+            { _id: user._id },
+            { $push: { teams: teamId } }
+        );
 
         await sendEmailNotification(user.email, team.teamName, "added");
 
@@ -76,12 +83,18 @@ const kickTeamMember = async (teamId, userId) => {
         if (!isMember) throw new Error("User is not a member of this team");
 
         team.teamMembers = team.teamMembers.filter(member => member._id._id.toString() !== userId);
-        await team.save();
+        await db.Team.updateOne(
+            { _id: teamId },
+            { $set: { teamMembers: team.teamMembers } }
+        );
 
         const user = await db.User.findById(userId);
         if (user) {
             user.teams = user.teams.filter(team => team.toString() !== teamId);
-            await user.save();
+            await db.User.updateOne(
+                { _id: userId },
+                { $set: { teams: user.teams } }
+            );
             await sendEmailNotification(user.email, team.teamName, "removed");
         }
 
