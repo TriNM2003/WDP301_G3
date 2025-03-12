@@ -18,7 +18,9 @@ function SprintActivity({ activity }) {
 
                     {activity?.activityTitle}
                 </text>
-                <Avatar shape="square" size={16} style={{ borderRadius: 0 }}>{activity?.child.length}</Avatar>
+                <Avatar shape="square" size={16} style={{ borderRadius: 0 }}>{activity?.child
+                    ?.map((c) => activities.find((a) => a?._id == c))
+                    .filter(Boolean)?.length}</Avatar>
             </Space>
             <Space align="center">
 
@@ -29,7 +31,7 @@ function SprintActivity({ activity }) {
                     <Button
                         size="small"
                         variant="outlined"
-                        color="red"
+                        color={new Date(activity.dueDate) <= new Date() ? "red" : ""}
                         style={{ borderRadius: 0 }}
 
                     >
@@ -47,15 +49,14 @@ function SprintActivity({ activity }) {
 
                 {activity?.assignee.length > 0 ?
                     <Avatar.Group max={{ count: 2 }} >
-                        {activity?.assignee?.map((a) => {
-                            return (
-                                <Tooltip title={a.username} placement="top" >
-                                    <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" size="small" />
-                                </Tooltip>
-
-
-                            )
-                        })}
+                        {activity.assignee.map((a) => (
+                            <Tooltip key={a._id} title={a.username} placement="top">
+                                <Avatar
+                                    src={a.userAvatar || "https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"}
+                                    size="small"
+                                />
+                            </Tooltip>
+                        ))}
 
                     </Avatar.Group > :
                     <Tooltip title="Unassigned">
@@ -66,7 +67,7 @@ function SprintActivity({ activity }) {
                     overlay={
                         <Menu onClick={(e) => e.domEvent.stopPropagation()}>
                             <Menu.Item onClick={() => { showActivity(activity) }}>Show activity detail</Menu.Item>
-                            <Menu.Item onClick={() => { showDeleteActivity(activity?.activityTitle) }} danger>Delete activity</Menu.Item>
+                            <Menu.Item onClick={() => { showDeleteActivity(activity) }} danger>Delete activity</Menu.Item>
                         </Menu>
                     }
                     trigger={["click"]}

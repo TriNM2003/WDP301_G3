@@ -171,15 +171,15 @@ const removeAssignMember = async (req, res, next) => {
 const removeActivity = async (req, res, next) => {
     try {
         const {activityId} = req.params;
-        const activity = await db.Activity.findById(activityId).populate("project");
+        const activity = await db.Activity.findOne({_id:activityId, isDestroyed: { $ne: true }}).populate("project");
 
         if (!activity) {
             return res.status(400).json({ error: { status: 400, message: "Activity not found." } })
 
         }
-        await activityService.remove(activityId)
+        const deletedActivity = await activityService.remove(activityId)
 
-         res.status(200).json({ status: 200, message: "Activity deleted successfully"  })
+        res.status(200).json({ status: 200, message: "Activity deleted successfully", deletedActivity  })
 
     } catch (error) {
         next(error);

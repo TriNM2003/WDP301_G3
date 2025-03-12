@@ -35,7 +35,7 @@ activityRouter.put("/:activityId/removeAssignee",
     activityController.removeAssignMember
 )
 activityRouter.delete("/:activityId/delete",
-[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, activityMiddleware.isInActivity],
+[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
     activityController.removeActivity
 )
 

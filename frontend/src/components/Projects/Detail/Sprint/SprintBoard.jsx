@@ -13,11 +13,11 @@ import { AppContext } from "../../../../context/AppContext";
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities,activityTypes, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
 
   // Activities
-  const [filterActivity, setFliterActivity] = useState([]);
-  const filteredActivitites = activities?.filter((a) => a && (filterActivity.length>0 ? filterActivity.includes(a?.type?.typeName):true));
+  const [filterActivity, setFliterActivity] = useState(["task"]);
+  const filteredActivitites = activities?.filter((a) => a && (filterActivity.length > 0 ? filterActivity.includes(a?.type?.typeName) : true));
 
   return (
     <div style={{ padding: " 2%", overflow: "auto", maxHeight: "100%" }}>
@@ -69,7 +69,7 @@ const SprintBoard = () => {
               <Space>
                 <Title level={5} style={{ margin: 0 }}>{sprint?.sprintName}</Title>
                 <DatePicker.RangePicker format="DD-MM-YYYY" placeholder={['Start date', 'Due date']} value={[dayjs("2024-03-01"), dayjs("2024-03-15")]} variant="underlined" disabled />
-                <small style={{ color: grey[2] }}>({sprint?.activities?.length} activities)</small>
+                <small style={{ color: grey[2] }}>({filteredActivitites?.filter((activity) => activity?.sprint?._id == sprint?._id)?.length} activities)</small>
               </Space>
               <Space>
                 {sprint?.sprintStatus == "active" && (<Button

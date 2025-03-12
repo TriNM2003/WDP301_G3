@@ -14,7 +14,7 @@ import SubMenu from 'antd/es/menu/SubMenu'
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI, site, project, setActivities, activityLoading, setActivityLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI, site, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
@@ -39,6 +39,8 @@ function ActivityDetail() {
   const [selectedType, setSelectedType] = useState("subtask")
   const [projectMembers, setProjectMembers] = useState([])
   const [assigneeFilter, setAssigneeFilter] = useState("");
+  const [orderActivities, setOrderActivities] = useState("createdAt");
+
   // fetch site members
   useEffect(() => {
     axios.get(
@@ -62,10 +64,9 @@ function ActivityDetail() {
     const updatedActivity = activities.find((a) => a._id == activity?._id)
     if (updatedActivity) {
       setActivity(updatedActivity);
-
     }
 
-  }, [activities, assigneeFilter])
+  }, [activities, orderActivities])
 
   // edit activity
 
@@ -85,7 +86,7 @@ function ActivityDetail() {
 
       activityModalLoading();
       setActivity(res?.data?.activity);
-      const updateActivities = activities.map((a) =>
+      const updateActivities = activities?.map((a) =>
         a._id === res?.data?.activity?._id ? res?.data?.activity : a
       );
       setActivities(updateActivities)
@@ -101,31 +102,31 @@ function ActivityDetail() {
 
   //Asign member
   const assignMember = async (memberId) => {
-    
-      await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
-        { member: memberId },
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        })
-        .then((res) => {
-          activityModalLoading();
-          setActivity(res?.data?.activity);
-          const updateActivities = activities.map((a) =>
-            a._id === res?.data?.activity?._id ? res?.data?.activity : a
-          );
-          setActivities(updateActivities)
-          setIsActivityTitle(false);
-          setIsDescription(false);
-          setNewDescription("")
-          message.success("Assign member successfully");
-          showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
-        })
-        .catch((err) => {
-          console.log(err);
-        })
-    
+
+    await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
+      { member: memberId },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+      .then((res) => {
+        activityModalLoading();
+        setActivity(res?.data?.activity);
+        const updateActivities = activities.map((a) =>
+          a._id === res?.data?.activity?._id ? res?.data?.activity : a
+        );
+        setActivities(updateActivities)
+        setIsActivityTitle(false);
+        setIsDescription(false);
+        setNewDescription("")
+        message.success("Assign member successfully");
+        showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+
   }
   const removeAssign = async (memberId) => {
     if (memberId) {
@@ -155,11 +156,14 @@ function ActivityDetail() {
     }
   }
   //Subactivity
-  const child = activity?.child?.map((c) => activities.find((a) => c == a._id));
-  // const [child, setChild] = useState([])
+  // console.log(activity?.child
+  //   ?.map((c) => activities.find((a) => a?._id == c))
+  //   .filter(Boolean));
+  const child = activity?.child
+    ?.map((c) => activities.find((a) => a?._id == c))
+    .filter(Boolean);
 
-  // const subtasks = child?.filter(c => c.type?.typeName == "subtask");
-  // const bugs = child?.filter(c => c.type?.typeName == "bug");
+
   const handleCreateSubActivityCancel = () => {
 
     setCreateSubActivity(false);
@@ -220,12 +224,7 @@ function ActivityDetail() {
   const handleEditCommentCancel = () => {
     setEditComment(false);
   };
-  const activityModalLoading = () => {
-    setActivityLoading(true);
-    setTimeout(() => {
-      setActivityLoading(false);
-    }, 1000);
-  }
+
 
   return (
     <Modal
@@ -262,7 +261,7 @@ function ActivityDetail() {
               <Dropdown
                 overlay={
                   <Menu>
-                    <Menu.Item key="1" style={{ color: red[6] }} onClick={() => showDeleteActivity(activity.activityTitle)} >
+                    <Menu.Item key="1" style={{ color: red[6] }} onClick={() => showDeleteActivity(activity)} >
                       Remove activity
                     </Menu.Item>
                   </Menu>
@@ -284,6 +283,26 @@ function ActivityDetail() {
             <Row justify="space-between" style={{ padding: "1% 0" }}>
               <Col span={15} style={{ padding: "0 1%" }}>
                 <Space style={{ width: "60%", textAlign: "center", padding: "2% 0" }}  >
+                  {activity?.parent && (
+                    activityLoading ? (
+                      <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                    ) : (
+                      <Title level={5} style={{ margin: "0", cursor: "pointer" }} onClick={() => {
+                        activityModalLoading();
+                        setActivity(activities?.find(a => a?._id == activity?.parent));
+
+                      }} >
+                        <>
+                          {activities?.find(a => a?._id == activity?.parent)?.type?.typeName === "task" && <FormOutlined style={{ color: blue[6] }} />}
+                          {activities?.find(a => a?._id == activity?.parent)?.type?.typeName === "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
+                          {activities?.find(a => a?._id == activity?.parent)?.type?.typeName === "bug" && <BugOutlined style={{ color: yellow[6] }} />}
+                          {activities?.find(a => a?._id == activity?.parent)?.activityTitle}
+                        </>
+                        /
+                      </Title>
+                    )
+                  )}
+
                   {isActivityTitle == false ?
                     (<Space onClick={() => setIsActivityTitle(true)}>
 
@@ -316,12 +335,89 @@ function ActivityDetail() {
                       style={{ width: "100%", borderRadius: "0", margin: "1% 0", padding: "0.5% 1%" }}
                     />)}
                 </Space>
+
                 <Space direction="vertical" style={{ width: "60%", textAlign: "center", padding: "2% 0" }}>
+                  {activity?.parent && (
+                    <Flex justify="space-between" align="center" style={{ width: "100%" }}>
+                      <small style={{ fontWeight: "bolder", color: gray[4] }}><UserOutlined /> Parent </small>
+                      {activityLoading ? (
+                        <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                      ) : (
+                        <Dropdown
+                          placement="rightTop"
+                          trigger={['click']}
+
+                          overlay={
+                            <Menu style={{ maxHeight: "300px", width: "200px", padding: "5% 0", overflow: "auto" }}>
+                              <Menu.ItemGroup title={<small>Parent</small>}>
+
+                                <Menu.Item >
+                                  <text>
+                                    {activities?.find(a => a?._id == activity.parent)?.type?.typeName === "task" && <FormOutlined style={{ color: blue[6] }} />}
+                                    {activities?.find(a => a?._id == activity.parent)?.type?.typeName === "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
+                                    {activities?.find(a => a?._id == activity.parent)?.type?.typeName === "bug" && <BugOutlined style={{ color: yellow[6] }} />}
+                                    {activities?.find(a => a?._id == activity.parent)?.activityTitle}
+                                  </text>
+                                </Menu.Item>
+
+                              </Menu.ItemGroup>
+                              <Menu.ItemGroup title={<small>Add parent</small>} >
+                                <Menu.Item disabled >
+                                  <Input
+                                    placeholder="Search project member"
+                                    allowClear
+                                    size="middle"
+                                    onChange={(e) => { setAssigneeFilter(e.target.value); console.log(assigneeFilter); }}
+                                    style={{ width: "100%", borderRadius: "2%" }}
+                                    prefix={<SearchOutlined />}
+                                  />
+                                </Menu.Item>
+
+                                {activities?.filter((a) =>
+                                  a
+                                  && a._id != activity?.parent
+                                  && (
+                                    (activity?.type?.typeName === "subtask" && a?.type?.typeName === "task") ||
+                                    (activity?.type?.typeName === "bug" && (a?.type?.typeName === "task" || a?.type?.typeName === "subtask"))
+                                  )
+                                )
+                                  .map((ac) => {
+                                    return (
+                                      <Menu.Item onClick={() => handleEditActivity("parent", ac?._id)}>
+                                        <text>
+                                          {ac?.type?.typeName === "task" && <FormOutlined style={{ color: blue[6] }} />}
+                                          {ac?.type?.typeName === "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
+                                          {ac?.type?.typeName === "bug" && <BugOutlined style={{ color: yellow[6] }} />}
+                                          {ac?.activityTitle}
+                                        </text>
+                                      </Menu.Item>
+
+                                    )
+                                  })}
+                              </Menu.ItemGroup>
+                            </Menu>
+                          }
+                        >
+                          <text>
+                            {activities?.find(a => a?._id == activity?.parent)?.type?.typeName === "task" && <FormOutlined style={{ color: blue[6] }} />}
+                            {activities?.find(a => a?._id == activity?.parent)?.type?.typeName === "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
+                            {activities?.find(a => a?._id == activity?.parent)?.type?.typeName === "bug" && <BugOutlined style={{ color: yellow[6] }} />}
+                            {activities?.find(a => a?._id == activity?.parent)?.activityTitle}
+                          </text>
+                        </Dropdown>
+                      )
+                      }
+                    </Flex>
+                  )}
+
+
 
                   {child?.length > 0 && <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><PieChartOutlined /> Progress </small>
                     <text ><Progress type="circle" percent={(child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100} size={15} showInfo={false} /> {(child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100 || 0}%</text>
                   </Flex>}
+
+
                   {/* Priority */}
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><Tag />Priority </small>
@@ -329,6 +425,7 @@ function ActivityDetail() {
                       <Skeleton.Input active size="small" style={{ width: "100%" }} />
                     ) : (
                       <Dropdown
+                        placement="rightTop"
                         overlay={
                           <Menu
                             defaultSelectedKeys={activity?.priority}
@@ -407,6 +504,7 @@ function ActivityDetail() {
                             </Tooltip>
                           ))}
                           <Dropdown
+                            placement="rightTop"
                             trigger={['click']}
 
                             overlay={
@@ -483,6 +581,7 @@ function ActivityDetail() {
                         </Avatar.Group>
                       ) : (
                         <Dropdown
+                          placement="rightTop"
                           trigger={['click']}
 
                           overlay={
@@ -680,12 +779,13 @@ function ActivityDetail() {
                           size='small'
                           variant='borderless'
                           disabled={child?.length <= 0}
+                          onSelect={(key) => setOrderActivities(key)}
                         >
-                          <Option key='created'>Created at</Option>
-                          <Option key='assignee'>Assignee</Option>
-                          <Option key='status'>Status</Option>
+                          <Option key='createdAt'>Created at</Option>
+                          <Option key='assignee?.username'>Assignee</Option>
+                          <Option key='stage?.stageName'>Status</Option>
                           <Option key='priority'>Priority</Option>
-                          <Option key='type'>Activity type</Option>
+                          <Option key='type?.typeName'>Activity type</Option>
                         </Select>
                       )}
                       <Tooltip title="Add a sub activity...">
@@ -773,7 +873,7 @@ function ActivityDetail() {
 
             <Modal
               title="Edit Comment"
-              visible={editComment}
+              open={editComment}
               onOk={handleEditCommentCancel}
               onCancel={handleEditCommentOk}
               footer={[
@@ -791,7 +891,7 @@ function ActivityDetail() {
             {/* Modal for Creating New Activity */}
             <Modal
               title="Create subactivity"
-              visible={createSubActivity}
+              open={createSubActivity}
               onOk={handleCreateSubactivityOk}
               onCancel={handleCreateSubActivityCancel}
               footer={[
