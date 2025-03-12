@@ -5,47 +5,8 @@ const db = require("../models/index");
 const authService = require("../services/auth.service");
 const passport = require("passport");
 const { bcryptUtils, jwtUtils, redisUtils } = require("../utils");
+const { mailer } = require("../configs");
 
-async function sendEmail(type, email, link) {
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-
-    let subject;
-    let text;
-
-    if (type == "verify") {
-        subject = "Verify your account";
-        text = `Click this link to verify your account: ${link}`;
-    } else if (type == "reset") {
-        subject = "Change your password";
-        emailBody = `
-            <h2>Change Your Password</h2>
-            <p>Click the button below to change your password:</p>
-            <a href="${link}" 
-               style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
-                Change password
-            </a>
-            <p>If you didn't request this, please ignore this email.</p>
-        `;
-    } else {
-        throw new Error("Invalid email type");
-    }
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: subject,
-        text: text,
-        html: emailBody,
-    };
-
-    return transporter.sendMail(mailOptions);
-}
 
 async function forgotPassword(req, res) {
     const { email } = req.body;
@@ -66,7 +27,7 @@ async function forgotPassword(req, res) {
         const link = `http://localhost:3000/reset-password`;
 
 
-        await sendEmail("reset", email, link);
+        await mailer.sendEmail("reset", email, link);
 
         res.json({ status: "Email sent, check your inbox!", token });
     } catch (error) {
@@ -142,26 +103,7 @@ const sendActivationEmail = async (req, res) => {
         // Tạo link kích hoạt
         const activationLink = `http://localhost:3000/active-account?token=${token}`;
 
-        const emailBody = `
-                <h2>Confirm Your Account Activation</h2>
-                <p>Click the button below to activate your account:</p>
-                <a href="${activationLink}"
-                   style="padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
-                    Confirm Activation
-                </a>
-            `;
-
-        // Gửi email
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
-
-        const mailOptions = { from: process.env.EMAIL_USER, to: user.email, subject: "Activate Your Account", html: emailBody };
-        await transporter.sendMail(mailOptions);
+        await mailer.sendEmail("activate", user.email, activationLink);
 
         res.json({ message: "Activation email sent successfully!" });
 
@@ -390,7 +332,6 @@ const checkLoginStatus = async (req, res) => {
 }
 
 const AuthController = {
-    sendEmail,
     forgotPassword,
     resetPassword, logout,
     sendActivationEmail,

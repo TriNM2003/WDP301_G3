@@ -1,48 +1,138 @@
-import React, { useState } from "react";
-import { Modal, Form, Input, Button, List, Avatar, Tag, Select } from "antd";
+import React, { useState, useEffect, useContext } from "react";
+import { Modal, Form, Input, Button, List, Avatar, Tag, Select , message} from "antd";
+import { UserOutlined } from "@ant-design/icons";
+import { AppContext } from "../../context/AppContext";
+import axios from "axios";
 
 const { Option } = Select;
 
-const mockUsers = [
-  { id: "1", name: "Alice Johnson", email: "alice@example.com", avatar: "https://randomuser.me/api/portraits/women/1.jpg" },
-  { id: "2", name: "Bob Smith", email: "bob@example.com", avatar: "https://randomuser.me/api/portraits/men/2.jpg" },
-  { id: "3", name: "Charlie Brown", email: "charlie@example.com", avatar: "https://randomuser.me/api/portraits/men/3.jpg" },
-  { id: "4", name: "David White", email: "david@example.com", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-  { id: "5", name: "Emily Green", email: "emily@example.com", avatar: "https://randomuser.me/api/portraits/women/5.jpg" },
-];
 
 const CreateTeam = ({ visible, onCreate, onCancel }) => {
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [teamLeader, setTeamLeader] = useState(null);
+  const [siteMembers, setSiteMembers] = useState([]);
+  const [showList, setShowList] = useState(false);
+  const [inputError, setInputError] = useState(""); // Thêm state lưu lỗi
+  const { teams, user, site, accessToken , setTeams ,siteAPI} = useContext(AppContext);
+
+
+  // Lấy danh sách thành viên trong site (bỏ qua user đang tạo project)
+  useEffect(() => {
+    if (site._id && accessToken) {
+      axios
+        .get(`http://localhost:9999/sites/${site._id}/members`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        .then((res) => {
+          setSiteMembers(res.data.filter(member => member._id !== user._id)); // Loại bỏ user hiện tại
+        })
+        .catch((err) => {
+          console.error("Error fetching site members:", err);
+        });
+    }
+  }, [site, accessToken, user]);
 
   // Lọc user theo search term
-  const filteredUsers = searchTerm
-    ? mockUsers.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
 
-  // Chọn Team Leader
-  const handleSelectLeader = (leaderId) => {
-    const leader = mockUsers.find(user => user.id === leaderId);
-    setTeamLeader(leader);
-  };
+
+  // Lọc thành viên theo từ khóa tìm kiếm
+  const filteredUsers = searchTerm
+    ? siteMembers.filter(
+      (member) =>
+        member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    : siteMembers;
+
+
+
+  // Chỉ hiển thị tối đa 5 thành viên, nếu nhiều hơn sẽ có scroll
+  const visibleUsers = filteredUsers.slice(0, 5);
+
 
   // Thêm thành viên vào danh sách team
-  const handleSelectMember = (user) => {
-    if (!selectedUsers.some(u => u.id === user.id)) {
-      setSelectedUsers([...selectedUsers, user]);
+
+
+  const handleSelectUser = (member) => {
+    if (!selectedUsers.some((u) => u._id === member._id)) {
+      setSelectedUsers([...selectedUsers, member]);
     }
-    setSearchTerm(""); // Reset input sau khi chọn
+    setSearchTerm(""); 
+    // setShowList(false); 
   };
 
+
   // Xóa thành viên khỏi danh sách
-  const handleRemoveMember = (id) => {
-    setSelectedUsers(selectedUsers.filter(user => user.id !== id));
+  const handleRemoveUser = (id) => {
+    setSelectedUsers(selectedUsers.filter(member => member._id !== id));
   };
+
+
+    // Gửi yêu cầu tạo team
+
+
+const handleCreateTeam = async (values) => {
+  // Kiểm tra nếu input có giá trị nhưng chưa được chọn từ danh sách
+  if (searchTerm && !siteMembers.some(member => 
+      member.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()))) {
+    setInputError("Member not exist in this site");
+    return;
+  }
+
+  // Kiểm tra nếu tất cả thành viên được chọn đều thuộc site
+  const invalidMembers = selectedUsers.filter(member => 
+    !siteMembers.some(siteMember => siteMember._id === member._id)
+  );
+
+  if (invalidMembers.length > 0) {
+    message.error("Some selected members are not part of the site. Please check again.");
+    return;
+  }
+  console.log("Payload gửi lên server:", {
+    teamName: values.teamName,
+    teamMembers: selectedUsers.map((member) => member._id),
+  });
+  
+
+  try {
+    const response = await axios.post(
+      `http://localhost:9999/sites/${site._id}/teams/create-team`,
+      {
+        teamName: values.teamName,
+        teamMembers: selectedUsers.map((member) => member._id),
+      },
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+    .then((res) => {
+      setTeams(res.data);
+    })
+    .catch((err) => {
+      console.error("Error fetching projects in site:", err);
+    });
+    console.log("Response từ server:", response.data);
+
+    message.success("Team created successfully!");
+    form.resetFields();
+    setSelectedUsers([]);
+    setSearchTerm("");
+    setInputError(""); // Xóa lỗi sau khi tạo thành công
+    onCreate();
+  } catch (error) {
+    console.error("Error creating team:", error);
+    message.error("Failed to create team.");
+  }
+};
 
   return (
     <Modal
@@ -51,60 +141,98 @@ const CreateTeam = ({ visible, onCreate, onCancel }) => {
       onCancel={onCancel}
       footer={null}
     >
-      <Form form={form} layout="vertical" onFinish={(values) => onCreate({ ...values, teamLeader, teamMembers: selectedUsers })}>
-        
+      <Form form={form} layout="vertical" onFinish={handleCreateTeam}>
+
         {/* Team Name */}
         <Form.Item
           name="teamName"
           label="Team Name"
-          rules={[{ required: true, message: "Please enter a team name!" }]}
+          rules={[
+            { required: true, message: "Please enter a team name!" },
+            { min: 3, message: "Team name must be at least 3 characters long!" }
+          ]}
         >
           <Input placeholder="Enter team name" />
         </Form.Item>
 
 
-        {/* Invite Team Members */}
-        <Form.Item label="Add Team Members">
-          <Input
-            placeholder="Search by username or email"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ marginBottom: "8px" }}
-          />
 
-          {/* Hiển thị danh sách gợi ý user */}
-          {filteredUsers.length > 0 && (
+
+        {/* Mời thành viên vào project */}
+        <Form.Item label="Add Team Members ( Optional )" validateStatus={inputError ? "error" : ""} help={inputError}>
+          <div style={{ position: "relative" }}>
+            <Input
+              placeholder="Search by username or email"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowList(true);
+                setInputError("");
+              }}
+              style={{ paddingRight: "40px" }}
+            />
+
+            {/* Icon User */}
+            <UserOutlined
+              onClick={() => setShowList(!showList)} // Toggle danh sách
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+                color: "#1890ff",
+                fontSize: "18px",
+              }}
+            />
+          </div>
+
+          {/* Hiển thị danh sách thành viên (tối đa 5) */}
+          {showList && (
             <List
               bordered
               size="small"
-              dataSource={filteredUsers}
-              renderItem={(user) => (
+              dataSource={visibleUsers}
+              style={{
+                maxHeight: "200px",
+                overflowY: "auto", // Thanh scroll nếu nhiều hơn 5 người
+                marginTop: "5px",
+                borderRadius: "4px",
+              }}
+              renderItem={(member) => (
                 <List.Item
                   style={{ cursor: "pointer" }}
-                  onClick={() => handleSelectMember(user)}
+                  onClick={() => handleSelectUser(member)}
                 >
-                  <Avatar src={user.avatar} size="small" style={{ marginRight: 8 }} />
-                  {user.name} ({user.email})
+                  <Avatar src={member.userAvatar} size="small" style={{ marginRight: 8 }} />
+                  {member.username} ({member.email})
                 </List.Item>
               )}
             />
           )}
 
-          {/* Hiển thị danh sách user đã chọn */}
+          {/* Danh sách thành viên đã chọn */}
           <div style={{ marginTop: "10px" }}>
-            {selectedUsers.map(user => (
+            {selectedUsers.map((member) => (
               <Tag
-                key={user.id}
+                key={member._id}
                 closable
-                onClose={() => handleRemoveMember(user.id)}
-                style={{ display: "inline-flex", alignItems: "center", marginBottom: "5px" }}
+                onClose={() => handleRemoveUser(member._id)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  marginBottom: "5px",
+                }}
               >
-                <Avatar src={user.avatar} size="small" style={{ marginRight: 5 }} />
-                {user.name}
+                <Avatar src={member.userAvatar} size="small" style={{ marginRight: 5 }} />
+                {member.username}
               </Tag>
             ))}
           </div>
         </Form.Item>
+
+
+
 
         {/* Footer Buttons */}
         <Form.Item style={{ textAlign: "center", marginTop: "20px" }}>

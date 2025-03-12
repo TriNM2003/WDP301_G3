@@ -1,5 +1,7 @@
 const teamService = require("../services/team.service");
-
+const db = require('../models');
+const mongoose = require("mongoose");
+const nodemailer = require("nodemailer");
 const getAllTeams = async (req, res) => {
     try {
         const teams = await teamService.getAllTeams();
@@ -9,6 +11,7 @@ const getAllTeams = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
 
 const getTeamMembers = async (req, res) => {
     try {
@@ -50,6 +53,8 @@ const teamController = {
     getTeamMembers,
     addTeamMember,
     kickTeamMember,
+    getTeamsInSite,
+    createTeam,
 };
 
 module.exports = teamController;

@@ -28,8 +28,9 @@ const siteSchema = new mongoose.Schema({
     },
     invitations: [{
         _id: {
-            type: mongoose.Schema.Types.ObjectId
-        },
+            type: mongoose.Schema.Types.ObjectId,
+            default: () => new mongoose.Types.ObjectId()
+        },        
         sender: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
@@ -48,8 +49,8 @@ const siteSchema = new mongoose.Schema({
         },
         expireAt: {
             type: Date,
-            //tim hieu thoi gian tu dong het han
-        },
+            default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 ngày
+        },   
         createdAt: {
             type: Date,
             default: Date.now
