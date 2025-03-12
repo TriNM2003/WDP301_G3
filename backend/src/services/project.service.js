@@ -262,18 +262,25 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
         }
 
         //add project member
-        project.projectMember = [...project.projectMember, {
-            _id: projectMember._id,
-            roles: [projectMemberRole]
-        }]
-        await project.save();
-        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
+        const updatedProject = await db.Project.findOneAndUpdate(
+            {_id: projectId},
+            {$addToSet: {projectMember: {_id: projectMemberId, roles: projectMemberRole}} },
+            { new: true}
+        ).populate("projectMember._id");
 
         // cap nhap project trong user
-        projectMember.projects = [...projectMember.projects, updatedProject._id];
-        await projectMember.save();
+        await db.User.findOneAndUpdate(
+            {_id: projectMember._id},
+            {$addToSet: {projects: projectId}}
+        )
 
-        return updatedProject.projectMember;
+        const updatedProjectMember = updatedProject?.projectMember?.map(member => {
+            return {
+                projectMember: member._id,
+                roles: member.roles
+            }
+        })
+        return updatedProjectMember;
     } catch (error) {
         throw error;
     }
@@ -346,11 +353,12 @@ const removeProjectMember = async (projectId, projectMemberId) => {
         }
 
         //remove project member from project
-        const updatedProjectMember = await db.Project.findOneAndUpdate(
-            { "projectMember._id": projectMemberId },
+        let updatedProject = await db.Project.findOneAndUpdate(
+            { _id: projectId },
             { $pull: { projectMember: { _id: projectMemberId } } },
             { new: true}
-        ).select("projectMember").populate("projectMember._id");
+        );
+        updatedProject = await updatedProject.populate("projectMember._id");
 
         // remove project from member
         await db.User.findOneAndUpdate(
@@ -358,9 +366,17 @@ const removeProjectMember = async (projectId, projectMemberId) => {
             {$pull: {projects: projectId}}
         )
 
-        return updatedProjectMember;
+        const data = updatedProject?.projectMember?.map(member => {
+            return {
+                projectMember: member._id,
+                roles: member.roles
+            }
+        })
+        console.log(data)
+        return data;
     } catch (error) {
-        throw error;
+        console.log(error);
+        return error;
     }
 }
 

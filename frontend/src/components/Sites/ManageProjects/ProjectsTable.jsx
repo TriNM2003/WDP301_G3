@@ -2,7 +2,7 @@ import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MoreOutlined }
 import { Avatar, Button, Dropdown, Image, Menu, Popconfirm, Space, Table } from 'antd';
 import React from 'react'
 
-const ProjectsTable = ({parseDate, handleRemoveProject, nav, filteredProjects, handleEditProject}) => {
+const ProjectsTable = ({parseDate, handleMoveToTrash, filteredProjects, setEditProjectModalVisible, setCurrentProjectSettings}) => {
     // table column configs
   const columns = [
     {
@@ -66,7 +66,7 @@ const ProjectsTable = ({parseDate, handleRemoveProject, nav, filteredProjects, h
                 <Popconfirm
                   title="Are you sure to remove this project?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleRemoveProject(record.key, record.name)}
+                  onConfirm={() => handleMoveToTrash(record.projectId, record.projectName)}
                   okText="Yes"
                   cancelText="No"
                 >
@@ -75,7 +75,8 @@ const ProjectsTable = ({parseDate, handleRemoveProject, nav, filteredProjects, h
               </Menu.Item>
               <Menu.Item key="editProject">
                 <Button type="text" icon={<EditOutlined />} onClick={() => {
-                    handleEditProject(record.key)
+                    setEditProjectModalVisible(true);
+                    setCurrentProjectSettings({projectId: record.projectId, projectName: record.projectName, projectAvatar: record.projectAvatar, projectDescription: record.projectDescription})
                 }}>Edit project</Button>
               </Menu.Item>
             </Menu>
@@ -98,7 +99,8 @@ const ProjectsTable = ({parseDate, handleRemoveProject, nav, filteredProjects, h
     scroll={{ x: "max-content" }}
     style={{
       width: "100%",
-      borderRadius: "5%"
+      borderRadius: "5%",
+      overflowY: "unset"
     }}
     />
   )

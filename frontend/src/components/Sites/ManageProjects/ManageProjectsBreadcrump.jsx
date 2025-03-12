@@ -15,7 +15,7 @@ const breadCrumbItems = [
 
 const ManageProjectsBreadcrump = () => {
   return (
-    <Breadcrumb style={{ marginBottom: "20px" }} items={breadCrumbItems} />
+    <Breadcrumb style={{ marginBottom: "10px" }} items={breadCrumbItems} />
   )
 }
 

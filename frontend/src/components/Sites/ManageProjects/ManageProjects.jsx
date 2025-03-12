@@ -7,6 +7,8 @@ import ProjectsTable from "./ProjectsTable";
 import ProjectsSearchbar from "./ProjectsSearchbar";
 import authAxios from "../../../utils/authAxios";
 import CreateProjectModal from "./CreateProjectModal";
+import EditProjectSettingsModal from "./EditProjectSettingsModal";
+import axios from "axios";
 
 
 
@@ -15,6 +17,7 @@ import CreateProjectModal from "./CreateProjectModal";
 const ManageProjects = () => {
   const nav = useNavigate();
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
+  const [editProjectModalVisisble, setEditProjectModalVisible] = useState(false);
   const {showNotification, showMessage, messageHolder, projectAPI, userApi, site, user} = useContext(AppContext);
   const [projects, setProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,6 +25,13 @@ const ManageProjects = () => {
   const [selectedProjectName, setSelectedProjectName] = useState();
   const [selectedEmail, setSelectedEmail] = useState([]);
   const [userEmails, setUserEmails] = useState([]);
+  const [currentProjectSettings, setCurrentProjectSettings] = useState({
+    projectId: "",
+    projectName: "",
+    projectAvatar: "",
+  })
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     fetchData()
@@ -33,7 +43,8 @@ const ManageProjects = () => {
         const projectManagerId = project.projectMember.find(member => member.roles.includes("projectManager"))._id;
         const projectManager = userList.find(user => user._id === projectManagerId);
         return  { key: index+1, 
-          projectName: project.projectName, 
+          projectId: project._id,
+          projectName: project.projectName,
           projectAvatar: project.projectAvatar, 
           projectManager: projectManager.email, 
           projectManagerAvatar: projectManager.userAvatar,
@@ -125,20 +136,61 @@ const ManageProjects = () => {
     return matchesSearch;
   }) || [];
 
+  const handleFileChange = ({ file }) => {
+    const fileReader = new FileReader();
+    fileReader.onload = () => setImagePreview(fileReader.result);
+    fileReader.readAsDataURL(file);
+    setSelectedFile(file);
+  };
+
   // handle go to project setting
-  const handleEditProject = (projectName) => {
-    showMessage("success", "Edit project successfully", 2);
+  const handleEditProject = async () => {
+    try {
+      console.log("Project setting:", currentProjectSettings, selectedFile);
+      const formData = new FormData();
+      formData.append("projectName", currentProjectSettings.projectName);
+      if (selectedFile) {
+        formData.append("projectAvatar", selectedFile);
+      }
+      const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${currentProjectSettings.projectId}/project-setting-v2`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(response.data)
+
+
+      const result = await authAxios.get(`${projectAPI}/get-all`);
+      const projectsOfSameSite = result.data.filter(project => project?.site?.toString() === site?._id?.toString()) || [];
+      setProjects(tableData(projectsOfSameSite, allUser));
+      setEditProjectModalVisible(false);
+      setCurrentProjectSettings({ projectName: "", projectAvatar: "" });
+      setSelectedFile(null);
+      setImagePreview(null);
+      showMessage("success", "Edit project successfully", 2);
+      showNotification(`Project ${currentProjectSettings.projectName} settings has been changed`);
+    } catch (error) {
+      console.log(error)
+    }
+    
   }
 
 
   // handle remove project
-  const handleRemoveProject = (key, name) => {
-    // update database
+  const handleMoveToTrash = async (projectId, projectName) => {
+    try {
+      // update database
+      await authAxios.put(`${projectAPI}/${projectId}/remove-to-trash-v2`);
+
+      // update fe state
+      setProjects(projects.map(project => project.projectId.toString() === projectId ? {...project, projectStatus: "archived"} : project));
+      showMessage("success", `Project ${projectName} moved to trashcan successfully`, 2);
+      showNotification(`📑 Project ${projectName} has been moved to trashcan 🗑 by John Smith 👋`)
+    } catch (error) {
+      console.log(error)
+    }
     
-    // update fe state
-    setProjects(projects.filter((member) => member.key !== key));
-    showMessage("success", `Project ${name} moved to trashcan successfully`, 2);
-   showNotification(`📑 Project ${name} has been moved to trashcan 🗑 by John Smith 👋`)
   };
 
 
@@ -146,7 +198,7 @@ const ManageProjects = () => {
 
   // render fe
   return (
-    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)"}}>
+    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)", overflowY: "hidden"}}>
       {/* hien thi message api */}
       {messageHolder}
       {/* Breadcrumb */}
@@ -154,7 +206,7 @@ const ManageProjects = () => {
       {/* title and button */}
       <ProjectsSearchbar setCreateProjectModal={setCreateProjectModalVisible} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       {/* project table */}
-      <ProjectsTable parseDate={parseDate} handleRemoveProject={handleRemoveProject} nav={nav} filteredProjects={filteredProjects} handleEditProject={handleEditProject}/>
+      <ProjectsTable parseDate={parseDate} handleMoveToTrash={handleMoveToTrash} filteredProjects={filteredProjects} setEditProjectModalVisible={setEditProjectModalVisible} setCurrentProjectSettings={setCurrentProjectSettings}/>
       {/* create project modal */}
       <CreateProjectModal createProjectModalVisible={createProjectModalVisible} 
       setCreateProjectModalVisible={setCreateProjectModalVisible} 
@@ -164,6 +216,16 @@ const ManageProjects = () => {
       selectedEmail={selectedEmail} 
       setSelectedEmail={setSelectedEmail} 
       userEmails={userEmails} />
+      <EditProjectSettingsModal
+        editProjectModalVisisble={editProjectModalVisisble}
+        setEditProjectModalVisible={setEditProjectModalVisible}
+        handleEditProject={handleEditProject}
+        currentProjectSettings={currentProjectSettings}
+        setCurrentProjectSettings={setCurrentProjectSettings}
+        handleFileChange={handleFileChange}
+        imagePreview={imagePreview}
+      />
+
     </div>
   );
 };

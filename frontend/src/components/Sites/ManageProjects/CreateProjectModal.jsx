@@ -39,7 +39,7 @@ const CreateProjectModal = ({createProjectModalVisible, setCreateProjectModalVis
         <Title level={5}>Project name</Title>
         <Input value={selectedProjectName} onChange={(e) => setSelectedProjectName(e.target.value)} placeholder='Enter project name'/>
 
-      <Title level={5}>User email addresses</Title>
+      <Title level={5}>Assign project manager</Title>
       <Select
       showSearch
       style={{ width: "100%" }}

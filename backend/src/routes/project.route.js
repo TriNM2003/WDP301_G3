@@ -55,9 +55,22 @@ projectRouter.put("/:projectId/project-setting",
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
+// for site owner
+projectRouter.put("/:projectId/project-setting-v2",
+    authMiddleware.verifyAccessToken,
+    siteMiddleware.isSiteOwner,
+    cloudinary.upload.single("projectAvatar"),
+    projectController.editProject
+)
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    projectController.removeToTrash
+);
+// for site owner
+projectRouter.put("/:projectId/remove-to-trash-v2",
+    authMiddleware.verifyAccessToken,
+    siteMiddleware.isSiteOwner,
     projectController.removeToTrash
 );
 

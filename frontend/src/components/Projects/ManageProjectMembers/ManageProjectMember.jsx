@@ -51,11 +51,11 @@ const ManageProjectMember = () => {
     return rawProjectMembers?.map((member, index) => {
     return { 
       key: index+1,
-      projectMemberId: member._id._id, 
-      projectMemberName: member._id.username, 
-      projectMemberEmail: member._id.email, 
+      projectMemberId: member.projectMember._id, 
+      projectMemberName: member.projectMember.username, 
+      projectMemberEmail: member.projectMember.email, 
       projectMemberRole: member.roles[0],
-      projectMemberAvatar: member._id.userAvatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+      projectMemberAvatar: member.projectMember.userAvatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
     }}) || []
 
   } 
@@ -128,6 +128,7 @@ const ManageProjectMember = () => {
     { projectMemberId: currentUser.userId,
       projectMemberRole: selectMemberRole
     })
+    console.log(newProjectMemberListRaw.data);
     setAddMemberModalVisible(false);
     showNotification(`Project member ${currentUser.value} has been add to project ${project?.projectName}`)
     await showMessage("success", "Add project member successfully", 2);
@@ -170,7 +171,7 @@ const handleRoleChange = async (key, updatedRoleList, projectMemberId, projectMe
         { data: {
           projectMemberId: projectMemberId
         } });
-      const updateProjectMember = response?.data?.projectMember || projectMembers;
+      const updateProjectMember = response?.data || projectMembers;
       console.log(updateProjectMember)
 
       showNotification(`Project member ${projectMemberName} has been removed from project ${project?.projectName}`)
