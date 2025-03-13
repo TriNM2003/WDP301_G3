@@ -72,7 +72,7 @@ const TeamPerformance = () => {
   }, {});
 
   // 🔹 Chuyển Object thành Array [{ name: "Stage", value: số lượng }]
-  const filterStageData = Object.keys(stageData).map(stage => ({
+  const filterStageData = Object.keys(stageData)?.map(stage => ({
     name: stage,
     value: stageData[stage]
   }));
@@ -80,16 +80,16 @@ const TeamPerformance = () => {
   // Lọc dữ liệu theo bộ lọc cho từng biểu đồ
 
 
-  const uniqueProjects = [...new Set(activities.map(a => a.project?.projectName).filter(Boolean))];
-  const uniqueStages = [...new Set(activities.map(a => a.stage?.stageName).filter(Boolean))];
-  const uniqueAssignees = [...new Set(activities.flatMap(a => a.assignee.map(as => as.username)).filter(Boolean))];
+  const uniqueProjects = [...new Set(activities?.map(a => a.project?.projectName).filter(Boolean))];
+  const uniqueStages = [...new Set(activities?.map(a => a.stage?.stageName).filter(Boolean))];
+  const uniqueAssignees = [...new Set(activities?.flatMap(a => a.assignee?.map(as => as.username)).filter(Boolean))];
 
   //  Tính toán số lượng tổng hợp
-  const totalProjects = uniqueProjects.length;
-  const totalActivities = activities.length;
-  const doneActivities = activities.filter(activity => activity.stage?.stageStatus === "done").length;
+  const totalProjects = uniqueProjects?.length;
+  const totalActivities = activities?.length;
+  const doneActivities = activities.filter(activity => activity.stage?.stageStatus === "done")?.length;
 
-  const overdueActivities = activities.filter(activity => dayjs(activity.dueDate).isBefore(dayjs()) && activity.stage !== "Done").length;
+  const overdueActivities = activities?.filter(activity => dayjs(activity.dueDate).isBefore(dayjs()) && activity.stage !== "done")?.length;
 
   // Xác định khoảng thời gian lọc
   const getFilteredDateRange = () => {
@@ -123,11 +123,11 @@ const TeamPerformance = () => {
 
   const teamLeader = team?.teamMembers?.find(member => member.roles.includes("teamLeader"));
   const filteredMemberActivityData = activities
-    .filter((entry) => {
+    ?.filter((entry) => {
       const entryDate = dayjs(entry.startDate);
       return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
     })
-    .flatMap((entry) =>
+    ?.flatMap((entry) =>
       entry.assignee.map((assignee) => ({
         date: dayjs(entry.startDate).format("YYYY-MM-DD"),
         member: assignee.username,
@@ -155,7 +155,7 @@ const TeamPerformance = () => {
   const sortedActivities = [...activities].sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
 
   // chỉ lấy 5 activity mới nhất
-  const latestActivities = sortedActivities.slice(0, 5);
+  const latestActivities = sortedActivities?.slice(0, 5);
 
   // Lọc `activities` theo bộ lọc
 
@@ -217,12 +217,12 @@ const TeamPerformance = () => {
 
 
   // Chuyển đổi dữ liệu sang dạng phù hợp cho BarChart
-  const formattedProjectData = Object.keys(aggregatedProjectData).map(projectName => {
+  const formattedProjectData = Object.keys(aggregatedProjectData)?.map(projectName => {
     const projectStages = aggregatedProjectData[projectName];
 
     return {
       name: projectName,
-      ...uniqueStages.reduce((acc, stage) => {
+      ...uniqueStages?.reduce((acc, stage) => {
         acc[stage] = projectStages[stage] || 0;
         return acc;
       }, {})
@@ -230,7 +230,7 @@ const TeamPerformance = () => {
   });
 
   // Nếu không có dữ liệu, hiển thị ít nhất một cột trống
-  if (formattedProjectData.length === 0) {
+  if (formattedProjectData?.length === 0) {
     formattedProjectData.push({ name: "No Data", "Unknown Stage": 0 });
   }
 
@@ -239,7 +239,7 @@ const TeamPerformance = () => {
     const isDone = activity.stage?.stageStatus === "done";
     const isOverdue = dueDate < today && !isDone; // Chỉ quá hạn nếu chưa hoàn thành
 
-    activity.assignee.forEach(member => {
+    activity.assignee?.forEach(member => {
       const memberName = member.username;
 
       if (!acc[memberName]) {
@@ -257,16 +257,13 @@ const TeamPerformance = () => {
   }, {});
 
   // Chuyển thành mảng để hiển thị trên biểu đồ
-  const formattedData = Object.keys(activityStats).map(memberName => ({
+  const formattedData = Object.keys(activityStats)?.map(memberName => ({
     name: memberName,
     "Done On Time": activityStats[memberName].onTime,
     "Overdue": activityStats[memberName].overdue
   }));
 
 
-
-
-  console.log("formattedData", formattedData);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -342,7 +339,7 @@ const TeamPerformance = () => {
                     extra={
                       <Select value={selectedStatus} onChange={(value) => setSelectedStatus(value)} style={{ width: "100px" }}>
                         <Option value="All">All</Option>
-                        {uniqueStages.map((stage) => (
+                        {uniqueStages?.map((stage) => (
                           <Option key={stage} value={stage}>{stage}</Option>
                         ))}
                       </Select>
@@ -351,7 +348,7 @@ const TeamPerformance = () => {
                     <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie data={filterStageData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
-                          {filterStageData.map((entry, index) => (
+                          {filterStageData?.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
@@ -440,9 +437,9 @@ const TeamPerformance = () => {
                     style={{ width: 180 }}
                   >
                     <Option value="All Projects">All Projects</Option>
-                    {Array.from(new Set(activities.map(activity => activity.project?.projectName)))
-                      .filter(Boolean)
-                      .map((project) => (
+                    {Array.from(new Set(activities?.map(activity => activity.project?.projectName)))
+                      ?.filter(Boolean)
+                      ?.map((project) => (
                         <Option key={project} value={project}>{project}</Option>
                       ))}
                   </Select>
@@ -455,7 +452,7 @@ const TeamPerformance = () => {
                     <YAxis />
                     <RechartsTooltip cursor={{ fill: "rgba(0, 0, 0, 0.05)" }} />
                     <Legend />
-                    {uniqueStages.map((stage, index) => (
+                    {uniqueStages?.map((stage, index) => (
                       <Bar key={stage} dataKey={stage} stackId="a" fill={COLORS[index % COLORS.length]} />
                     ))}
                   </BarChart>
@@ -500,7 +497,7 @@ const TeamPerformance = () => {
               <Card
                 title={
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Members ({filteredMembers.length})</span>
+                    <span>Members ({filteredMembers?.length})</span>
                     <Input
                       placeholder="Search member..."
                       allowClear
@@ -528,7 +525,7 @@ const TeamPerformance = () => {
                     dataSource={filteredMembers}
                     renderItem={(member) => (
                       <List.Item
-                      onClick={() => navigate(`/site/teams/${teamSlug}/member-performance/${member._id._id}`)}>
+                        onClick={() => navigate(`/site/teams/${teamSlug}/member-performance/${member._id._id}`)}>
                         <List.Item.Meta
                           avatar={
 
@@ -583,9 +580,9 @@ const TeamPerformance = () => {
                       key: "assignee",
                       align: "center",
                       render: (assignees) => {
-                        if (assignees.length === 0) return "No Assignee";
-                        const displayedAssignees = assignees.slice(0, 2).map(a => a.username).join(", ");
-                        return assignees.length > 2 ? `${displayedAssignees}, ...` : displayedAssignees;
+                        if (assignees?.length === 0) return "No Assignee";
+                        const displayedAssignees = assignees?.slice(0, 2)?.map(a => a.username).join(", ");
+                        return assignees?.length > 2 ? `${displayedAssignees}, ...` : displayedAssignees;
                       },
                     },
 
@@ -620,19 +617,19 @@ const TeamPerformance = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Select value={projectFilter} onChange={setProjectFilter} style={{ width: "120px" }}>
-            <Option value="All">All Projects</Option>{uniqueProjects.map(p => <Option key={p}>{p}</Option>)}</Select>
+            <Option value="All">All Projects</Option>{uniqueProjects?.map(p => <Option key={p}>{p}</Option>)}</Select>
 
 
           <Select value={stageFilter} onChange={setStageFilter} style={{ width: "120px" }}>
             <Option key="All" value="All">All Stages</Option>
-            {uniqueStages.map(s => (
+            {uniqueStages?.map(s => (
               <Option key={s} value={s}>{s}</Option>
             ))}
           </Select>
 
           <Select value={assigneeFilter} onChange={setAssigneeFilter} style={{ width: "130px" }}>
             <Option key="all" value="All">All Assignees</Option>
-            {uniqueAssignees.map(a => (
+            {uniqueAssignees?.map(a => (
               <Option key={a} value={a}>{a}</Option>
             ))}
           </Select>
@@ -688,9 +685,9 @@ const TeamPerformance = () => {
               key: "assignee",
               align: "center",
               render: (assignees) => {
-                if (assignees.length === 0) return "No Assignee";
-                const displayedAssignees = assignees.slice(0, 2).map(a => a.username).join(", ");
-                return assignees.length > 2 ? `${displayedAssignees}, ...` : displayedAssignees;
+                if (assignees?.length === 0) return "No Assignee";
+                const displayedAssignees = assignees?.slice(0, 2)?.map(a => a.username).join(", ");
+                return assignees?.length > 2 ? `${displayedAssignees}, ...` : displayedAssignees;
               },
             },
           ]}

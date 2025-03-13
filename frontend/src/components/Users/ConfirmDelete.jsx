@@ -36,6 +36,7 @@ const ConfirmDelete = () => {
                     setTimeout(() => {
                         localStorage.removeItem("accessToken");
                         localStorage.removeItem("accessTokenExp");
+                        localStorage.removeItem("lastVisitedUrl");
                         localStorage.removeItem("userId");
                         setUser({});
                         navigate("/auth/login");

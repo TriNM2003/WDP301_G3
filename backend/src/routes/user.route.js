@@ -45,4 +45,10 @@ userRouter.get("/user-activities",
     UserController.getUserActivities
 );
 
+// getUserInfoByUserIdFromParams
+userRouter.get("/user/:userId",
+    authMiddleware.verifyAccessToken,
+    UserController.getUserInfoByUserIdFromParams
+);
+
 module.exports = userRouter

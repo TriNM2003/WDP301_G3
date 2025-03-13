@@ -50,7 +50,7 @@ const ProjectList = () => {
 
 
     const filteredProjectsByUser = Array.isArray(projects)
-        ? projects.filter((project) =>
+        ? projects?.filter((project) =>
             project.projectMember?.some(member => member._id?._id === user._id)
         )
         : [];
@@ -87,7 +87,7 @@ const ProjectList = () => {
     // projectMember.find(member => member._id === user._id)
     const recentProjects = Array.isArray(projects)
         ? projects
-            .filter(project => project.projectMember.some(member => member._id?._id === user._id))
+            ?.filter(project => project.projectMember.some(member => member._id?._id === user._id))
             .map(project => ({
                 ...project,
                 lastUpdated: project?.updatedAt || null
@@ -100,7 +100,7 @@ const ProjectList = () => {
 
     // filter activities by week
     const filterActivitiesByWeek = (weekStart, weekEnd) => {
-        return userActivities.filter((activity) => {
+        return userActivities?.filter((activity) => {
             const start = dayjs(activity.startDate);
             const end = dayjs(activity.dueDate);
             return (
@@ -241,7 +241,7 @@ const ProjectList = () => {
                                                     <div
                                                         className="project-card-bg"
                                                         style={{
-                                                            background: `url(${project.projectAvatar}) center/cover no-repeat`,
+                                                            background: `url(${project?.projectAvatar}) center/cover no-repeat`,
                                                             height: "100px",
                                                             width: "95%",
                                                             margin: "5px auto 0px",
@@ -278,7 +278,7 @@ const ProjectList = () => {
                                                     >
                                                         {/* Team Avatars */}
                                                         <Avatar.Group maxCount={3}>
-                                                            {project.projectMember
+                                                            {project?.projectMember
                                                                 ?.filter(member => member.roles.includes("projectMember")) // Chỉ lấy những thành viên có role là "projectMember"
                                                                 .map((member) => (
                                                                     <Tooltip

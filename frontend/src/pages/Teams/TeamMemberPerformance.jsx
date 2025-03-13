@@ -1,28 +1,15 @@
-import React, { useState } from "react";
-import { Layout, Menu, Card, Typography, Select, Table, Row, Col, Avatar,List, Button , DatePicker, Input, Tooltip,Modal, } from "antd";
-import {
-  TeamOutlined,
-  ProjectOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  SearchOutlined
-} from "@ant-design/icons";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
+import React, { useState, useContext, useEffect } from "react";
+import { useParams, useNavigate } from 'react-router-dom';
+import { Layout, Menu, Card, Typography, Select, Table, Row, Col, Avatar, List, Button, DatePicker, Input, Tooltip, Modal, } from "antd";
+import { TeamOutlined, ProjectOutlined, CheckCircleOutlined, ClockCircleOutlined, SearchOutlined } from "@ant-design/icons";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, } from "recharts";
 import dayjs from "dayjs";
+import { AppContext } from "../../context/AppContext";
+import axios from 'axios';
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -30,141 +17,240 @@ const { Option } = Select;
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-// **Giả lập dữ liệu thành viên**
-const selectedMember = {
-  id: "u2",
-  fullName: "Bob Smith",
-  email: "bob@example.com",
-  phoneNumber: "0123456789",
-  userAvatar: "https://randomuser.me/api/portraits/men/2.jpg",
-  projects: [
-    { id: "p1", name: "Project Alpha", avatar: "https://via.placeholder.com/40" },
-    { id: "p2", name: "Project Beta", avatar: "https://via.placeholder.com/40" },
-    { id: "p3", name: "Project Gamma", avatar: "https://via.placeholder.com/40" },
-  ],
-  activities: [
-    { id: "a1", name: "Fix login bug", project: "Project Alpha", status: "done", stage: "To Do", createdAt: "2025-02-15", dueDate: "2025-02-18" },
-    { id: "a2", name: "Implement dashboard", project: "Project Beta", status: "done", stage: "In Progress", createdAt: "2025-02-18", dueDate: "2025-02-20" },
-    { id: "a3", name: "Optimize database", project: "Project Gamma 3", status: "overdue", stage: "Review", createdAt: "2025-02-20", dueDate: "2025-02-19" },
-    { id: "a4", name: "Improve UI/UX", project: "Project Alpha", status: "done", stage: "Done", createdAt: "2025-02-22", dueDate: "2025-02-23" },
-    { id: "a5", name: "API Refactoring", project: "Project Beta", status: "doing", stage: "To Do 4", createdAt: "2025-02-25", dueDate: "2025-02-28" },
-  ],
-};
 
-// **Lấy danh sách stage**
-const uniqueStages = [...new Set(selectedMember.activities.map((activity) => activity.stage))];
-
-// **Lấy danh sách project**
-const uniqueProjects = [...new Set(selectedMember.activities.map((activity) => activity.project))];
-
-// **Tạo dữ liệu cho Task Distribution by Stage**
-const taskDistributionData = uniqueStages.map((stage) => ({
-  name: stage,
-  value: selectedMember.activities.filter((activity) => activity.stage === stage).length,
-}));
-
-// **Tạo dữ liệu cho Tasks by Project**
-const tasksByProjectData = uniqueProjects.map((project) => {
-  const projectActivities = selectedMember.activities.filter((activity) => activity.project === project);
-  return {
-    name: project,
-    ...Object.fromEntries(uniqueStages.map((stage) => [stage, projectActivities.filter((a) => a.stage === stage).length])),
-  };
-});
-
-// **Tạo dữ liệu cho Completion Rate Over Time**
-const completionRateData = selectedMember.activities.map((activity) => ({
-  date: activity.createdAt,
-  onTime: activity.status === "done" && dayjs(activity.dueDate).isAfter(activity.createdAt) ? 1 : 0,
-  overdue: activity.status === "overdue" ? 1 : 0,
-}));
 
 
 
 const TeamMemberPerformance = () => {
-  const [selectedStage, setSelectedStage] = useState("All");
+  const [selectedStage, setSelectedStage] = useState(null);
   const [selectedProject, setSelectedProject] = useState("All Projects");
   const [selectedFilter, setSelectedFilter] = useState("1 Week");
   const [customDateRange, setCustomDateRange] = useState([null, null]);
   const today = dayjs();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [projectFilter, setProjectFilter] = useState("All");
+  const [projectFilter, setProjectFilter] = useState("All Projects");
   const [stageFilter, setStageFilter] = useState("All");
   const [dateRange, setDateRange] = useState([null, null]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [userInfo, setUserInfo] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedActivities, setSelectedActivities] = useState([]);
+  const [modalTitle, setModalTitle] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const { teams, siteAPI, site, accessToken, userApi } = useContext(AppContext);
+  const { userId } = useParams();
 
 
-  // **Lọc dữ liệu Task Distribution by Stage**
-  const filteredTaskDistributionData =
-    selectedStage === "All" ? taskDistributionData : taskDistributionData.filter((data) => data.name === selectedStage);
+  useEffect(() => {
+    if (userId && site._id && accessToken) {
+      axios
+        .get(`${userApi}/user/${userId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        .then((res) => {
+          setUserInfo(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching user info", err);
+        });
+    }
+  }, [userId, site, accessToken]);
 
-  // **Lọc dữ liệu Tasks by Project**
-  const filteredTasksByProjectData =
-    selectedProject === "All Projects" ? tasksByProjectData : tasksByProjectData.filter((data) => data.name === selectedProject);
 
-      // Lọc danh sách project từ activity (không ghi cứng)
-  const uniqueProjects = [
-    ...new Set(selectedMember.activities.map((activity) => activity.project)),
-  ];
+  // Lọc danh sách activities theo trạng thái
+  const doneActivities = userInfo?.activities?.filter(a => a.stage?.stageStatus === "done") || [];
+  const ongoingActivities = userInfo?.activities?.filter(a => a.stage?.stageStatus === "doing") || [];
+  const overdueActivities = userInfo?.activities?.filter(a =>
+    a?.dueDate && dayjs(a.dueDate).isBefore(dayjs()) && a.stage?.stageStatus !== "done"
+  ) || [];
 
-  // Lọc danh sách stage từ activity (không ghi cứng)
-  const uniqueStages = [
-    ...new Set(selectedMember.activities.map((activity) => activity.stage)),
-  ];
 
-   // Sắp xếp activity theo startDate (mới nhất -> cũ nhất)
-   const sortedActivities = [...selectedMember.activities].sort((a, b) =>
+  // Lấy danh sách project từ userInfo.projects
+  const projects = userInfo?.projects || [];
+
+
+  // Lọc dự án theo từ khóa tìm kiếm
+  const filteredProjects = projects?.filter((project) =>
+    project?.projectName?.toLowerCase().includes(searchText?.toLowerCase())
+  );
+
+  // Sắp xếp activity theo startDate mới nhất -> cũ nhất
+  const sortedActivities = [...(userInfo?.activities || [])].sort((a, b) =>
     dayjs(b.startDate).diff(dayjs(a.startDate))
   );
   // Hiển thị 5 activity gần nhất
   const latestActivities = sortedActivities.slice(0, 5);
 
+  // **Lấy danh sách project**
+  const uniqueProjects = [
+    ...new Set((userInfo?.activities || []).map((act) => act.project?.projectName)),
+  ];
+  const uniqueStages = [
+    ...new Set((userInfo?.activities || []).map((act) => act.stage?.stageName)),
+  ];
 
-  // Lọc danh sách Activity theo từ khóa, trạng thái, project, stage và thời gian tạo
+  const stageColorMap = {};
+  uniqueStages.forEach((stage, index) => {
+    stageColorMap[stage] = COLORS[index % COLORS.length];
+  });
+
+
+  const taskDistributionData = uniqueStages?.map((stage) => ({
+    name: stage,
+    value: (userInfo.activities || []).filter((activity) => activity.stage?.stageName === stage).length,
+  }));
+
+  const tasksByProjectData = uniqueProjects?.map((project) => {
+    const projectActivities = (userInfo.activities || []).filter((activity) => activity.project?.projectName === project);
+    return {
+      name: project,
+      ...Object.fromEntries(uniqueStages?.map((stage) => [stage, projectActivities.filter((a) => a.stage?.stageName === stage).length])),
+    };
+  });
+
+  const completionRateData = (userInfo?.activities || []).map((activity) => ({
+    date: dayjs(activity.dueDate).format("YYYY-MM-DD"),
+    onTime:
+      activity.stage?.stageStatus === "done" &&
+        dayjs(activity?.dueDate).isBefore(dayjs()) // DueDate trước hôm nay và đã hoàn thành
+        ? 1
+        : 0,
+    overdue:
+      activity?.dueDate &&
+        dayjs(activity?.dueDate).isBefore(dayjs()) &&
+        activity.stage?.stageStatus !== "done" // DueDate trước hôm nay nhưng chưa hoàn thành
+        ? 1
+        : 0,
+  }));
+
+
+
+
+
+
+  // **Lọc dữ liệu Task Distribution by Stage**
+  const filteredTaskDistributionData =
+    selectedStage === null ? taskDistributionData : taskDistributionData.filter((data) => data.name === selectedStage);
+
+
+  // **Lọc dữ liệu Tasks by Project**
+  const filteredTasksByProjectData =
+    selectedProject === "All Projects" ? tasksByProjectData : tasksByProjectData.filter((data) => data.name === selectedProject);
+
+
+
+
+
   const filteredActivities = sortedActivities.filter((activity) => {
-    const matchSearch = activity.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === "All" || activity.status === statusFilter.toLowerCase();
-    const matchProject = projectFilter === "All" || activity.project === projectFilter;
-    const matchStage = stageFilter === "All" || activity.stage === stageFilter;
+    const matchSearch = activity?.activityTitle?.toLowerCase()?.includes(searchTerm.toLowerCase());
+
+    // Nếu "All Projects" được chọn, bỏ qua filter theo project
+    const matchProject = projectFilter === "All Projects" || activity?.project?.projectName === projectFilter;
+
+    // Nếu "All Stages" được chọn, bỏ qua filter theo stage
+    const matchStage = stageFilter === "All" || activity?.stage?.stageName === stageFilter;
+
     const matchDate =
       (!dateRange[0] && !dateRange[1]) ||
-      (dayjs(activity.startDate).isAfter(dateRange[0]) &&
-        dayjs(activity.startDate).isBefore(dateRange[1]));
+      (dayjs(activity?.startDate).isAfter(dateRange[0]) && dayjs(activity?.startDate).isBefore(dateRange[1]));
 
-    return matchSearch && matchStatus && matchProject && matchStage && matchDate;
+    return matchSearch && matchProject && matchStage && matchDate;
   });
-  
-
-const getFilteredDateRange = () => {
-  switch (selectedFilter) {
-    case "1 Week":
-      return [today.subtract(1, "week").startOf("day"), today];
-    case "1 Month":
-      return [today.subtract(1, "month").startOf("day"), today];
-    case "4 Months":
-      return [today.subtract(4, "month").startOf("day"), today];
-    case "1 Year":
-      return [today.subtract(1, "year").startOf("day"), today];
-    case "Custom":
-      return customDateRange[0] && customDateRange[1] ? customDateRange : [today.subtract(1, "month"), today];
-    default:
-      return [today.subtract(1, "week"), today];
-  }
-};
-
-const [startDate, endDate] = getFilteredDateRange();
 
 
- // **Lọc dữ liệu Completion Rate Over Time theo khoảng thời gian đã chọn**
- const filteredCompletionRateData = completionRateData.filter((entry) => {
-  const entryDate = dayjs(entry.date);
-  return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
-});
+
+
+  const getFilteredDateRange = () => {
+    switch (selectedFilter) {
+      case "1 Week":
+        return [today.subtract(1, "week").startOf("day"), today];
+      case "1 Month":
+        return [today.subtract(1, "month").startOf("day"), today];
+      case "4 Months":
+        return [today.subtract(4, "month").startOf("day"), today];
+      case "1 Year":
+        return [today.subtract(1, "year").startOf("day"), today];
+      case "Custom":
+        return customDateRange[0] && customDateRange[1] ? customDateRange : [today.subtract(1, "month"), today];
+      default:
+        return [today.subtract(1, "week"), today];
+    }
+  };
+
+  const [startDate, endDate] = getFilteredDateRange();
+
+
+  // Nhóm dữ liệu theo ngày
+  const groupedCompletionRateData = completionRateData.reduce((acc, curr) => {
+    const dateKey = dayjs(curr.date).format("YYYY-MM-DD");
+
+    if (!acc[dateKey]) {
+      acc[dateKey] = { date: dateKey, onTime: 0, overdue: 0 };
+    }
+
+    acc[dateKey].onTime += curr.onTime;
+    acc[dateKey].overdue += curr.overdue;
+
+    return acc;
+  }, {});
+
+
+  const filteredCompletionRateData = Object.values(groupedCompletionRateData)
+    .filter((entry) => {
+      const entryDate = dayjs(entry.date);
+      return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
+    })
+    .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf()); // Sắp xếp từ xa đến gần
+
+
+  // Xử lý khi click vào Card
+  const handleCardClick = (title, activities) => {
+    setModalTitle(title);
+    setSelectedActivities(activities);
+    setIsModalOpen(true);
+  };
+
+  const columns = [
+    {
+      title: "Activity Title",
+      dataIndex: "activityTitle",
+      key: "activityTitle",
+      sorter: (a, b) => a.activityTitle.localeCompare(b.activityTitle), // Sắp xếp A-Z, Z-A
+    },
+    {
+      title: "Project Name",
+      dataIndex: "projectName",
+      key: "projectName",
+      render: (text, record) => record.project?.projectName || "N/A",
+      sorter: (a, b) => (a.project?.projectName || "").localeCompare(b.project?.projectName || ""),
+    },
+    {
+      title: "Expiration Date",
+      dataIndex: "dueDate",
+      key: "dueDate",
+      render: (text, record) => record.dueDate
+        ? dayjs(record.dueDate).format("YYYY-MM-DD")
+        : "N/A",
+      sorter: (a, b) => dayjs(a.dueDate).valueOf() - dayjs(b.dueDate).valueOf(), // Sắp xếp từ xa đến gần
+    },
+    {
+      title: "Completion Time",
+      dataIndex: "completionTime",
+      key: "completionTime",
+      render: (text, record) =>
+        record.stage?.stageStatus === "done"
+          ? dayjs(record.updatedAt).format("YYYY-MM-DD")
+          : "Not completed",
+      sorter: (a, b) => dayjs(a.updatedAt).valueOf() - dayjs(b.updatedAt).valueOf(),
+    },
+  ];
+
+
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-  
+
 
       <Layout style={{ padding: "24px" }}>
         <Content>
@@ -174,13 +260,42 @@ const [startDate, endDate] = getFilteredDateRange();
               {/* Tổng quan hoạt động */}
               <Row gutter={[16, 16]}>
                 <Col span={8}>
-                  <Card><CheckCircleOutlined style={{ color: "green" }} /> {selectedMember.activities.filter(a => a.status === "done").length} Done</Card>
+                  <Card hoverable onClick={() => handleCardClick("Total Activities Done", doneActivities)}>
+                    <Row align="middle">
+                      <Col span={6}><CheckCircleOutlined style={{ fontSize: 24, color: "green" }} /></Col>
+                      <Col span={18}>
+                        <Text strong>Total Activities Done</Text>
+                        <br />
+                        <Text style={{ fontSize: "24px", fontWeight: "bold" }}>{doneActivities.length}</Text>
+                      </Col>
+                    </Row>
+                  </Card>
                 </Col>
+
                 <Col span={8}>
-                  <Card><ClockCircleOutlined /> {selectedMember.activities.filter(a => a.status === "doing").length} Ongoing</Card>
+                  <Card hoverable onClick={() => handleCardClick("Total Activities Ongoing", ongoingActivities)}>
+                    <Row align="middle">
+                      <Col span={6}><ClockCircleOutlined style={{ fontSize: 24, color: "blue" }} /></Col>
+                      <Col span={18}>
+                        <Text strong>Total Activities Ongoing</Text>
+                        <br />
+                        <Text style={{ fontSize: "24px", fontWeight: "bold" }}>{ongoingActivities.length}</Text>
+                      </Col>
+                    </Row>
+                  </Card>
                 </Col>
+
                 <Col span={8}>
-                  <Card><ClockCircleOutlined style={{ color: "red" }} /> {selectedMember.activities.filter(a => a.status === "overdue").length} Overdue</Card>
+                  <Card hoverable onClick={() => handleCardClick("Total Activities Overdue", overdueActivities)}>
+                    <Row align="middle">
+                      <Col span={6}><ClockCircleOutlined style={{ fontSize: 24, color: "red" }} /></Col>
+                      <Col span={18}>
+                        <Text strong>Total Activities Overdue</Text>
+                        <br />
+                        <Text style={{ fontSize: "24px", fontWeight: "bold" }}>{overdueActivities.length}</Text>
+                      </Col>
+                    </Row>
+                  </Card>
                 </Col>
               </Row>
 
@@ -188,12 +303,13 @@ const [startDate, endDate] = getFilteredDateRange();
               <Card
                 title="Activities Distribution by Stage"
                 extra={
-                  <Select value={selectedStage} onChange={(value) => setSelectedStage(value)} style={{ width: 150 }}>
-                    <Option value="All">All</Option>
+                  <Select value={selectedStage || "All Stages"} onChange={(value) => setSelectedStage(value)} style={{ width: 150 }}>
+                    <Option value={null}>All Stages</Option>
                     {uniqueStages.map((stage) => (
                       <Option key={stage} value={stage}>{stage}</Option>
                     ))}
                   </Select>
+
                 }
                 style={{ marginTop: "16px" }}
               >
@@ -201,7 +317,7 @@ const [startDate, endDate] = getFilteredDateRange();
                   <PieChart>
                     <Pie data={filteredTaskDistributionData} cx="50%" cy="50%" outerRadius={80} label>
                       {filteredTaskDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={stageColorMap[entry.name] || COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <RechartsTooltip />
@@ -284,8 +400,12 @@ const [startDate, endDate] = getFilteredDateRange();
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={filteredCompletionRateData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(date) => dayjs(date).format("YYYY-MM-DD")}
+                    />
                     <YAxis />
+
                     <RechartsTooltip />
                     <Legend />
                     <Line type="monotone" dataKey="onTime" stroke="#52c41a" />
@@ -296,26 +416,29 @@ const [startDate, endDate] = getFilteredDateRange();
             </Col>
 
 
-         {/* Cột 2: Profile, Project List, Activity List */}
-         <Col span={8}>
-              {/* Profile Member */}
-              <Card title="Profile" style={{ marginBottom: "10px" }}>
-                <Avatar size={64} src={selectedMember.userAvatar} />
-                <Title level={4}>{selectedMember.fullName}</Title>
-                <Text>Email: {selectedMember.email}</Text><br />
-                <Text>Phone: {selectedMember.phoneNumber}</Text>
+            {/* Cột 2: Profile, Project List, Activity List */}
+            <Col span={8}>
+              <Card title="Profile" style={{ marginBottom: "10px", textAlign: "center" }}>
+                <Avatar size={64} src={userInfo?.userAvatar} />
+                <Title level={4}>{userInfo?.fullName}</Title>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginTop: "10px", marginLeft: "70px" }}>
+                  <Text>Email: {userInfo?.email}</Text>
+                  <Text>Phone: {userInfo?.phoneNumber}</Text>
+                </div>
               </Card>
+
 
               {/* Project List */}
               <Card
                 title={
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Projects ({selectedMember.projects.length})</span>
+                    <span>Projects ({projects.length})</span>
                     <Input
                       placeholder="Search project..."
                       allowClear
                       prefix={<SearchOutlined />}
                       style={{ width: "50%" }}
+                      onChange={(e) => setSearchText(e.target.value)}
                     />
                   </div>
                 }
@@ -332,16 +455,33 @@ const [startDate, endDate] = getFilteredDateRange();
                 >
                   <List
                     itemLayout="horizontal"
-                    dataSource={selectedMember.projects}
+                    dataSource={filteredProjects}
                     renderItem={(project) => (
-                      <List.Item>
+                      <List.Item
+                        style={{
+                          transition: "all 0.3s ease-in-out",
+                          padding: "8px",
+                          borderRadius: "2px",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#f0f0f0";
+                          e.currentTarget.style.transform = "scale(1.02)";
+                          e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.transform = "scale(1)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      >
                         <List.Item.Meta
                           avatar={
-                            <Tooltip title={project.name}>
-                              <Avatar src={project.avatar} />
+                            <Tooltip title={project.projectName}>
+                              <Avatar src={project.projectAvatar} />
                             </Tooltip>
                           }
-                          title={project.name}
+                          title={project.projectName}
                         />
                       </List.Item>
                     )}
@@ -349,11 +489,12 @@ const [startDate, endDate] = getFilteredDateRange();
                 </div>
               </Card>
 
+
               {/* Activity List */}
               <Card
                 title={
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Activity List ({selectedMember.activities.length})</span>
+                    <span>Activity List ({userInfo?.activities?.length})</span>
                     <Button onClick={() => setModalVisible(true)}>View More</Button>
                   </div>
                 }
@@ -362,14 +503,14 @@ const [startDate, endDate] = getFilteredDateRange();
                   columns={[
                     {
                       title: "Activity Details",
-                      dataIndex: "name",
-                      key: "name",
+                      dataIndex: "activityTitle",
+                      key: "activityTitle",
                       render: (text, record) => (
                         <div>
                           <strong>{text}</strong>
                           <br />
                           <span style={{ fontSize: "12px", color: "gray" }}>
-                            {record.project} • {record.startDate}
+                            {record.project.projectName} • {dayjs(record.startDate).format("YYYY-MM-DD")}
                           </span>
                         </div>
                       ),
@@ -379,11 +520,13 @@ const [startDate, endDate] = getFilteredDateRange();
                       dataIndex: "stage",
                       key: "stage",
                       align: "center",
+                      render: (stage) => stage?.stageName || "N/A", // Tránh lỗi khi stage là null hoặc undefined
                     },
+
                   ]}
                   dataSource={latestActivities}
                   pagination={false}
-                  rowKey="id"
+                  rowKey="_id"
                 />
               </Card>
             </Col>
@@ -391,9 +534,9 @@ const [startDate, endDate] = getFilteredDateRange();
           </Row>
         </Content>
       </Layout>
-      
-        {/* Modal hiển thị toàn bộ activity với bộ lọc */}
-        <Modal
+
+      {/* Modal hiển thị toàn bộ activity với bộ lọc */}
+      <Modal
         title="All Activities"
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
@@ -401,71 +544,102 @@ const [startDate, endDate] = getFilteredDateRange();
         width={800}
         style={{ top: "50px" }}
       >
-        <div style={{ display: "flex", gap: "10px",   }}>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
           <Input
             placeholder="Search activity..."
             allowClear
             prefix={<SearchOutlined />}
             style={{ width: "25%" }}
             value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Select value={projectFilter} onChange={setProjectFilter} style={{ width: 150 }}>
-            <Option value="All">All Projects</Option>
-            {uniqueProjects.map((proj) => <Option key={proj} value={proj}>{proj}</Option>)}
+            <Select.Option value="All Projects">All Projects</Select.Option>
+            {uniqueProjects.map((proj) => (
+              <Select.Option key={proj} value={proj}>{proj}</Select.Option>
+            ))}
           </Select>
+
           <Select value={stageFilter} onChange={setStageFilter} style={{ width: 150 }}>
-            <Option value="All">All Stages</Option>
-            {uniqueStages.map((stage) => <Option key={stage} value={stage}>{stage}</Option>)}
+            <Select.Option value="All">All Stages</Select.Option>
+            {uniqueStages.map((stage) => (
+              <Select.Option key={stage} value={stage}>{stage}</Select.Option>
+            ))}
           </Select>
-         
-                {/* Chọn ngày tùy chỉnh */}
-                             
-                                <>
-                                  <DatePicker
-                                    value={dateRange[0]}
-                                    placeholder="Start Date"
-                                    onChange={(date) => setDateRange([date, dateRange[1]])}
-                                    format="YYYY-MM-DD"
-                                    style={{ width: "120px" }}
-                                  />
-                                  <DatePicker
-                                    value={dateRange[1]}
-                                    placeholder="End Date"
-                                    onChange={(date) => setDateRange([dateRange[0], date])}
-                                    format="YYYY-MM-DD"
-                                    style={{ width: "120px" }}
-                                    disabled={!dateRange[0]} // Chỉ cho chọn end date khi đã chọn start date
-                                  />
-                                </>
-                           
+
+
+
+          <DatePicker
+            value={dateRange[0]}
+            placeholder="Start Date"
+            onChange={(date) => setDateRange([date, dateRange[1]])}
+            format="YYYY-MM-DD"
+            style={{ width: "120px" }}
+          />
+          <DatePicker
+            value={dateRange[1]}
+            placeholder="End Date"
+            onChange={(date) => setDateRange([dateRange[0], date])}
+            format="YYYY-MM-DD"
+            style={{ width: "120px" }}
+            disabled={!dateRange[0]}
+          />
         </div>
         <Table
           columns={[
             {
               title: "Activity Details",
-              dataIndex: "name",
-              key: "name",
+              dataIndex: "activityTitle",
+              key: "activityTitle",
               render: (text, record) => (
                 <div>
                   <strong>{text}</strong>
                   <br />
                   <span style={{ fontSize: "12px", color: "gray" }}>
-                    {record.project} • {record.startDate}
+                    {record.project?.projectName || "No Project"}
                   </span>
                 </div>
               ),
+            },
+            {
+              title: "Start Date",
+              dataIndex: "startDate",
+              key: "startDate",
+              align: "center",
+              render: (date) => (date ? dayjs(date).format("YYYY-MM-DD") : "N/A"),
+            },
+            {
+              title: "Due Date",
+              dataIndex: "dueDate",
+              key: "dueDate",
+              align: "center",
+              render: (date) => (date ? dayjs(date).format("YYYY-MM-DD") : "N/A"),
             },
             {
               title: "Stage",
               dataIndex: "stage",
               key: "stage",
               align: "center",
+              render: (stage) => stage?.stageName || "N/A",
             },
           ]}
           dataSource={filteredActivities}
           pagination={{ pageSize: 5, position: ["bottomCenter"] }}
-          rowKey="id"
+          rowKey="_id"
+        />
+      </Modal>
+
+      <Modal
+        title={modalTitle}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        <Table
+          columns={columns}
+          dataSource={selectedActivities.map((activity, index) => ({ key: index, ...activity }))}
+          pagination={{ pageSize: 5 }}
         />
       </Modal>
     </Layout>

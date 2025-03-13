@@ -32,35 +32,52 @@ projectRouter.get("/:projectId",
 
     projectController.getProjectById
 )
+projectRouter.get("/:projectId/get-project-members",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.getProjectMembersById
+)
+projectRouter.post("/:projectId/add-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.addProjectMember
+)
+projectRouter.put("/:projectId/edit-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.editProjectMemberRole
+)
+projectRouter.delete("/:projectId/remove-project-member",
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    projectController.removeProjectMember
+)
 projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.removeToTrash
 );
 
 projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.getProjectTrash
 );
 
 projectRouter.put("/:projectId/restore",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.restoreProject
 );
 
-projectRouter.delete("/:projectId",
+projectRouter.delete("/:projectId/delete",
     authMiddleware.verifyAccessToken,
+    projectMiddleware.isInProject,
     projectController.deleteProject
 );
 
-// projectRouter.get("/:projectId/check-manager",
-//     authMiddleware.verifyAccessToken,
-//     projectController.checkProjectManager
-// );
 
 
 projectRouter.post("/create",
