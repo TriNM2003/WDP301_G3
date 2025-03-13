@@ -1,4 +1,4 @@
-import { blue, cyan, gray, green } from "@ant-design/colors";
+import { blue, cyan, gray, green, orange, red } from "@ant-design/colors";
 import {
     DeleteOutlined,
     EllipsisOutlined,
@@ -12,6 +12,9 @@ import {
     CalendarOutlined,
     FileTextOutlined,
     DoubleRightOutlined,
+    MinusOutlined,
+    UpOutlined,
+    DownOutlined,
 } from "@ant-design/icons";
 import {
     Avatar,
@@ -42,28 +45,29 @@ import TextArea from "antd/es/input/TextArea";
 import ActivityDetail from "../../../Activity/ActivityDetail";
 import DeleteActivityModal from "../DeleteActivityModal";
 
-function KanbanBody() {
-    const { activity, setActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
+function KanbanBody({ sprint, stage }) {
+    const { activity, setActivity, activities, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
 
 
 
 
-
+    const [filterActivityType, setFliterActivityType] = useState(["task"]);
+    const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
 
 
 
 
     return (
-        <Col span={6}>
-            <Card style={{ borderRadius: "0", background: "#F5F5F5" }} bodyStyle={{ padding: "2%" }}>
-                {[1, 2, 3].map((a) => (
+        <Col span={6} >
+            <Card style={{ borderRadius: "0", background: "#F5F5F5", minHeight: "50% " }} bodyStyle={{ padding: "2%" }}>
+                {filteredActivitites?.filter(activity => activity?.stage?._id === stage?._id && activity?.sprint?._id === sprint?._id).map((a) => (
                     <Card
-                        key={a}
+                        key={a._id}
                         hoverable
                         style={{ width: "100%", borderRadius: "1%", margin: "5% 0" }}
                         bodyStyle={{ padding: "2%" }}
                         headStyle={{ padding: "2%", border: "0" }}
-                        onClick={() => showActivity(activity)}
+                        onClick={() => showActivity(a)}
                         cover={
                             <img
                                 src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"
@@ -72,13 +76,13 @@ function KanbanBody() {
                         }
                         title={
                             <Flex justify="space-between" align="center" style={{ padding: "1% 3%", height: "100%" }}>
-                                <p style={{ margin: 0, color: "black" }}>Activity {a}</p>
+                                <p style={{ margin: 0, color: "black" }}>{a?.activityTitle}</p>
                                 <Dropdown
                                     overlay={
                                         <Menu>
                                             <Menu.Item key="1" icon={<DeleteOutlined />} danger onClick={(e) => {
                                                 e.domEvent.stopPropagation();
-                                                showDeleteActivity(`${a}`);
+                                                showDeleteActivity(a);
                                             }}>
                                                 Delete activity
                                             </Menu.Item>
@@ -92,26 +96,61 @@ function KanbanBody() {
                     >
                         <Row justify="space-between" style={{ padding: "2% 3%" }}>
                             <Col span={24}>
-                                <Progress percent={10} percentPosition={{ align: "end", type: "outer" }} strokeColor={green[6]} />
+                                <Progress percent={(a?.child?.filter((c) => c?.stage?.stageStatus == "done").length / a?.child?.length) * 100} percentPosition={{ align: "end", type: "outer" }} strokeColor={green[6]} />
                             </Col>
                             <Col span={8} align="start" style={{ display: "flex", alignItems: "center" }}>
-                                <Tag color="red" bordered={false}>
-                                    <strong>
-                                        <DoubleRightOutlined rotate="-90" /> Highest
-                                    </strong>
-                                </Tag>
+
+                                {a?.priority === "highest" && (
+                                    <Tag color="red" bordered={false}>
+                                        <strong>
+                                            <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} /> Highest
+                                        </strong>
+                                    </Tag>
+                                )}
+                                {a?.priority === "high" && (
+                                    <Tag color="orange" bordered={false}>
+                                        <strong>
+                                            <UpOutlined style={{ color: orange[6] }} /> High
+                                        </strong>
+                                    </Tag>
+                                )}
+                                {a?.priority === "medium" && (
+                                    <Tag color="blue" bordered={false}>
+                                        <strong>
+                                            <MinusOutlined style={{ color: blue[6] }} /> Medium
+                                        </strong>
+                                    </Tag>
+                                )}
+                                {a?.priority === "low" && (
+                                    <Tag color="cyan" bordered={false}>
+                                        <strong>
+                                            <DownOutlined style={{ color: cyan[6] }} /> Low
+                                        </strong>
+                                    </Tag>
+                                )}
+                                {a?.priority === "lowest" && (
+                                    <Tag color="cyan" bordered={false}>
+                                        <strong>
+                                            <DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> Lowest
+                                        </strong>
+                                    </Tag>
+                                )}
+
+
                             </Col>
                             <Col span={8} align="end">
                                 <Avatar.Group max={{ count: 2 }}>
-                                    <Tooltip title="Ant User" placement="top">
-                                        <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
-                                    </Tooltip>
-                                    <Tooltip title="Ant User" placement="top">
-                                        <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
-                                    </Tooltip>
-                                    <Tooltip title="Ant User" placement="top">
-                                        <Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />
-                                    </Tooltip>
+                                    {a?.assignee?.length > 0 ?
+                                        a?.assignee?.map((as) => (
+                                            <Tooltip title={as?.username} placement="top">
+                                                <Avatar src={as?.userAvatar} size={25} />
+                                            </Tooltip>
+                                        )) :
+                                        <Tooltip title="Unassigned" placement="top">
+                                            <Avatar icon={<UserOutlined/>} size={25} />
+                                        </Tooltip>
+                                    }
+
                                 </Avatar.Group>
                             </Col>
                         </Row>
@@ -120,10 +159,9 @@ function KanbanBody() {
 
                 {createActivityModal ? (
                     <Input
-                        autoFocus
                         value={activityName}
                         onChange={(e) => setActivityName(e.target.value)}
-                        onPressEnter={handleActivityCreate}
+                        onPressEnter={()=>handleActivityCreate(sprint?.sprintName, stage?.stageName, "task", null)}
                         onBlur={() => setCreateActivityModal(false)}
                         placeholder="Enter activity name"
                         prefix={<FormOutlined />}
@@ -139,7 +177,7 @@ function KanbanBody() {
 
             {/* Modal hiển thị chi tiết Activity */}
 
-            <ActivityDetail />
+            
 
         </Col>
     );

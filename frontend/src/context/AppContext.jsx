@@ -257,7 +257,7 @@ const AppProvider = ({ children }) => {
       message.warning("Activity title must be at least 3 characters!");
       return;
     }
-    const stageId = "67c56083dbc95aae6823267d";
+    const stageId = stages?.find(t => t.stageName.trim().toUpperCase() == stage.trim().toUpperCase())?._id
     const typeId = activityTypes?.find(t => t.typeName.trim().toUpperCase() == type.trim().toUpperCase())?._id
     const sprintId = sprints?.find((s) => s.sprintName?.trim().toUpperCase() == sprint?.trim().toUpperCase())?._id
     axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
@@ -370,8 +370,8 @@ const AppProvider = ({ children }) => {
         );
         setActivities(updateActivities)
 
-        message.success(`Activity "${activityToDelete}" has been deleted successfully!`);
-        showNotification(`Project update`, `User1 just deleted activity ${activityToDelete}.`);
+        message.success(`Activity "${activityToDelete?.activityTitle}" has been deleted successfully!`);
+        showNotification(`Project update`, `User1 just deleted activity ${activityToDelete?.activityTitle}.`);
         handleCloseDeleteActivityModal();
         closeActivity();
       } catch (error) {

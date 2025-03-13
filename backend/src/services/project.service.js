@@ -86,6 +86,19 @@ const createProject = async (projectData, creatorId, siteId) => {
 
         const savedProject = await newProject.save();
 
+
+
+        // Tạo 3 stage mặc định
+        const stages = [
+            { stageName: "To Do", project: savedProject._id, stageStatus: "todo" },
+            { stageName: "Doing", project: savedProject._id, stageStatus: "doing" },
+            { stageName: "Done", project: savedProject._id, stageStatus: "done" }
+        ];
+
+        const createdStages = await db.Stage.insertMany(stages);
+        savedProject.stages = createdStages.map(stage => stage._id);
+        await savedProject.save()
+
         // Cập nhật danh sách project của các user trong model User
         const memberIds = projectMembers.map(member => member._id);
         await db.User.updateMany(
@@ -98,6 +111,8 @@ const createProject = async (projectData, creatorId, siteId) => {
         throw error;
     }
 };
+
+
 
 // site owner tao project va assign project manager
 const createProjectV2 = async (siteId, projectManagerId, projectName) => {

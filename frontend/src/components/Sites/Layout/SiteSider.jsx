@@ -12,11 +12,10 @@ function SiteSider() {
 
   const { defaultSelectedKeys, setDefaultSelectedKeys, site, projects, user, teams } = useContext(AppContext)
   const navigate = useNavigate();
-
   // Tìm 4 project có thời gian cập nhật gần nhất của tài khoản hiện tại
   const recentProjects = Array.isArray(projects)
     ? projects
-      .filter(project => project.projectMember.some(member => member._id?._id === user._id))
+      .filter(project => project?.projectStatus === "active" &&  project.projectMember.some(member => member._id?._id === user._id))
       .map(project => ({
         ...project,
         lastUpdated: project?.updatedAt || null
