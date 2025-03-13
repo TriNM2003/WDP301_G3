@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin } from "antd";
+import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin, AutoComplete } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -12,9 +12,9 @@ const { Option } = Select;
 
 
 const TeamMemberManagement = () => {
-    const {showNotification,siteAPI,site, accessToken, user} = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, user } = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
-    const [teamId, setTeamId] = useState(null); 
+    const [teamId, setTeamId] = useState(null);
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -25,12 +25,15 @@ const TeamMemberManagement = () => {
     const [loadingKick, setLoadingKick] = useState(false);
     const [isLeader, setIsLeader] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [siteMembers, setSiteMembers] = useState([]);
+    const [filteredMembers, setFilteredMembers] = useState([]);
     const { teamSlug } = useParams();
     const nav = useNavigate();
 
     useEffect(() => {
         if (site._id && accessToken) {
             fetchTeamIdBySlug();
+            fetchSiteMembers();
         }
     }, [site, accessToken, teamSlug]);
 
@@ -60,6 +63,42 @@ const TeamMemberManagement = () => {
             console.error("Error fetching teams:", error);
             message.error("Failed to fetch teams.");
         }
+    };
+
+    const fetchSiteMembers = async () => {
+        try {
+            const response = await axios.get(`${siteAPI}/${site._id}/get-site-members`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            setSiteMembers(response.data || []);
+        } catch (error) {
+            console.error("Error fetching site members:", error);
+            message.error("Failed to fetch site members.");
+        }
+    };
+
+    // Hàm này chạy khi user nhập vào AutoComplete
+    const handleSearchUser = (value) => {
+        if (!value) {
+            setFilteredMembers([]);
+            return;
+        }
+
+        const filtered = siteMembers
+            .map(member => member._id)
+            .filter(user => user.username.toLowerCase().includes(value.toLowerCase()) ||
+                (user.fullName && user.fullName.toLowerCase().includes(value.toLowerCase())))
+            .map(user => ({
+                value: user.username,
+                label: (
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <Avatar src={user.userAvatar} size="small" style={{ marginRight: 8 }} />
+                        <span>{user.fullName || user.username} ({user.email})</span>
+                    </div>
+                ),
+            }));
+
+        setFilteredMembers(filtered);
     };
 
     // 🔹 Fetch thành viên của team bằng `teamId`
@@ -96,9 +135,9 @@ const TeamMemberManagement = () => {
         setSearchText(value);
 
         if (value) {
-            setMembers(members.filter(member => 
-                member.username.toLowerCase().includes(value) || 
-                member.email.toLowerCase().includes(value) || 
+            setMembers(members.filter(member =>
+                member.username.toLowerCase().includes(value) ||
+                member.email.toLowerCase().includes(value) ||
                 member.fullName.toLowerCase().includes(value)
             ));
         } else {
@@ -113,7 +152,7 @@ const TeamMemberManagement = () => {
 
     const handleKickMember = async () => {
         const userId = selectedUser?._id || selectedUser?.key; // Đảm bảo lấy đúng _id
-    
+
         if (!userId) {
             console.error("User ID is missing:", selectedUser);
             message.error("Error: User ID is missing");
@@ -141,20 +180,32 @@ const TeamMemberManagement = () => {
 
     const handleAddMember = async () => {
         if (!searchUser) {
-            message.error("Please enter a username or email.");
+            message.error("Please select a member.");
             return;
         }
+
+        // 🔹 Kiểm tra xem thành viên đã có trong team chưa
+        const isAlreadyInTeam = members.some(member => member.username === searchUser);
+        if (isAlreadyInTeam) {
+            message.warning(`${searchUser} is already in the team.`);
+            return;
+        }
+
         setLoadingAdd(true);
         try {
             await axios.post(
-                `http://localhost:9999/sites/${site._id}/teams/${teamId}/add-team-member`,
-                { username: searchUser, email: searchUser, role: selectedRole },
-                { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
+                `${siteAPI}/${site._id}/teams/${teamId}/add-team-member`,
+                { username: searchUser, role: selectedRole },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
             );
+
             message.success(`Successfully added ${searchUser} to the team`);
             showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+
             setIsAddMemberModalVisible(false);
-            fetchTeamMembers(teamId);
+            setSearchUser(""); // Reset input sau khi thêm thành viên thành công
+            setFilteredMembers([]);
+            fetchTeamMembers(teamId); // Cập nhật danh sách thành viên trong team
         } catch (error) {
             console.error("Error adding team member:", error);
             message.error(error.response?.data?.message || "Failed to add user.");
@@ -194,7 +245,7 @@ const TeamMemberManagement = () => {
                             value={searchText}
                             onChange={handleSearch}
                         />
-                        <Button type="primary" icon={<PlusOutlined />}  onClick={() => setIsAddMemberModalVisible(true)}>
+                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>
                             Add Member
                         </Button>
                     </Col>
@@ -270,14 +321,39 @@ const TeamMemberManagement = () => {
             <Modal
                 title="Add Member to Team"
                 open={isAddMemberModalVisible}
-                onCancel={() => setIsAddMemberModalVisible(false)}
+                onCancel={() => {
+                    setIsAddMemberModalVisible(false);
+                    setSearchUser(""); // Reset input khi đóng modal
+                    setFilteredMembers([]);
+                }}
                 footer={[
-                    <Button key="cancel" onClick={() => setIsAddMemberModalVisible(false)}>Cancel</Button>,
-                    <Button key="ok" type="primary" loading={loadingAdd} onClick={handleAddMember}>Add</Button>
+                    <Button key="cancel" onClick={() => {
+                        setIsAddMemberModalVisible(false);
+                        setSearchUser(""); // Reset input khi bấm Cancel
+                        setFilteredMembers([]);
+                    }}>
+                        Cancel
+                    </Button>,
+                    <Button key="ok" type="primary" loading={loadingAdd} onClick={handleAddMember}>
+                        Add
+                    </Button>
                 ]}
             >
-                <div style={{ marginBottom: "10px" }}>Enter Username or Email</div>
-                <Input value={searchUser} onChange={e => setSearchUser(e.target.value)} placeholder="Enter username or email" />
+                <div style={{ marginBottom: "10px" }}>Enter Username</div>
+                <AutoComplete
+                    style={{ width: "100%" }}
+                    options={filteredMembers} // Danh sách gợi ý
+                    onSearch={(value) => {
+                        setSearchUser(value);  // Cập nhật giá trị nhập vào
+                        handleSearchUser(value);
+                    }}
+                    onChange={(value) => setSearchUser(value)}  // Cập nhật khi nhập chữ
+                    onSelect={(value) => setSearchUser(value)}  // Cập nhật khi chọn từ gợi ý
+                    value={searchUser}  // Đảm bảo input hiển thị giá trị hiện tại
+                    placeholder="Enter username"
+                    allowClear
+                />
+
                 <div style={{ marginBottom: "10px", marginTop: "10px" }}>Role</div>
                 <Select value={selectedRole} onChange={setSelectedRole} style={{ width: "100%" }}>
                     <Option value="teamMember">Member</Option>
