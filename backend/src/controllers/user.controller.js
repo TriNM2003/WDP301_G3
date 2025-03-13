@@ -82,6 +82,18 @@ const getUserActivities = async (req, res, next) => {
     }
 };
 
+//  getUserInfoByUserIdFromParams
+const getUserInfoByUserIdFromParams = async (req, res, next) =>{
+    try{
+        const {userId} = req.params;
+        const user = await userService.getUserInfoByUserIdFromParams(userId);
+        if (!user) return res.status(400).json({ message: "User not found" });
+
+        res.status(200).json(user);
+    }catch(error){
+        next(error);
+    }
+}
 const getOtherUserById = async (req, res , next) => {
     try {
         const userId = req.params.userId;
@@ -101,6 +113,8 @@ const UserControllers = {
     sendDeleteAccountEmail,
     confirmDeleteAccount,
      getUserActivities,
+     getUserInfoByUserIdFromParams,
+
      getOtherUserById,
 };
 

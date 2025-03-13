@@ -204,6 +204,8 @@ const siteController = {
     getInvitaionsBySiteId,
     cancelInvitationById,
 
+    getInvitaionsBySiteId,
+    cancelInvitationById,
 }
 
 module.exports = siteController;
