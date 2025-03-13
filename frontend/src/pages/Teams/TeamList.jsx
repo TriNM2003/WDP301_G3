@@ -24,7 +24,7 @@ const TeamList = () => {
     const [inputValue, setInputValue] = useState("");
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [filter, setFilter] = useState("created-newest"); // Mặc định lọc theo tên A-Z
-    const { teams } = useContext(AppContext);
+    const { teams, user } = useContext(AppContext);
 
 
     const handlePageChange = (page) => setCurrentPage(page);
@@ -40,24 +40,42 @@ const TeamList = () => {
         setShowCreateModal(false);
     };
 
-    // Sắp xếp danh sách team theo bộ lọc
-    const sortedTeams = Array.isArray(teams)
-        ? [...teams].sort((a, b) => {
-            if (filter === "name-asc") return a.teamName.localeCompare(b.teamName);
-            if (filter === "name-desc") return b.teamName.localeCompare(a.teamName);
-            if (filter === "created-newest") return new Date(b.createdAt) - new Date(a.createdAt);
-            if (filter === "created-oldest") return new Date(a.createdAt) - new Date(b.createdAt);
-            return 0;
-        })
-        : [];
+// Kiểm tra nếu `teams` là một mảng hợp lệ
+const userTeams = Array.isArray(teams)
+    ? teams.filter(team => 
+        team?.teamMembers?.some(member => 
+            member?._id?._id === user?._id && member?.roles?.includes("teamLeader")
+        )
+    )
+    : [];
 
-    // Lọc danh sách team theo tìm kiếm
-    const filteredTeams = searchQuery
-        ? sortedTeams?.filter((team) => team?.teamName?.toLowerCase().includes(searchQuery.toLowerCase().trim()))
-        : sortedTeams;
+// Sắp xếp danh sách team theo bộ lọc
+const sortedTeams = userTeams.length > 0
+    ? [...userTeams].sort((a, b) => {
+        switch (filter) {
+            case "name-asc":
+                return a?.teamName?.localeCompare(b?.teamName);
+            case "name-desc":
+                return b?.teamName?.localeCompare(a?.teamName);
+            case "created-newest":
+                return new Date(b?.createdAt) - new Date(a?.createdAt);
+            case "created-oldest":
+                return new Date(a?.createdAt) - new Date(b?.createdAt);
+            default:
+                return 0;
+        }
+    })
+    : [];
+
+// Lọc danh sách team theo tìm kiếm
+const filteredTeams = searchQuery?.trim()
+    ? sortedTeams.filter(team => 
+        team?.teamName?.toLowerCase()?.includes(searchQuery.toLowerCase().trim())
+    )
+    : sortedTeams;
 
 
-    const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
+    const totalPages = Math.ceil(filteredTeams?.length / teamsPerPage);
     const startIndex = (currentPage - 1) * teamsPerPage;
     const displayedTeams = filteredTeams?.slice(startIndex, startIndex + teamsPerPage) || [];
 

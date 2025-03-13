@@ -140,8 +140,8 @@ function SiteSider() {
               overlay={(
                 <Menu onClick={(e) => e.domEvent.stopPropagation()}>
                   <Menu.Item key="add">Add people</Menu.Item>
-                  <Menu.Item key="settings" onClick={() => navigate(`/teams/${team.teamSlug}/manage-member`)}>
-                    Team settings
+                  <Menu.Item key="settings" onClick={() => navigate(`/site/teams/${team.teamSlug}/manage-member`)}>
+                    Manage members
                   </Menu.Item>
                 </Menu>
               )}
