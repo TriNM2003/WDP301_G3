@@ -395,7 +395,6 @@ const AppProvider = ({ children }) => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
 
-      handleAddTeamMember, handleKickTeamMember,
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
