@@ -86,6 +86,19 @@ const createProject = async (projectData, creatorId, siteId) => {
 
         const savedProject = await newProject.save();
 
+
+
+        // Tạo 3 stage mặc định
+        const stages = [
+            { stageName: "To Do", project: savedProject._id, stageStatus: "todo" },
+            { stageName: "Doing", project: savedProject._id, stageStatus: "doing" },
+            { stageName: "Done", project: savedProject._id, stageStatus: "done" }
+        ];
+
+        const createdStages = await db.Stage.insertMany(stages);
+        savedProject.stages = createdStages.map(stage => stage._id);
+        await savedProject.save()
+
         // Cập nhật danh sách project của các user trong model User
         const memberIds = projectMembers.map(member => member._id);
         await db.User.updateMany(
@@ -99,19 +112,21 @@ const createProject = async (projectData, creatorId, siteId) => {
     }
 };
 
+
+
 // site owner tao project va assign project manager
 const createProjectV2 = async (siteId, projectManagerId, projectName) => {
     const site = await db.Site.findById(siteId);
-    if(!site){
+    if (!site) {
         throw new Error("Site does not exist");
     }
     const projectManager = await db.User.findById(projectManagerId);
-    if(!projectManager){
+    if (!projectManager) {
         throw new Error("User does not exist");
     }
 
     const siteMember = site.siteMember.find(member => member._id?.toString() === projectManager._id?.toString());
-    if(!siteMember){
+    if (!siteMember) {
         throw new Error("Assigned user is not a member of site");
     }
 
@@ -120,7 +135,7 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
         projectName: projectName,
         projectSlug: projectSlug,
         projectStatus: "active",
-        projectMember: [{_id: projectManager._id, roles:["projectManager"]}],
+        projectMember: [{ _id: projectManager._id, roles: ["projectManager"] }],
         site: site._id,
         projectRoles: ["projectManager", "projectMember"],
         projectAvatar: "https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg",
@@ -128,8 +143,8 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
 
     //theo project vao user
     await db.User.findOneAndUpdate(
-        {_id: projectManager._id},
-        {$addToSet: {projects: newProject._id}}
+        { _id: projectManager._id },
+        { $addToSet: { projects: newProject._id } }
     )
 
     return newProject;
@@ -263,15 +278,15 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
 
         //add project member
         const updatedProject = await db.Project.findOneAndUpdate(
-            {_id: projectId},
-            {$addToSet: {projectMember: {_id: projectMemberId, roles: projectMemberRole}} },
-            { new: true}
+            { _id: projectId },
+            { $addToSet: { projectMember: { _id: projectMemberId, roles: projectMemberRole } } },
+            { new: true }
         ).populate("projectMember._id");
 
         // cap nhap project trong user
         await db.User.findOneAndUpdate(
-            {_id: projectMember._id},
-            {$addToSet: {projects: projectId}}
+            { _id: projectMember._id },
+            { $addToSet: { projects: projectId } }
         )
 
         const updatedProjectMember = updatedProject?.projectMember?.map(member => {
@@ -308,8 +323,8 @@ const editProjectMemberRole = async (projectId, projectMemberId, updatedRoleList
         //edit project member from project
         const projectMemberList = await db.Project.findOneAndUpdate(
             { "projectMember._id": projectMemberId },
-            { $set: { "projectMember.$.roles":  updatedRoleList} }, 
-            { new: true } 
+            { $set: { "projectMember.$.roles": updatedRoleList } },
+            { new: true }
         ).select("projectMember")
 
         return projectMemberList;
@@ -356,14 +371,14 @@ const removeProjectMember = async (projectId, projectMemberId) => {
         let updatedProject = await db.Project.findOneAndUpdate(
             { _id: projectId },
             { $pull: { projectMember: { _id: projectMemberId } } },
-            { new: true}
+            { new: true }
         );
         updatedProject = await updatedProject.populate("projectMember._id");
 
         // remove project from member
         await db.User.findOneAndUpdate(
-            {_id: projectMemberId },
-            {$pull: {projects: projectId}}
+            { _id: projectMemberId },
+            { $pull: { projects: projectId } }
         )
 
         const data = updatedProject?.projectMember?.map(member => {
