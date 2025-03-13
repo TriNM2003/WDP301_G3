@@ -81,20 +81,21 @@ const AppProvider = ({ children }) => {
 
 
 
+  useEffect(() => {
 
- useEffect(() => {
     if (location.pathname !== '/login') {
       localStorage.setItem("lastVisitedUrl", location.pathname);
     }
     if (!excludedRoutes.includes(location.pathname)) {
       checkLoginStatus();
     }
- }, [location.pathname])
+  }, [location.pathname])
 
 
 
   //call api
   useEffect(() => {
+
     axios.get(`${userApi}/user-profile`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -115,65 +116,97 @@ const AppProvider = ({ children }) => {
 
   useEffect(() => {
 
-    axios.get(`${siteAPI}/get-by-user-id`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    })
-      .then((res) => {
-        setSite(res.data);
-      })
-      .catch((err) => {
-        console.error("Error fetching site:", err);
-      });
 
-  }, [accessToken]);
-  useEffect(() => {
-
-    axios.get(`${activityTypeAPI}/get-all`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    })
-      .then((res) => {
-        setActivityTypes(res.data.types);
+    if (accessToken) {
+      axios.get(`${userApi}/user-profile`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       })
-      .catch((err) => {
-        console.error("Error fetching site:", err);
-      });
+        .then(res => {
+          setUser(res.data);
+        })
+        .catch(error => {
+          console.log(error.response?.data?.message);
+        });
+    }
 
   }, [accessToken]);
 
+
+
+  // get project in site
+
   useEffect(() => {
-    if (site._id) {
-      axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+
+    if (accessToken) {
+      axios.get(`${siteAPI}/get-by-user-id`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       })
         .then((res) => {
-          setProjects(res.data);
+          setSite(res.data);
         })
         .catch((err) => {
-          console.error("Error fetching projects in site:", err);
+          console.error("Error fetching site:", err);
         });
+    }
+
+  }, [accessToken]);
+
+  useEffect(() => {
+
+    if (accessToken) {
+      axios.get(`${activityTypeAPI}/get-all`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setActivityTypes(res.data.types);
+        })
+        .catch((err) => {
+          console.error("Error fetching site:", err);
+        });
+    }
+
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (accessToken) {
+      if (site._id) {
+        axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+          .then((res) => {
+            setProjects(res.data);
+          })
+          .catch((err) => {
+            console.error("Error fetching projects in site:", err);
+          });
+      }
     }
   }, [site]);
 
   // get activities by userId
   useEffect(() => {
-    if (user._id) {
-      axios.get(`${userApi}/user-activities`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-        .then((res) => {
-          setUserActivities(res.data.activities);
+    if (accessToken) {
+      if (user._id) {
+        axios.get(`${userApi}/user-activities`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
         })
-        .catch((err) => {
-          console.error("Error fetching projects in site:", err);
-        });
+          .then((res) => {
+            setUserActivities(res.data.activities);
+          })
+          .catch((err) => {
+            console.error("Error fetching projects in site:", err);
+          });
+      }
     }
   }, [user]);
 
@@ -406,13 +439,9 @@ const AppProvider = ({ children }) => {
 
       showMessage, messageHolder,
       showDeleteActivity, handleDeleteActivity, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
-
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
-
-
-      handleAddTeamMember, handleKickTeamMember,
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
