@@ -50,11 +50,11 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
           key: "siteMemberRole",
           render: (_, record) => (
               <Dropdown overlay={roleMenu(record)} trigger={["click"]} 
-              disabled={record.siteMemberRole === "siteOwner"}
+              disabled={record.siteMemberRole.includes("siteOwner")}
               >
                 <Button style={{ width: "100%", textAlign: "left" }}>
             { 
-              formatRole(record.siteMemberRole)
+              formatRole(record.siteMemberRole[0])
             } <DownOutlined style={{ float: "right" }} />
           </Button>
               </Dropdown>

@@ -18,7 +18,7 @@ import FilterProjectMember from "./FilterProjectMember";
 const ManageProjectMember = () => {
   // state
   const {projectSlug} = useParams();
-  const {user, project, projects, setProject, userApi, showNotification, projectAPI, showMessage, messageHolder} = useContext(AppContext)
+  const {user, project, userApi, showNotification, projectAPI, showMessage, messageHolder} = useContext(AppContext)
   const [userEmails, setUserEmails] = useState([]);
   const [projectRoles, setProjectRoles] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
@@ -27,8 +27,6 @@ const ManageProjectMember = () => {
   const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState();
   const [selectMemberRole, setSelectedMemberRole] = useState();
-  const nav = useNavigate();
-  const [currentProject, setCurrentProject] = useState({});
   
   // filter by name and role
   const filteredMembers = projectMembers.filter((member) => {
@@ -41,10 +39,13 @@ const ManageProjectMember = () => {
  // use effect
   useEffect(() => {
     console.clear();
+    console.log(projectSlug)
     if(!projectSlug){
       showMessage("error", "Project name not found", 2);
     }
-    fetchData();
+    if (projectSlug && project && project._id) {
+      fetchData();
+    }
   },[project])
 
   const formattedProjectMembers = (rawProjectMembers) => {
@@ -62,13 +63,10 @@ const ManageProjectMember = () => {
 
   const fetchData = async () => {
     try {
-      const currProject = projects?.find(item => item.projectSlug === projectSlug) || [];
-      setCurrentProject(currProject || {})
-      console.log(projects)
       //get project member
       if(!project)
         return;
-      const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id || currProject._id}/get-project-members`);
+      const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id}/get-project-members`);
       const projectMember = formattedProjectMembers(rawProjectMembers.data || []) || [];
       setProjectMembers(projectMember || []);
 

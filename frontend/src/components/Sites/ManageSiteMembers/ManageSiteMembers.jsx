@@ -41,7 +41,12 @@ const fetchData = async () => {
   try {
   const siteMemberData = await authAxios.get(`${siteAPI}/${site?._id}/get-site-members`);
   const memberData = siteMemberData.data.map((member, index) => {
-    return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
+    return { key: index+1,
+       siteMemberId: member._id._id,
+        siteMemberName: member._id.username,
+         siteMemberEmail: member._id.email,
+          siteMemberRole: member.roles,
+           siteMemberAvatar: member._id.userAvatar }
   })
   setTableData(memberData)
 
@@ -71,7 +76,7 @@ const fetchData = async () => {
     try {
       setInviteLoading(true)
       const invitedUserId = invitaionEmails.find(item => item.value === selectedEmail).userId;
-    console.log(selectedEmail)
+    // console.log(selectedEmail)
     await authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiverId: invitedUserId})
     showMessage("success", `Send invitation to ${selectedEmail.toString()} successfully !`, 2)
     showNotification(`👋 Invitation have been sent to ${selectedEmail.toString()} ✉`);
@@ -92,7 +97,7 @@ const fetchData = async () => {
     filteredMembers = tableData.filter(
         (member) =>
           member.siteMemberName?.toLowerCase().includes(searchTerm?.toLowerCase()) &&
-          (!selectedFilterRole || member.siteMemberRole === selectedFilterRole)
+          (!selectedFilterRole || member.siteMemberRole.includes(selectedFilterRole))
       );
   }else{
     filteredMembers = tableData.filter(

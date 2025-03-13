@@ -146,7 +146,7 @@ const ManageProjects = () => {
   // handle go to project setting
   const handleEditProject = async () => {
     try {
-      console.log("Project setting:", currentProjectSettings, selectedFile);
+      // console.log("Project setting:", currentProjectSettings, selectedFile);
       const formData = new FormData();
       formData.append("projectName", currentProjectSettings.projectName);
       if (selectedFile) {
@@ -158,7 +158,7 @@ const ManageProjects = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log(response.data)
+      // console.log(response.data)
 
 
       const result = await authAxios.get(`${projectAPI}/get-all`);
