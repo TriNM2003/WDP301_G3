@@ -11,7 +11,9 @@ import DeleteActivityModal from '../Detail/DeleteActivityModal'
 function ProjectLayout() {
     const nav = useNavigate();
     const location = useLocation();
-    const projectSlug = useParams().projectSlug;
+
+    const {projectSlug} = useParams();
+
    
     const getActiveKey = () => {
         if (location.pathname.includes("summary")) return "summary";
@@ -36,8 +38,8 @@ function ProjectLayout() {
                         <Dropdown style={{ height: "100%" }}
                             overlay={
                                 <Menu>
-                                    <Menu.Item key="1" icon={<SettingOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/project-setting`)}> Project settings</Menu.Item>
-                                    <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav("/site/project/manage/members")}> Manage members</Menu.Item>
+                                    <Menu.Item key="1" icon={<SettingOutlined />} > Project settings</Menu.Item>
+                                    <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>
                                     <Menu.Item key="3" icon={<DeleteOutlined style={{ color: red[6] }} />} > Delete project</Menu.Item>
 
                                 </Menu>

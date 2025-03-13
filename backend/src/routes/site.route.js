@@ -8,6 +8,7 @@ const { siteController } = require("../controllers");
 const authMiddleware = require("../middlewares/auth.middleware");
 const adminMiddleware = require("../middlewares/admin.middleware");
 const siteMiddleware = require("../middlewares/site.middleware");
+const { siteService } = require("../services");
 const siteRouter = express.Router({mergeParams: true});
 
 siteRouter.use(bodyParser.json());
@@ -30,6 +31,9 @@ siteRouter.put("/:siteId/deactivate",
     [verifyAccessToken, siteMiddleware.isInSite],
     siteController.deactivateSite
 );
+siteRouter.get("/:siteId/get-invitations-by-site",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.getInvitaionsBySiteId); //hung
+siteRouter.delete("/:siteId/cancel-Invitation",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.cancelInvitationById);
+
 siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],
     siteController.getSiteByUserId

@@ -22,6 +22,10 @@ const stageSchema = new mongoose.Schema({
     parent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'stage'
+    },
+    isDestroyed:{
+        type:Boolean,
+        default:false
     }
 }, { timestamps: true });
 

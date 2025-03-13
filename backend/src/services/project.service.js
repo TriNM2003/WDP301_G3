@@ -99,7 +99,44 @@ const createProject = async (projectData, creatorId, siteId) => {
     }
 };
 
-const editProject = async (projectId, projectName, projectSlug, file) => {
+// site owner tao project va assign project manager
+const createProjectV2 = async (siteId, projectManagerId, projectName) => {
+    const site = await db.Site.findById(siteId);
+    if(!site){
+        throw new Error("Site does not exist");
+    }
+    const projectManager = await db.User.findById(projectManagerId);
+    if(!projectManager){
+        throw new Error("User does not exist");
+    }
+
+    const siteMember = site.siteMember.find(member => member._id?.toString() === projectManager._id?.toString());
+    if(!siteMember){
+        throw new Error("Assigned user is not a member of site");
+    }
+
+    const projectSlug = slugify(projectName);
+    const newProject = await db.Project.create({
+        projectName: projectName,
+        projectSlug: projectSlug,
+        projectStatus: "active",
+        projectMember: [{_id: projectManager._id, roles:["projectManager"]}],
+        site: site._id,
+        projectRoles: ["projectManager", "projectMember"],
+        projectAvatar: "https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg",
+    })
+
+    //theo project vao user
+    await db.User.findOneAndUpdate(
+        {_id: projectManager._id},
+        {$addToSet: {projects: newProject._id}}
+    )
+
+    return newProject;
+}
+
+const editProject = async (projectId, projectName, file) => {
+
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
@@ -245,24 +282,31 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
         }
 
         //add project member
-        project.projectMember = [...project.projectMember, {
-            _id: projectMember._id,
-            roles: [projectMemberRole]
-        }]
-        await project.save();
-        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
+        const updatedProject = await db.Project.findOneAndUpdate(
+            {_id: projectId},
+            {$addToSet: {projectMember: {_id: projectMemberId, roles: projectMemberRole}} },
+            { new: true}
+        ).populate("projectMember._id");
 
         // cap nhap project trong user
-        projectMember.projects = [...projectMember.projects, updatedProject._id];
-        await projectMember.save();
+        await db.User.findOneAndUpdate(
+            {_id: projectMember._id},
+            {$addToSet: {projects: projectId}}
+        )
 
-        return updatedProject.projectMember;
+        const updatedProjectMember = updatedProject?.projectMember?.map(member => {
+            return {
+                projectMember: member._id,
+                roles: member.roles
+            }
+        })
+        return updatedProjectMember;
     } catch (error) {
         throw error;
     }
 }
 
-const editProjectMemberRole = async (projectId, projectMemberId, newRole) => {
+const editProjectMemberRole = async (projectId, projectMemberId, updatedRoleList) => {
     try {
         // console.log(projectId, projectMemberId, newRole); return "ok"
         const project = await db.Project.findById(projectId);
@@ -282,13 +326,13 @@ const editProjectMemberRole = async (projectId, projectMemberId, newRole) => {
 
 
         //edit project member from project
-        const memberToEdit = project.projectMember.find(member => member._id.toString() === projectMemberId)
-        memberToEdit.roles = [newRole];
-        await project.save();
-        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
+        const projectMemberList = await db.Project.findOneAndUpdate(
+            { "projectMember._id": projectMemberId },
+            { $set: { "projectMember.$.roles":  updatedRoleList} }, 
+            { new: true } 
+        ).select("projectMember")
 
-
-        return updatedProject.projectMember;
+        return projectMemberList;
     } catch (error) {
         throw error;
     }
@@ -329,19 +373,30 @@ const removeProjectMember = async (projectId, projectMemberId) => {
         }
 
         //remove project member from project
-        const filteredList = project.projectMember.filter(member => member._id.toString() !== projectMemberId)
-        project.projectMember = filteredList;
-        await project.save();
+        let updatedProject = await db.Project.findOneAndUpdate(
+            { _id: projectId },
+            { $pull: { projectMember: { _id: projectMemberId } } },
+            { new: true}
+        );
+        updatedProject = await updatedProject.populate("projectMember._id");
 
         // remove project from member
-        const updatedProject = await db.Project.findById(projectId).populate("projectMember._id");
-        const filteredProjectList = projectMember.projects.filter(project => project._id.toString() !== updatedProject._id.toString())
-        projectMember.projects = filteredProjectList;
-        await projectMember.save();
+        await db.User.findOneAndUpdate(
+            {_id: projectMemberId },
+            {$pull: {projects: projectId}}
+        )
 
-        return updatedProject.projectMember;
+        const data = updatedProject?.projectMember?.map(member => {
+            return {
+                projectMember: member._id,
+                roles: member.roles
+            }
+        })
+        console.log(data)
+        return data;
     } catch (error) {
-        throw error;
+        console.log(error);
+        return error;
     }
 }
 
@@ -352,7 +407,7 @@ const projectService = {
     getProjectById,
     getAllProjects,
     getProjectsInSite,
-    createProject,
+    createProject, createProjectV2,
     editProject,
     removeToTrash,
     restoreProject,

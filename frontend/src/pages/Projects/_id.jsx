@@ -13,7 +13,7 @@ import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 
 function _id() {
-    const {activity, project, setProject,activityLoading,isActivityTitle, setIsActivityTitle, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
+    const {activity, project, setProject,activityLoading,isActivityTitle,stages, setStages, setIsActivityTitle, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
     const { projectSlug } = useParams();
     useEffect(() => {
         const selectedProject = projects?.find((p) => p.projectSlug == projectSlug)
@@ -31,6 +31,18 @@ function _id() {
                 .catch((err) => {
                     console.error("Error fetching projects in site:", err);
                 });
+
+                axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/stages/get-all`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                })
+                    .then((res) => {
+                        setStages(res.data?.stages);
+                    })
+                    .catch((err) => {
+                        console.error("Error fetching projects in site:", err);
+                    });    
 
             axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/sprints/get-by-project`, {
                 headers: {
