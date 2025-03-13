@@ -52,14 +52,12 @@ projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
-    siteMiddleware.isSiteOwner,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
-    siteMiddleware.isSiteOwner,
     projectMiddleware.isProjectManager,
     projectController.removeToTrash
 );
@@ -68,7 +66,6 @@ projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
-    siteMiddleware.isSiteOwner,
     projectController.getProjectTrash
 );
 
@@ -76,7 +73,6 @@ projectRouter.put("/:projectId/restore",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
-    siteMiddleware.isSiteOwner,
     projectController.restoreProject
 );
 
@@ -84,7 +80,6 @@ projectRouter.delete("/:projectId/destroy",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
-    siteMiddleware.isSiteOwner,
     projectController.destroyProject
 );
 
