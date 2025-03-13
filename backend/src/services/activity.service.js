@@ -19,6 +19,21 @@ const getActivitiesByProjectId = async (projectId) => {
     }
 }
 
+const getById = async (id) => {
+    try {
+        const activity = await db.Activity.findById(id)
+            .populate("createBy")
+            .populate("assignee")
+            .populate("type")
+            .populate("project")
+            .populate("sprint")
+            .populate("stage");
+        return activity;
+    } catch (error) {
+        throw error;
+    }
+}
+
 const create = async (data, project) => {
     try {
         const {
@@ -53,30 +68,50 @@ const create = async (data, project) => {
 
 const edit = async (data, activityId) => {
     try {
+        const activity = await db.Activity.findById(activityId);
         const {
             activityTitle,
             description,
             parent,
             sprint,
             stage,
+            priority,
             startDate,
             dueDate,
             child,
         } = data;
 
-        const updatedActivity = await db.Activity.findByIdAndUpdate(
-            activityId,
-            {
-                activityTitle,
-                description,
-                parent,
-                sprint,
-                stage,
-                startDate,
-                dueDate,
-                child,
+        const updatedActivity = await db.Activity.findOneAndUpdate(
+            // activityId,
+            // {
+            //     activityTitle,
+            //     description,
+            //     parent,
+            //     sprint,
+            //     stage,
+            //     priority,
+            //     startDate,
+            //     dueDate,
+            //     child,
 
+            // },
+            // { new: true, runValidators: true }
+            { _id: activityId },
+
+            {
+                $set: {
+                    activityTitle: activityTitle || activity?.activityTitle,
+                    description: description,
+                    parent: parent || activity?.parent,
+                    sprint: sprint || activity?.sprint,
+                    stage: stage || activity?.stage,
+                    priority: priority || activity?.priority,
+                    startDate: startDate || activity?.startDate,
+                    dueDate: dueDate || activity?.dueDate,
+                    child: child || activity?.child,
+                }
             },
+
             { new: true, runValidators: true }
 
         )
@@ -101,6 +136,35 @@ const assignMember = async (data, activityId) => {
         if (!updatedActivity) {
             throw new Error("Activity not found");
         }
+        const updateUser = await db.User.findByIdAndUpdate(
+            data,
+            { $addToSet: { activities: activityId } },
+            { new: true, runValidators: true }
+        )
+
+        return updatedActivity;
+    } catch (error) {
+        throw error;
+    }
+};
+
+const removeAssignMember = async (data, activityId) => {
+    try {
+
+        const updatedActivity = await db.Activity.findByIdAndUpdate(
+            activityId,
+            { $pull: { assignee: data } }, // Tránh trùng lặp thành viên
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedActivity) {
+            throw new Error("Activity not found");
+        }
+        const updateUser = await db.User.findByIdAndUpdate(
+            data,
+            { $pull: { activities: activityId } },
+            { new: true, runValidators: true }
+        )
 
         return updatedActivity;
     } catch (error) {
@@ -132,9 +196,11 @@ const remove = async (activityId) => {
 
 const activityService = {
     getActivitiesByProjectId,
+    getById,
     create,
     edit,
     assignMember,
+    removeAssignMember,
     remove
 }
 
