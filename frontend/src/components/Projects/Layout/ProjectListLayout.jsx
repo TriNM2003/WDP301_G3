@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom'
 
 function ProjectListLayout() {
   return (
-    <Layout style={{ minHeight: "100%", background:"white" }}><Outlet /></Layout>
+    <Layout style={{ height: "100%", background:"white" }}><Outlet /></Layout>
   )
 }
 

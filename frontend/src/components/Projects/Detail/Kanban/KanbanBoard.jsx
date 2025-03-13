@@ -14,7 +14,7 @@ import CompleteSprintModal from "../Sprint/CompleteSprintModal";
 const { Title } = Typography;
 
 const KanbanBoard = () => {
-    const { showNotification, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+    const { showNotification,stages,setStages, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
 
     const columns = ["To Do", "In Progress", "Review", "Done", "Done 2"];
 
@@ -83,12 +83,17 @@ const KanbanBoard = () => {
                 top: 0,
                 zIndex: 10, margin: "0 2%", flexWrap: "nowrap"
             }}>
-                <KanbanTitle column={"COLUMN"} />
+                {stages?.map((stage)=>{
+                    return <KanbanTitle stage={stage} />
+                })}
+                
 
             </Row>
             <Row gutter={16} style={{ height: `83 % `, margin: "0 2%", flexWrap: "nowrap" }}>
-                <KanbanBody />
 
+                {stages?.map((stage)=>{
+                    return <KanbanBody stage={stage} />
+                })}
             </Row>
         </div>
     );
