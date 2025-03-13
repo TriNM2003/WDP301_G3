@@ -11,7 +11,9 @@ import DeleteActivityModal from '../Detail/DeleteActivityModal'
 function ProjectLayout() {
     const nav = useNavigate();
     const location = useLocation();
+
     const {projectSlug} = useParams();
+
    
     const getActiveKey = () => {
         if (location.pathname.includes("summary")) return "summary";

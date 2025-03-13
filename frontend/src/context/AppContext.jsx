@@ -378,13 +378,6 @@ const AppProvider = ({ children }) => {
 
   };
 
-  const handleAddTeamMember = () => {
-    showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
-  }
-
-  const handleKickTeamMember = () => {
-    showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
-  }
 
   return (
     <AppContext.Provider value={{
@@ -401,11 +394,13 @@ const AppProvider = ({ children }) => {
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
+
       handleAddTeamMember, handleKickTeamMember,
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
       handleMoveActivity
+
 
     }}>
       {children}

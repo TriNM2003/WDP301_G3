@@ -136,6 +136,7 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
 }
 
 const editProject = async (projectId, projectName, file) => {
+
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
@@ -149,27 +150,43 @@ const editProject = async (projectId, projectName, file) => {
             throw new Error("Failed to upload image");
         }
     }
+    
+    const newProject = {
+        projectName: projectName || project.projectName,
+        projectSlug: projectSlug || project.projectSlug,
+        projectAvatar: newProjectAvatar
+    }
 
-    project.projectName = projectName;
-    project.projectAvatar = newProjectAvatar;
-    project.projectSlug = slugify(projectName);
-    return await project.save();
+    return await db.Project.findByIdAndUpdate(projectId, {
+        $set: {
+            projectName: newProject.projectName,
+            projectSlug: newProject.projectSlug,
+            projectAvatar: newProject.projectAvatar
+        }
+    }, { new: true });
+
 };
 
 const removeToTrash = async (projectId) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
-
-    project.projectStatus = "archived";
-    return await project.save();
+    
+    return await db.Project.findByIdAndUpdate(projectId, {
+        $set: {
+            projectStatus: "archived"
+        }
+    }, { new: true });
 };
 
 const restoreProject = async (projectId) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
-    project.projectStatus = "active";
-    return await project.save();
+    return await db.Project.findByIdAndUpdate(projectId, {
+        $set: {
+            projectStatus: "active"
+        }
+    }, { new: true });
 };
 
 const getProjectTrash = async (siteId, userId) => {
@@ -209,13 +226,16 @@ const getProjectTrash = async (siteId, userId) => {
     }
 };
 
-const deleteProject = async (projectId) => {
+const destroyProject = async (projectId) => {
     const project = await db.Project.findById(projectId);
     if (!project) throw new Error("Project not found");
-
-    // chuyen project sang trang thai destroyed
-    project.projectStatus = "destroyed";
-    await project.save();
+    
+    // chuyen project sang trang thai destroyed dung query mongodb
+    return await db.Project.findByIdAndUpdate(projectId, {
+        $set: {
+            projectStatus: "destroyed"
+        }
+    }, { new: true });
 };
 
 
@@ -392,7 +412,7 @@ const projectService = {
     removeToTrash,
     restoreProject,
     getProjectTrash,
-    deleteProject,
+    destroyProject,
     getProjectMembersById,
     addProjectMember,
     removeProjectMember,
