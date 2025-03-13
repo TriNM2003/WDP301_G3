@@ -58,7 +58,7 @@ import Stage from './pages/Stage/Stage';
 function App() {
 
 
-  const { accessToken } = useContext(AppContext)
+  const { accessToken, site, user } = useContext(AppContext)
 
 
   return (
@@ -96,6 +96,7 @@ function App() {
                 <Route path="edit-profile" element={<EditProfile />} />
               </Route>
               <Route path="/profile/confirm-delete" element={<ConfirmDelete />} />
+              {site?.siteStatus != "deactivated" &&
               <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
 
@@ -142,10 +143,9 @@ function App() {
                   </Route>
                 </Route>
 
-              </Route>
+              </Route>}
               <Route path="stage" element={<Stage />} />
 
-              <Route path='/create-site' element={<CreateSite />} />
 
               <Route path='/manage-sites' element={<ManageSites />} />
 

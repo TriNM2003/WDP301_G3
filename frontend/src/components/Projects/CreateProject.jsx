@@ -17,7 +17,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
   useEffect(() => {
     if (site._id && accessToken) {
       axios
-        .get(`http://localhost:9999/sites/${site._id}/get-site-members`, {
+        .get(`http://localhost:9999/sites/${site._id}/members`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
         .then((res) => {
@@ -33,15 +33,15 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
   
   // Lọc thành viên theo từ khóa tìm kiếm
   const filteredUsers = searchTerm
-    ? siteMembers.filter(
+    ? siteMembers?.filter(
       (member) =>
-        member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase())
+        member.username?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+        member.email?.toLowerCase().includes(searchTerm?.toLowerCase())
     )
     : siteMembers;
 
   // Chỉ hiển thị tối đa 5 thành viên, nếu nhiều hơn sẽ có scroll
-  const visibleUsers = filteredUsers.slice(0, 5);
+  const visibleUsers = filteredUsers?.slice(0, 5);
 
   // Chọn thành viên vào danh sách
   const handleSelectUser = (member) => {
@@ -64,18 +64,18 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
 const handleCreateProject = async (values) => {
   // Kiểm tra nếu input có giá trị nhưng chưa được chọn từ danh sách
   if (searchTerm && !siteMembers.some(member => 
-      member.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()))) {
+      member.username?.toLowerCase().includes(searchTerm?.toLowerCase()) || 
+      member.email?.toLowerCase().includes(searchTerm?.toLowerCase()))) {
     setInputError("Member not exist in this site");
     return;
   }
 
   // Kiểm tra nếu tất cả thành viên được chọn đều thuộc site
   const invalidMembers = selectedUsers.filter(member => 
-    !siteMembers.some(siteMember => siteMember._id === member._id)
+    !siteMembers?.some(siteMember => siteMember?._id === member?._id)
   );
 
-  if (invalidMembers.length > 0) {
+  if (invalidMembers?.length > 0) {
     message.error("Some selected members are not part of the site. Please check again.");
     return;
   }
