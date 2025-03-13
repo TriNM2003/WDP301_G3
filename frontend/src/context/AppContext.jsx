@@ -22,11 +22,16 @@ const AppProvider = ({ children }) => {
   const location = useLocation();
   const nav = useNavigate();
 
+  const [messageApi, messageHolder] = message.useMessage();
+
+
+
   //Project
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
   //Stage
   const [stages, setStages] = useState([]);
+
 
   // Activity
   const [activityTypes, setActivityTypes] = useState([]);
@@ -71,20 +76,20 @@ const AppProvider = ({ children }) => {
 
 
 
-
-
-
-
-  //call api
-  useEffect(() => {
+ // check token
+ useEffect(() => {
     if (location.pathname !== '/login') {
       localStorage.setItem("lastVisitedUrl", location.pathname);
     }
     if (!excludedRoutes.includes(location.pathname)) {
       checkLoginStatus();
     }
+ }, [location.pathname])
 
 
+
+  //call api
+  useEffect(() => {
     axios.get(`${userApi}/user-profile`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -96,7 +101,7 @@ const AppProvider = ({ children }) => {
       .catch(error => {
         console.log(error.response?.data?.message);
       });
-  }, [location.pathname]);
+  }, []);
 
 
 
@@ -189,6 +194,13 @@ const AppProvider = ({ children }) => {
 
 
   //fuction
+  const showMessage = (type, content, duration) => {
+    messageApi.open({
+      type: type,
+      content: content,
+      duration: duration
+    });
+  }
 
   const showNotification = (message, description) => {
     notification.info({
@@ -382,7 +394,10 @@ const AppProvider = ({ children }) => {
       //setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,
       showNotification,
-      showDeleteActivity, handleDeleteActivity, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
+
+      showMessage, messageHolder,
+      showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
+
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
