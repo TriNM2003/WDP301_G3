@@ -73,7 +73,6 @@ const ProjectList = () => {
     }
   };
   const handleCreateProject = (values) => {
-    console.log("New Project Data:", values);
     setShowCreateModal(false);
   };
   const sortedProjects = [...filteredProjectsByUser].sort((a, b) => {
@@ -100,7 +99,17 @@ const ProjectList = () => {
   return (
     
       <Layout>
-        <Content style={{ padding: "0px 20px", textAlign: "left" }}>
+        <Content   
+        style={{
+        padding: "20px",
+        textAlign: "left",
+        width: "100%",
+        maxWidth: "100vw",
+        overflowX: "hidden",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+    }}>
 
           <div style={{
             display: "flex",
@@ -216,7 +225,7 @@ const ProjectList = () => {
               )}
 
               <List
-                grid={{ gutter: 48, column: 4 }}
+                grid={{ gutter: 60, column: 4 }}
                 dataSource={displayedProjects}
                 style={{ marginTop: searchQuery ? "20px" : "0px" }}
             

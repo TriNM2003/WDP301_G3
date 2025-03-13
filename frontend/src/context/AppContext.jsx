@@ -7,10 +7,11 @@ import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
-const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password", "/processing-invitation"];
+const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password", "/processing-invitation", "/processing-invitation"];
 
 const AppProvider = ({ children }) => {
   //parameter
+
 
   const accessToken = localStorage.getItem("accessToken");
 
@@ -19,8 +20,10 @@ const AppProvider = ({ children }) => {
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
   const [site, setSite] = useState({})
 
+
   const location = useLocation();
   const nav = useNavigate();
+
 
   const [messageApi, messageHolder] = message.useMessage();
 
@@ -43,12 +46,16 @@ const AppProvider = ({ children }) => {
   const [activityName, setActivityName] = useState("");
   const [isActivityTitle, setIsActivityTitle] = useState(false)
   const [activityLoading, setActivityLoading] = useState(false)
-
   const [userActivities, setUserActivities] = useState([]);
   // Team
 
   const [teams, setTeams] = useState({});
 
+
+
+
+  //parameter
+  const [user, setUser] = useState({});
 
   const [activities, setActivities] = useState([]);
   const [activity, setActivity] = useState({});
@@ -59,10 +66,6 @@ const AppProvider = ({ children }) => {
 
 
 
-  //parameter
-  const [user, setUser] = useState({});
-
-
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
@@ -71,25 +74,28 @@ const AppProvider = ({ children }) => {
   const activityTypeAPI = "http://localhost:9999/activityTypes";
 
 
+
   // State lưu thông tin user & accessToken
 
 
 
 
- // check token
- useEffect(() => {
+
+  useEffect(() => {
+
     if (location.pathname !== '/login') {
       localStorage.setItem("lastVisitedUrl", location.pathname);
     }
     if (!excludedRoutes.includes(location.pathname)) {
       checkLoginStatus();
     }
- }, [location.pathname])
+  }, [location.pathname])
 
 
 
   //call api
   useEffect(() => {
+
     axios.get(`${userApi}/user-profile`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -105,71 +111,106 @@ const AppProvider = ({ children }) => {
 
 
 
+
   // get project in site
 
   useEffect(() => {
 
-    axios.get(`${siteAPI}/get-by-user-id`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    })
-      .then((res) => {
-        setSite(res.data);
-      })
-      .catch((err) => {
-        console.error("Error fetching site:", err);
-      });
 
-  }, [accessToken]);
-  useEffect(() => {
-
-    axios.get(`${activityTypeAPI}/get-all`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    })
-      .then((res) => {
-        setActivityTypes(res.data.types);
+    if (accessToken) {
+      axios.get(`${userApi}/user-profile`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       })
-      .catch((err) => {
-        console.error("Error fetching site:", err);
-      });
+        .then(res => {
+          setUser(res.data);
+        })
+        .catch(error => {
+          console.log(error.response?.data?.message);
+        });
+    }
 
   }, [accessToken]);
 
+
+
+  // get project in site
+
   useEffect(() => {
-    if (site._id) {
-      axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+
+    if (accessToken) {
+      axios.get(`${siteAPI}/get-by-user-id`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       })
         .then((res) => {
-          setProjects(res.data);
+          setSite(res.data);
         })
         .catch((err) => {
-          console.error("Error fetching projects in site:", err);
+          console.error("Error fetching site:", err);
         });
+    }
+
+  }, [accessToken]);
+
+  useEffect(() => {
+
+    if (accessToken) {
+      axios.get(`${activityTypeAPI}/get-all`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setActivityTypes(res.data.types);
+        })
+        .catch((err) => {
+          console.error("Error fetching site:", err);
+        });
+    }
+
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (accessToken) {
+      if (site._id) {
+        axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+          .then((res) => {
+            setProjects(res.data);
+          })
+          .catch((err) => {
+            console.error("Error fetching projects in site:", err);
+          });
+      }
     }
   }, [site]);
 
   // get activities by userId
   useEffect(() => {
-    if (user._id) {
-      axios.get(`${userApi}/user-activities`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-        .then((res) => {
-          setUserActivities(res.data.activities);
+    if (accessToken) {
+      if (user._id) {
+        axios.get(`${userApi}/user-activities`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
         })
-        .catch((err) => {
-          console.error("Error fetching projects in site:", err);
-        });
+          .then((res) => {
+            setUserActivities(res.data.activities);
+          })
+          .catch((err) => {
+            console.error("Error fetching projects in site:", err);
+          });
+      }
     }
   }, [user]);
+
+
 
 
   // get teams in site
@@ -188,6 +229,7 @@ const AppProvider = ({ children }) => {
         });
     }
   }, [site]);
+
 
 
 
@@ -344,13 +386,13 @@ const AppProvider = ({ children }) => {
     setActivityModal(true);
     setActivity(activity)
 
-
   };
 
   const closeActivity = () => {
     setActivityModal(false);
     setActivity()
   };
+
 
 
   //Complete sprint
@@ -378,6 +420,13 @@ const AppProvider = ({ children }) => {
 
   };
 
+  const handleAddTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+  }
+
+  const handleKickTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
+  }
 
   return (
     <AppContext.Provider value={{
@@ -390,11 +439,9 @@ const AppProvider = ({ children }) => {
 
       showMessage, messageHolder,
       showDeleteActivity, handleDeleteActivity, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
-
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
-
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
@@ -406,6 +453,6 @@ const AppProvider = ({ children }) => {
     </AppContext.Provider>
   );
 };
-
+  
 
 export default AppProvider;

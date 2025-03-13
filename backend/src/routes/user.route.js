@@ -52,6 +52,11 @@ userRouter.get("/user-activities",
 
 );
 
+// getUserInfoByUserIdFromParams
+userRouter.get("/user/:userId",
+    authMiddleware.verifyAccessToken,
+    UserController.getUserInfoByUserIdFromParams
+);
 userRouter.get("/:userId/get-user-by-id",
     authMiddleware.verifyAccessToken,
     UserController.getOtherUserById

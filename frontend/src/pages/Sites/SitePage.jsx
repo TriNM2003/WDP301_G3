@@ -12,8 +12,8 @@ const { Content } = Layout;
 
 
 const colors = [
-    "magenta", "red", "volcano", "orange", "gold",
-    "lime", "green", "cyan", "blue", "geekblue", "purple"
+    "#ff85c0", "#b37feb", "#91d5ff", "#87e8de", "#95de64",
+    "#bae637", "#fff566", "#ffd666", "#ffd591", "#ffbb96", "#ffa39e"
 ];
 
 
@@ -50,7 +50,7 @@ const ProjectList = () => {
 
 
     const filteredProjectsByUser = Array.isArray(projects)
-        ? projects.filter((project) =>
+        ? projects?.filter((project) =>
             project.projectMember?.some(member => member._id?._id === user._id)
         )
         : [];
@@ -87,7 +87,7 @@ const ProjectList = () => {
     // projectMember.find(member => member._id === user._id)
     const recentProjects = Array.isArray(projects)
         ? projects
-            .filter(project => project.projectMember.some(member => member._id?._id === user._id))
+            ?.filter(project => project.projectMember.some(member => member._id?._id === user._id))
             .map(project => ({
                 ...project,
                 lastUpdated: project?.updatedAt || null
@@ -100,7 +100,7 @@ const ProjectList = () => {
 
     // filter activities by week
     const filterActivitiesByWeek = (weekStart, weekEnd) => {
-        return userActivities.filter((activity) => {
+        return userActivities?.filter((activity) => {
             const start = dayjs(activity.startDate);
             const end = dayjs(activity.dueDate);
             return (
@@ -119,6 +119,7 @@ const ProjectList = () => {
     );
     const weeklyActivities = filterActivitiesByWeek(currentWeekStart, currentWeekEnd);
 
+    
 
 
     // Tính số project active của user hiện tại
@@ -141,10 +142,19 @@ const ProjectList = () => {
     }).length;
 
 
-
     return (
         <Layout>
-            <Content style={{ padding: "10px 10px", textAlign: "left" }}>
+            <Content 
+            style={{ 
+                padding: "10px 10px",
+                textAlign: "left",
+                width: "100%",
+                maxWidth: "100%",
+                overflowX: "hidden",
+                maxHeight: "100%", 
+                display: "flex",
+                flexDirection: "column", 
+                }}>
                 <Row gutter={[16, 16]}>
                     <Col xs={24} md={15}>
                         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -232,7 +242,7 @@ const ProjectList = () => {
                                                     <div
                                                         className="project-card-bg"
                                                         style={{
-                                                            background: `url(${project.projectAvatar}) center/cover no-repeat`,
+                                                            background: `url(${project?.projectAvatar}) center/cover no-repeat`,
                                                             height: "100px",
                                                             width: "95%",
                                                             margin: "5px auto 0px",
@@ -241,7 +251,8 @@ const ProjectList = () => {
                                                     />
                                                 }
                                                 bodyStyle={{ padding: "7px" }}
-                                                onClick={() => navigate(`${project.projectSlug}`)}
+                                                onClick={() => navigate(`/site/list/projects/${project.projectSlug}`)} 
+                                                
                                             >
                                                 <Title level={5} style={{ margin: "0", textAlign: "left" }}>
                                                     {project?.projectName}
@@ -269,7 +280,7 @@ const ProjectList = () => {
                                                     >
                                                         {/* Team Avatars */}
                                                         <Avatar.Group maxCount={3}>
-                                                            {project.projectMember
+                                                            {project?.projectMember
                                                                 ?.filter(member => member.roles.includes("projectMember")) // Chỉ lấy những thành viên có role là "projectMember"
                                                                 .map((member) => (
                                                                     <Tooltip
@@ -412,13 +423,12 @@ const ProjectList = () => {
                                             return (
                                                 <div
                                                     key={item.id}
-                                                    onClick={() => navigate(`/list/projects/${item.project?.projectSlug}`)}
-
+                                                    onClick={() => navigate(`/site/list/projects/${item.project?.projectSlug}`)}
                                                     style={{
                                                         gridColumn: `${startIndex + 1} / span ${span}`,
                                                         background: "white",
                                                         padding: "8px",
-                                                        borderLeft: `4px solid  ${getUniqueColor(item.activityTitle)}`,
+                                                        borderLeft: `4px solid  ${getUniqueColor(item?.activityTitle)}`,
                                                         borderRadius: "8px",
                                                         boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
                                                         cursor: "pointer",

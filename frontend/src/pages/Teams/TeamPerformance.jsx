@@ -1,9 +1,15 @@
-import React, { useState } from "react";
-import { Layout, Card, Row, Col, Menu, Select, Tooltip, DatePicker, List, Typography, Avatar, Input, Table, Button, Modal } from "antd";
-
+import React, { useContext, useState, useEffect } from "react";
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Layout, Card, Row, Col, Menu, Select, Tooltip, DatePicker, List, Typography, Avatar, Input, Table, Button, Modal, Tag } from "antd";
 import { TeamOutlined, ProjectOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, CalendarOutlined, SearchOutlined } from "@ant-design/icons";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import dayjs from "dayjs";
+import { AppContext } from "../../context/AppContext";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 const { Sider, Content } = Layout;
 const { Option } = Select;
@@ -12,80 +18,6 @@ const { Title, Text } = Typography;
 
 const COLORS = ["#FF8042", "#FFBB28", "#00C49F", "#0088FE"];
 
-
-
-const team = {
-  teamName: "Frontend Dev Team",
-  teamLeader: "Alice Johnson",
-  teamMembers: [
-    { _id: "1", name: "Bob Smith", avatar: "https://randomuser.me/api/portraits/men/2.jpg" },
-    { _id: "2", name: "Charlie Brown", avatar: "https://randomuser.me/api/portraits/men/3.jpg" },
-    { _id: "3", name: "David White", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-    { _id: "4", name: "Hao", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-    { _id: "5", name: "Tran", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-    { _id: "6", name: "Huu", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-    { _id: "7", name: "NJZ", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-    { _id: "8", name: "Huhu", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-  ],
-};
-
-
-const activities = [
-  { _id: "1", title: "Task 1", project: "Project A", stage: "To Do", createdAt: "2025-02-01", assignee: "Bob Smith" },
-  { _id: "2", title: "Task 2", project: "Project B", stage: "In Progress", createdAt: "2025-02-02", assignee: "Charlie Brown" },
-  { _id: "3", title: "Task 3", project: "Project C", stage: "Review", createdAt: "2025-02-03", assignee: "David White" },
-  { _id: "4", title: "Task 4", project: "Project A", stage: "Done", createdAt: "2025-02-04", assignee: "Bob Smith" },
-  { _id: "5", title: "Task 5", project: "Project F", stage: "Done", createdAt: "2025-02-05", assignee: "Charlie Brown" },
-  { _id: "6", title: "Task 6", project: "Project C", stage: "In Progress", createdAt: "2025-02-06", assignee: "David White" },
-];
-
-
-// Dữ liệu mẫu
-const rawData = {
-  stageData: [
-    { name: "To Do", value: 15 },
-    { name: "In Progress", value: 25 },
-    { name: "Review", value: 10 },
-    { name: "Done", value: 28 },
-  ],
-  projectData: [
-    { name: "Project A", todo: 5, inProgress: 10, review: 3, done: 12 },
-    { name: "Project E", todo: 7, inProgress: 8, review: 5, done: 10 },
-    { name: "Project C", todo: 3, inProgress: 7, review: 2, done: 6 },
-  ],
-  performanceData: [
-    { date: "2025-02-01", Hao: 5, Charlie: 7, David: 4 },
-    { date: "2025-02-08", B: 8, Charlie: 10, David: 6 },
-    { date: "2025-02-15", Hao: 12, Charlie: 14, David: 9, N: 19 },
-    { date: "2025-02-22", Hao: 15, Charlie: 18, David: 12 },
-    { date: "2025-03-01", Hao: 10, Charlie: 12, David: 8 },
-    { date: "2024-03-08", Hao: 14, Charlie: 16, David: 11 },
-    { date: "2024-04-01", A: 16, Charlie: 18, David: 14 },
-  ],
-};
-
-const aggregatedProjectData = [
-  { name: "Project A", "To Do": 5, "In Progress": 8, Review: 3, Done: 10 },
-  { name: "Project b", "To Do": 6, "In Progress": 7, Review: 4, Done: 9, no: 1 },
-  { name: "Project C", "To Do": 6, "In Progress": 7, Review: 4, Done: 9, no: 1 },
-  { name: "Project D", "To Do": 6, "In Progress": 7, Review: 4, Done: 9, no: 1 },
-  { name: "Project E", "To Do": 6, "In Progress": 7, Review: 4, Done: 9, no: 1 },
-  { name: "Project F", "To Do": 5, "In Progress": 8, Review: 3, Done: 10 },
-  { name: "Project G", "To Do": 6, "In Progress": 7, Review: 4, Done: 9, no: 1 },
-
-];
-
-const memberPerformanceData = [
-  { date: "2025-02-01", "Bob Smith": 10, "Charlie Brown": 0, "David White": 0 },
-  { date: "2025-02-02", "Bob Smith": 10, "Charlie Brown": 1, "David White": 0 },
-  { date: "2025-02-03", "Bob Smith": 10, "Charlie Brown": 1, "David White": 1 },
-  { date: "2024-02-04", "Bob Smith": 20, "Charlie Brown": 1, "David White": 1 },
-  { date: "2024-02-05", "Bob Smith": 20, "Charlie Brown": 2, "David White": 1 },
-  { date: "2024-02-06", "Bob Smith": 20, "Charlie Brown": 2, "David White": 2 },
-  { date: "2025-02-04", "Bob Smith": 20, "Charlie Brown": 1, "David White": 1 },
-  { date: "2025-02-05", "Bob Smith": 20, "Charlie Brown": 2, "David White": 1 },
-  { date: "2025-02-06", "Bob Smith": 20, "Charlie Brown": 2, "David White": 2 },
-];
 
 
 
@@ -102,20 +34,62 @@ const TeamPerformance = () => {
   const [assigneeFilter, setAssigneeFilter] = useState("All");
   const [dateRange, setDateRange] = useState([null, null]);
   const [modalVisible, setModalVisible] = useState(false);
+  const { teams, siteAPI, site, accessToken } = useContext(AppContext);
+  const [activities, setActivities] = useState([]);
+  const { teamSlug } = useParams();
+  const navigate = useNavigate();
+
+  const team = Array.isArray(teams)
+    ? teams.find(team => team?.teamSlug === teamSlug)
+    : null;
+
+
+  useEffect(() => {
+    if (site._id && accessToken) {
+      axios
+        .get(`${siteAPI}/${site._id}/teams/${teamSlug}`, {
+          headers: { Authorization: `Bearer ${accessToken} ` },
+        })
+        .then((res) => {
+          setActivities(res.data.activities); // Loại bỏ user hiện tại
+        })
+        .catch((err) => {
+          console.error("Error fetching site members:", err);
+        });
+    }
+  }, [site, teamSlug, accessToken]);
+
+
+  const filteredActivitiesForChart = activities?.filter((activity) => {
+    return selectedStatus === "All" || activity.stage?.stageName === selectedStatus;
+  });
+
+  // 🔹 Tạo danh sách đếm số lượng activity theo từng stage từ dữ liệu đã lọc
+  const stageData = filteredActivitiesForChart.reduce((acc, activity) => {
+    const stageName = activity.stage?.stageName || "Unknown"; // Kiểm tra nếu thiếu stage
+    acc[stageName] = (acc[stageName] || 0) + 1;
+    return acc;
+  }, {});
+
+  // 🔹 Chuyển Object thành Array [{ name: "Stage", value: số lượng }]
+  const filterStageData = Object.keys(stageData)?.map(stage => ({
+    name: stage,
+    value: stageData[stage]
+  }));
+
   // Lọc dữ liệu theo bộ lọc cho từng biểu đồ
-  const filterStageData = rawData.stageData.filter((task) => selectedStatus === "All" || task.name === selectedStatus);
-  const filterProjectData = rawData.projectData.filter((project) => selectedProject === "All Projects" || project.name === selectedProject);
 
 
-  const uniqueStages = [...new Set(activities.map((activity) => activity.stage))];
-  const uniqueProjects = [...new Set(activities.map((activity) => activity.project))];
-  const uniqueAssignees = [...new Set(activities.map((activity) => activity.assignee))];
+  const uniqueProjects = [...new Set(activities?.map(a => a.project?.projectName).filter(Boolean))];
+  const uniqueStages = [...new Set(activities?.map(a => a.stage?.stageName).filter(Boolean))];
+  const uniqueAssignees = [...new Set(activities?.flatMap(a => a.assignee?.map(as => as.username)).filter(Boolean))];
 
   //  Tính toán số lượng tổng hợp
-  const totalProjects = uniqueProjects.length;
-  const totalActivities = activities.length;
-  const doneActivities = activities.filter(activity => activity.stage === "Done").length;
-  const overdueActivities = activities.filter(activity => dayjs(activity.dueDate).isBefore(dayjs()) && activity.stage !== "Done").length;
+  const totalProjects = uniqueProjects?.length;
+  const totalActivities = activities?.length;
+  const doneActivities = activities.filter(activity => activity.stage?.stageStatus === "done")?.length;
+
+  const overdueActivities = activities?.filter(activity => dayjs(activity.dueDate).isBefore(dayjs()) && activity.stage !== "done")?.length;
 
   // Xác định khoảng thời gian lọc
   const getFilteredDateRange = () => {
@@ -138,82 +112,162 @@ const TeamPerformance = () => {
 
 
   // Lọc danh sách thành viên theo tìm kiếm
-  const filteredMembers = team.teamMembers.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMembers = team?.teamMembers
+    ?.filter(member => member.roles.includes("teamMember"))
+    ?.filter(member =>
+      member._id?.fullName?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      member._id?.username?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      member._id?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())
+    ) || [];
 
 
+  const teamLeader = team?.teamMembers?.find(member => member.roles.includes("teamLeader"));
+  const filteredMemberActivityData = activities
+    ?.filter((entry) => {
+      const entryDate = dayjs(entry.startDate);
+      return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
+    })
+    ?.flatMap((entry) =>
+      entry.assignee.map((assignee) => ({
+        date: dayjs(entry.startDate).format("YYYY-MM-DD"),
+        member: assignee.username,
+      }))
+    );
 
-  // Lọc dữ liệu hiệu suất theo ngày được chọn
-  const filteredPerformanceData = rawData.performanceData.filter((entry) => {
-    const entryDate = dayjs(entry.date);
-    return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
-  });
-  const filteredMemberActivityData = memberPerformanceData.filter((entry) => {
-    const entryDate = dayjs(entry.date);
-    return entryDate.isAfter(startDate) && entryDate.isBefore(endDate);
-  });
 
-  // Lấy danh sách tất cả thành viên xuất hiện trong dữ liệu
-  const getAllMembers = (data) => {
-    const members = new Set();
-
-    data.forEach(entry => {
-      Object.keys(entry).forEach(key => {
-        if (key !== "date") {
-          members.add(key);
-        }
-      });
-    });
-
-    return Array.from(members); // Chuyển Set thành Array
-  };
-
-  //  Cấu hình cột của bảng Activity
-  const activityColumns = [
-    { title: "Activity", dataIndex: "title", key: "title" },
-    { title: "Project", dataIndex: "project", key: "project" },
-    { title: "Created Date", dataIndex: "createdAt", key: "createdAt" },
-    { title: "Assignee", dataIndex: "assignee", key: "assignee" },
-  ];
-
-  const allMembers = getAllMembers(rawData.performanceData);
   // Sắp xếp dữ liệu theo ngày trước khi render biểu đồ
-  const sortedPerformanceData = [...filteredPerformanceData].sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
-  const sortedMemberPerformanceData = [...filteredMemberActivityData].sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
 
+  const groupedData = filteredMemberActivityData.reduce((acc, item) => {
+    const { date, member } = item;
+    if (!acc[date]) acc[date] = { date };
+    acc[date][member] = (acc[date][member] || 0) + 1; // Đếm số hoạt động của từng member
+    return acc;
+  }, {});
 
+  // Chuyển đổi object thành mảng
+  const sortedMemberPerformanceData = Object.values(groupedData).sort(
+    (a, b) => dayjs(a.date).diff(dayjs(b.date))
+  );
 
   // Filter Activity list
 
-  // 🔹 Sắp xếp `activity` theo `createdAt`
+  // Sắp xếp `activity` theo `createdAt`
   const sortedActivities = [...activities].sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
 
-  // 🔹 Chỉ lấy 5 activity mới nhất
-  const latestActivities = sortedActivities.slice(0, 5);
+  // chỉ lấy 5 activity mới nhất
+  const latestActivities = sortedActivities?.slice(0, 5);
 
-  // 🔹 Lọc `activities` theo bộ lọc
-  const filteredActivities = sortedActivities.filter((activity) => {
-    const matchSearch = activity.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchProject = projectFilter === "All" || activity.project === projectFilter;
-    const matchStage = stageFilter === "All" || activity.stage === stageFilter;
-    const matchAssignee = assigneeFilter === "All" || activity.assignee === assigneeFilter;
-    const matchDate =
-      (!dateRange[0] && !dateRange[1]) ||
-      (dayjs(activity.createdAt).isAfter(dateRange[0]) && dayjs(activity.createdAt).isBefore(dateRange[1]));
+  // Lọc `activities` theo bộ lọc
 
-    return matchSearch && matchProject && matchStage && matchDate && matchAssignee;
+  const filteredActivities = activities.filter((activity) => {
+    const matchSearch =
+      searchTerm === "" ||
+      (activity.activityTitle && activity.activityTitle.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchProject =
+      projectFilter === "All" ||
+      (activity.project?.projectName && activity.project.projectName === projectFilter);
+
+    const matchStage =
+      stageFilter === "All" ||
+      (activity.stage?._id && activity.stage.stageName === stageFilter);
+
+    const matchAssignee =
+      assigneeFilter === "All" ||
+      (activity.assignee?.some(assignee => assignee.username === assigneeFilter));
+
+    // Kiểm tra ngày hợp lệ trước khi dùng dayjs
+    const activityDate = activity.startDate ? dayjs(activity.startDate) : null;
+
+    let matchDate = true; // Mặc định không lọc theo ngày
+
+    if (activityDate && activityDate.isValid()) {
+      if (dateRange[0] && !dateRange[1]) {
+        // Chỉ nhập Start Date → Lọc từ ngày đó đến hôm nay
+        matchDate = activityDate.isSameOrAfter(dayjs(dateRange[0]), "day") && activityDate.isSameOrBefore(today, "day");
+      } else if (!dateRange[0] && dateRange[1]) {
+        // Chỉ nhập End Date → Lọc từ hôm nay về trước
+        matchDate = activityDate.isSameOrAfter(today, "day") && activityDate.isSameOrBefore(dayjs(dateRange[1]), "day");
+      } else if (dateRange[0] && dateRange[1]) {
+        // Nhập cả hai → Lọc trong khoảng từ Start Date đến End Date
+        matchDate = activityDate.isSameOrAfter(dayjs(dateRange[0]), "day") && activityDate.isSameOrBefore(dayjs(dateRange[1]), "day");
+      }
+    }
+
+    return matchSearch && matchProject && matchStage && matchAssignee && matchDate;
   });
+
+
+  // Lọc activities theo selectedProject (nếu chọn "All Projects" thì lấy tất cả)
+  const filteredActivitiesProject = selectedProject === "All Projects"
+    ? activities
+    : activities.filter(activity => activity.project?.projectName === selectedProject);
+  // Nhóm số lượng activities theo projectName và stageName
+  const aggregatedProjectData = filteredActivitiesProject.reduce((acc, activity) => {
+    const projectName = activity.project?.projectName || "Unknown Project";
+    const stageName = activity.stage?.stageName || "Unknown Stage";
+
+    if (!acc[projectName]) {
+      acc[projectName] = {};
+    }
+
+    acc[projectName][stageName] = (acc[projectName][stageName] || 0) + 1;
+    return acc;
+  }, {});
+
+
+  // Chuyển đổi dữ liệu sang dạng phù hợp cho BarChart
+  const formattedProjectData = Object.keys(aggregatedProjectData)?.map(projectName => {
+    const projectStages = aggregatedProjectData[projectName];
+
+    return {
+      name: projectName,
+      ...uniqueStages?.reduce((acc, stage) => {
+        acc[stage] = projectStages[stage] || 0;
+        return acc;
+      }, {})
+    };
+  });
+
+  // Nếu không có dữ liệu, hiển thị ít nhất một cột trống
+  if (formattedProjectData?.length === 0) {
+    formattedProjectData.push({ name: "No Data", "Unknown Stage": 0 });
+  }
+
+  const activityStats = activities.reduce((acc, activity) => {
+    const dueDate = new Date(activity.dueDate);
+    const isDone = activity.stage?.stageStatus === "done";
+    const isOverdue = dueDate < today && !isDone; // Chỉ quá hạn nếu chưa hoàn thành
+
+    activity.assignee?.forEach(member => {
+      const memberName = member.username;
+
+      if (!acc[memberName]) {
+        acc[memberName] = { onTime: 0, overdue: 0 };
+      }
+
+      if (isOverdue) {
+        acc[memberName].overdue += 1; // Đã quá hạn
+      } else if (isDone) {
+        acc[memberName].onTime += 1; // Hoàn thành đúng hạn
+      }
+    });
+
+    return acc;
+  }, {});
+
+  // Chuyển thành mảng để hiển thị trên biểu đồ
+  const formattedData = Object.keys(activityStats)?.map(memberName => ({
+    name: memberName,
+    "Done On Time": activityStats[memberName].onTime,
+    "Overdue": activityStats[memberName].overdue
+  }));
+
 
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={200} theme="light">
-        <Menu mode="inline" defaultSelectedKeys={["team"]}>
-          <Menu.Item key="team" icon={<TeamOutlined />}>Team Performance</Menu.Item>
-          <Menu.Item key="projects" icon={<ProjectOutlined />}>Projects</Menu.Item>
-        </Menu>
-      </Sider>
+
 
       <Layout style={{ padding: "10px" }}>
         <Content>
@@ -285,7 +339,7 @@ const TeamPerformance = () => {
                     extra={
                       <Select value={selectedStatus} onChange={(value) => setSelectedStatus(value)} style={{ width: "100px" }}>
                         <Option value="All">All</Option>
-                        {uniqueStages.map((stage) => (
+                        {uniqueStages?.map((stage) => (
                           <Option key={stage} value={stage}>{stage}</Option>
                         ))}
                       </Select>
@@ -294,7 +348,7 @@ const TeamPerformance = () => {
                     <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie data={filterStageData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
-                          {filterStageData.map((entry, index) => (
+                          {filterStageData?.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
@@ -357,8 +411,13 @@ const TeamPerformance = () => {
                         <YAxis />
                         <RechartsTooltip />
                         <Legend />
-                        {team.teamMembers.map((member, index) => (
-                          <Line key={member.name} type="monotone" dataKey={member.name} stroke={COLORS[index % COLORS.length]} />
+                        {team?.teamMembers?.map((member, index) => (
+                          <Line
+                            key={member._id?.username}
+                            type="monotone"
+                            dataKey={member._id?.username}
+                            stroke={COLORS[index % COLORS.length]}
+                          />
                         ))}
                       </LineChart>
                     </ResponsiveContainer>
@@ -369,91 +428,56 @@ const TeamPerformance = () => {
 
               {/* Biểu đồ số lượng công việc theo từng dự án */}
               <Card
-                title="Activity Distribution by Project "
-                style={{ marginBottom: "10px" , paddingLeft: "0px", textAlign: "left" }}
+                title="Activity Distribution by Project & Stage"
+                style={{ marginBottom: "10px", paddingLeft: "0px", textAlign: "left" }}
                 extra={
-                  <Select value={selectedProject} onChange={(value) => setSelectedProject(value)} style={{ width: 180 }}>
+                  <Select
+                    value={selectedProject}
+                    onChange={(value) => setSelectedProject(value)}
+                    style={{ width: 180 }}
+                  >
                     <Option value="All Projects">All Projects</Option>
-                    {uniqueProjects.map((project) => (
-                      <Option key={project} value={project}>{project}</Option>
-                    ))}
+                    {Array.from(new Set(activities?.map(activity => activity.project?.projectName)))
+                      ?.filter(Boolean)
+                      ?.map((project) => (
+                        <Option key={project} value={project}>{project}</Option>
+                      ))}
                   </Select>
                 }
               >
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={aggregatedProjectData}>
+                  <BarChart data={formattedProjectData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <RechartsTooltip cursor={{ fill: "rgba(0, 0, 0, 0.05)" }} />
                     <Legend />
-                    {uniqueStages.map((stage, index) => (
+                    {uniqueStages?.map((stage, index) => (
                       <Bar key={stage} dataKey={stage} stackId="a" fill={COLORS[index % COLORS.length]} />
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
 
-              {/* Biểu đồ hiệu suất làm việc theo thời gian */}
               <Card
-                title="Member Performance Over Time"
-                style={{ marginBottom: "15px" , paddingLeft: "0px", textAlign: "left"  }}
-                extra={
-                  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                    {/* Lựa chọn thời gian nhanh */}
-                    <Select
-                      value={selectedFilter}
-                      onChange={(value) => {
-                        setSelectedFilter(value);
-                        setCustomDateRange([null, null]); // Reset Custom Range nếu chọn filter nhanh
-                      }}
-                      style={{ width: 150 }}
-                    >
-                      <Option value="1 Week">Last 1 Week</Option>
-                      <Option value="1 Month">Last 1 Month</Option>
-                      <Option value="4 Months">Last 4 Months</Option>
-                      <Option value="1 Year">Last 1 Year</Option>
-                      <Option value="Custom">Custom Range</Option>
-                    </Select>
-
-                    {/* Chọn ngày tùy chỉnh */}
-                    {selectedFilter === "Custom" && (
-                      <>
-                        <DatePicker
-                          value={customDateRange[0]}
-                          placeholder="Start Date"
-                          onChange={(date) => setCustomDateRange([date, customDateRange[1]])}
-                          format="YYYY-MM-DD"
-                          style={{ width: "120px" }}
-                        />
-                        <DatePicker
-                          value={customDateRange[1]}
-                          placeholder="End Date"
-                          onChange={(date) => setCustomDateRange([customDateRange[0], date])}
-                          format="YYYY-MM-DD"
-                          style={{ width: "120px" }}
-                          disabled={!customDateRange[0]} // Chỉ cho chọn end date khi đã chọn start date
-                        />
-                      </>
-                    )}
-                  </div>
-                }
+                title="Activity Completion Status by Member"
+                style={{ marginBottom: "15px", paddingLeft: "0px", textAlign: "left" }}
               >
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={sortedPerformanceData}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={formattedData} barGap={10} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="name" />
                     <YAxis />
                     <RechartsTooltip cursor={{ fill: "rgba(0, 0, 0, 0.05)" }} />
                     <Legend />
 
-                    {/* Tạo danh sách Bar component dựa trên danh sách member động */}
-                    {allMembers.map((member, index) => (
-                      <Bar key={member} dataKey={member} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                    {/* Mỗi member có 2 cột: 1 cho "On Time", 1 cho "Overdue" */}
+                    <Bar dataKey="Done On Time" fill="#4CAF50" name="On Time" />
+                    <Bar dataKey="Overdue" fill="#FF5722" name="Overdue" />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
+
 
             </Col>
 
@@ -461,14 +485,19 @@ const TeamPerformance = () => {
             {/* Cột 2 (1/3) - Team Profile & Members */}
             <Col span={8} >
               <Card title="Team Profile" style={{ marginBottom: "10px" }}>
-                <Text strong>Team Name:</Text> <Text>{team.teamName}</Text> <br />
-                <Text strong>Team Leader:</Text> <Text>{team.teamLeader}</Text>
+                <Text strong>Team Name:</Text> <Text>{team?.teamName}</Text> <br />
+                <Text strong>Team Leader:</Text>
+                {teamLeader ? (
+                  <Text> {teamLeader?._id?.username}</Text>
+                ) : (
+                  <Text>N/A</Text>
+                )}
               </Card>
 
               <Card
                 title={
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Members ({team.teamMembers.length})</span>
+                    <span>Members ({filteredMembers?.length})</span>
                     <Input
                       placeholder="Search member..."
                       allowClear
@@ -485,7 +514,8 @@ const TeamPerformance = () => {
                   style={{
                     maxHeight: "300px",
                     overflowY: "auto",
-                    paddingRight: "5px",
+                    paddingLeft: "5px",
+
                     scrollbarWidth: "none", /* Firefox */
                     msOverflowStyle: "none", /* IE, Edge */
                   }}
@@ -494,40 +524,52 @@ const TeamPerformance = () => {
                     itemLayout="horizontal"
                     dataSource={filteredMembers}
                     renderItem={(member) => (
-                      <List.Item>
+                      <List.Item
+                        onClick={() => navigate(`/site/teams/${teamSlug}/member-performance/${member._id._id}`)}>
                         <List.Item.Meta
                           avatar={
-                            <Tooltip title={member.name}>
-                              <Avatar src={member.avatar} />
+
+                            <Tooltip title={member._id.username}>
+                              <Avatar src={member._id.userAvatar} style={{ marginRight: "80px" }} />
                             </Tooltip>
                           }
-                          title={member.name}
+                          title={
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span>{member._id.username}</span>
+                              {member.roles.includes("teamLeader") && (
+                                <Tag color="gold">Leader</Tag>
+                              )}
+                            </div>
+                          }
                         />
                       </List.Item>
                     )}
                   />
+
                 </div>
               </Card>
-              <Card title={
+
+
+              <Card
+                title={
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Activity List ({totalActivities})</span>
                     <Button onClick={() => setModalVisible(true)}>View More</Button>
                   </div>
                 }
->
+              >
                 <Table
                   columns={[
                     {
                       title: "Activity Details",
-                      dataIndex: "title",
-                      key: "title",
-                      
+                      dataIndex: "activityTitle",
+                      key: "activityTitle",
                       render: (text, record) => (
-                        <div >
+                        <div>
                           <strong>{text}</strong>
                           <br />
                           <span style={{ fontSize: "12px", color: "gray" }}>
-                            {record.project} • {record.createdAt}
+                            {record.project?.projectName || "No Project"} • {dayjs(record.startDate).format("YYYY-MM-DD")}
                           </span>
                         </div>
                       ),
@@ -537,12 +579,16 @@ const TeamPerformance = () => {
                       dataIndex: "assignee",
                       key: "assignee",
                       align: "center",
-                      
-                      render: (text) => <span>{text}</span>,
+                      render: (assignees) => {
+                        if (assignees?.length === 0) return "No Assignee";
+                        const displayedAssignees = assignees?.slice(0, 2)?.map(a => a.username).join(", ");
+                        return assignees?.length > 2 ? `${displayedAssignees}, ...` : displayedAssignees;
+                      },
                     },
+
                   ]}
                   dataSource={activities}
-                  pagination={{ pageSize: 6, position: ["bottomCenter"] }} 
+                  pagination={{ pageSize: 6, position: ["bottomCenter"] }}
                   rowKey="_id"
                 />
               </Card>
@@ -552,78 +598,103 @@ const TeamPerformance = () => {
         </Content>
       </Layout>
 
- {/* Modal hiển thị toàn bộ Activity */}
- <Modal
+      {/* Modal hiển thị toàn bộ Activity */}
+      <Modal
         title="All Activities"
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={1000}
         height={600}
-        style={{ top: "30px"}}
+        style={{ top: "30px" }}
       >
+        {/* Filter */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
-          <Input style={{ width: "330px" }} placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          <Select value={projectFilter} onChange={setProjectFilter}><Option value="All">All Projects</Option>{uniqueProjects.map(p => <Option key={p}>{p}</Option>)}</Select>
-          <Select value={stageFilter} onChange={setStageFilter}><Option value="All">All Stages</Option>{uniqueStages.map(s => <Option key={s}>{s}</Option>)}</Select>
-           <Select value={assigneeFilter} onChange={setAssigneeFilter}><Option value="All">All Assignees</Option>{uniqueAssignees.map(a => <Option key={a}>{a}</Option>)}</Select>
-                    
-                           {/* Chọn ngày tùy chỉnh */}
-                                        
-                                           <>
-                                             <DatePicker
-                                               value={dateRange[0]}
-                                               placeholder="Start Date"
-                                               onChange={(date) => setDateRange([date, dateRange[1]])}
-                                               format="YYYY-MM-DD"
-                                               style={{ width: "120px" }}
-                                             />
-                                             <DatePicker
-                                               value={dateRange[1]}
-                                               placeholder="End Date"
-                                               onChange={(date) => setDateRange([dateRange[0], date])}
-                                               format="YYYY-MM-DD"
-                                               style={{ width: "120px" }}
-                                               disabled={!dateRange[0]} // Chỉ cho chọn end date khi đã chọn start date
-                                             />
-                                           </>
+          <Input
+            style={{ width: "280px" }}
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Select value={projectFilter} onChange={setProjectFilter} style={{ width: "120px" }}>
+            <Option value="All">All Projects</Option>{uniqueProjects?.map(p => <Option key={p}>{p}</Option>)}</Select>
+
+
+          <Select value={stageFilter} onChange={setStageFilter} style={{ width: "120px" }}>
+            <Option key="All" value="All">All Stages</Option>
+            {uniqueStages?.map(s => (
+              <Option key={s} value={s}>{s}</Option>
+            ))}
+          </Select>
+
+          <Select value={assigneeFilter} onChange={setAssigneeFilter} style={{ width: "130px" }}>
+            <Option key="all" value="All">All Assignees</Option>
+            {uniqueAssignees?.map(a => (
+              <Option key={a} value={a}>{a}</Option>
+            ))}
+          </Select>
+
+
+          {/* 🔹 Chọn ngày */}
+          <>
+            <DatePicker
+              value={dateRange[0]}
+              placeholder="Start Date"
+              onChange={(date) => setDateRange([date, dateRange[1]])}
+              format="YYYY-MM-DD"
+              style={{ width: "120px" }}
+            />
+            <DatePicker
+              value={dateRange[1]}
+              placeholder="End Date"
+              onChange={(date) => setDateRange([dateRange[0], date])}
+              format="YYYY-MM-DD"
+              style={{ width: "120px" }}
+              disabled={!dateRange[0]} // Chỉ cho chọn end date khi đã chọn start date
+            />
+          </>
         </div>
+
+        {/* 🔹 Bảng hiển thị hoạt động */}
         <Table
-                  columns={[
-                    {
-                      title: "Activity Details",
-                      dataIndex: "title",
-                      key: "title",
-                      
-                      render: (text, record) => (
-                        <div >
-                          <strong>{text}</strong>
-                          <br />
-                          <span style={{ fontSize: "12px", color: "gray" }}>
-                            {record.project} • {record.createdAt}
-                          </span>
-                        </div>
-                      ),
-                    },
-                    {
-                      title: "Stage",
-                      dataIndex: "stage",
-                      key: "stage",
-                      align: "center",
-                    },
-                    {
-                      title: "Assignee",
-                      dataIndex: "assignee",
-                      key: "assignee",
-                      align: "center",
-                      
-                      render: (text) => <span>{text}</span>,
-                    },
-                  ]}
-                  dataSource={filteredActivities}
-                  pagination={{ pageSize: 5, position: ["bottomCenter"] }} 
-                  rowKey="_id"
-                />
+          columns={[
+            {
+              title: "Activity Details",
+              dataIndex: "activityTitle",
+              key: "activityTitle",
+              render: (text, record) => (
+                <div>
+                  <strong>{text}</strong>
+                  <br />
+                  <span style={{ fontSize: "12px", color: "gray" }}>
+                    {record.project?.projectName || "No Project"} • {dayjs(record.startDate).format("YYYY-MM-DD")}
+                  </span>
+                </div>
+              ),
+            },
+            {
+              title: "Stage",
+              dataIndex: "stage",
+              key: "stage",
+              align: "center",
+              render: (stage) => stage?.stageName || "No Stage",
+            },
+            {
+              title: "Assignee",
+              dataIndex: "assignee",
+              key: "assignee",
+              align: "center",
+              render: (assignees) => {
+                if (assignees?.length === 0) return "No Assignee";
+                const displayedAssignees = assignees?.slice(0, 2)?.map(a => a.username).join(", ");
+                return assignees?.length > 2 ? `${displayedAssignees}, ...` : displayedAssignees;
+              },
+            },
+          ]}
+          dataSource={filteredActivities}
+          pagination={{ pageSize: 5, position: ["bottomCenter"] }}
+          rowKey="_id"
+        />
       </Modal>
 
     </Layout>

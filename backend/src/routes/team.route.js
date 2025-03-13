@@ -44,5 +44,11 @@ teamRouter.post("/create-team",
     teamController.createTeam
 );
 
+// get team activites
+teamRouter.get("/:teamSlug", 
+    authMiddleware.verifyAccessToken, 
+    teamController.getTeamActivities
+);
+
 
 module.exports = teamRouter
