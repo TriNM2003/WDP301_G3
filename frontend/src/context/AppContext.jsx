@@ -18,13 +18,18 @@ const AppProvider = ({ children }) => {
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
   const [site, setSite] = useState({})
-  const [projects, setProjects] = useState([]);
-  const [project, setProject] = useState({});
+
   const location = useLocation();
   const nav = useNavigate();
-  const [activityTypes, setActivityTypes] = useState([]);
+
+  //Project
+  const [projects, setProjects] = useState([]);
+  const [project, setProject] = useState({});
+  //Stage
+  const [stages, setStages] = useState([]);
 
   // Activity
+  const [activityTypes, setActivityTypes] = useState([]);
   const [deleteActivity, setDeleteActivity] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState("");
   const [confirmActivity, setConfirmActivity] = useState("");
@@ -240,6 +245,34 @@ const AppProvider = ({ children }) => {
       setActivityLoading(false);
     }, 1000);
   }
+  // moveActivity
+  const handleMoveActivity = async (field, selectedActivity, data) => {
+    axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${selectedActivity?._id}/move`,
+      {
+        [field]: data
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+
+    )
+      .then((res) => {
+        activityModalLoading();
+        setActivity(res?.data?.activity);
+        const updateActivities = activities.map((a) =>
+          a._id === res?.data?.activity?._id ? res?.data?.activity : a
+        );
+        setActivities(updateActivities)
+        message.success(`Activity "${selectedActivity?.activityTitle}" moved successfully!`);
+        showNotification(`Project update`, `User1 just edit activity "${selectedActivity?.activityTitle}".`);
+      })
+      .catch((err) => {
+        message.error(err.response?.data?.error?.message || "Move activity failed");
+        console.log(err);
+      })
+  }
   // delete Activity
   const showDeleteActivity = (activity) => {
     setActivityToDelete(activity);
@@ -279,8 +312,8 @@ const AppProvider = ({ children }) => {
             }
           })
         const updateActivities = activities?.filter((a) =>
-            a._id!=activityToDelete?._id
-          );
+          a._id != activityToDelete?._id
+        );
         setActivities(updateActivities)
 
         message.success(`Activity "${activityToDelete}" has been deleted successfully!`);
@@ -306,6 +339,7 @@ const AppProvider = ({ children }) => {
     setActivityModal(false);
     setActivity()
   };
+
 
   //Complete sprint
   const showCompletedSprint = () => {
@@ -353,9 +387,10 @@ const AppProvider = ({ children }) => {
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
+      stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
-      userActivities, setUserActivities, teams, setTeams,activityModalLoading
+      userActivities, setUserActivities, teams, setTeams, activityModalLoading,
+      handleMoveActivity
 
     }}>
       {children}

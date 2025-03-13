@@ -1,16 +1,47 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal } from "antd";
 import { BugOutlined, CheckOutlined, DoubleRightOutlined, DownOutlined, EllipsisOutlined, FieldTimeOutlined, FormOutlined, MinusOutlined, PaperClipOutlined, PlusOutlined, UpOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
 import { blue, cyan, gray, grey, orange, red, yellow } from "@ant-design/colors";
 import { AppContext } from "../../context/AppContext";
-
+import { DndContext } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 
 function SprintActivity({ activity }) {
     const { showDeleteActivity, activities, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+
+    //DND
+    const [isClicking, setIsClicking] = useState(false);
+
+    const handleMouseDown = () => setIsClicking(true);
+    const handleMouseMove = () => setIsClicking(false);
+    const handleMouseUp = () => {
+        if (isClicking) {
+            showActivity(activity); // Chỉ mở khi là click
+        }
+    };
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: activity?._id,
+        data: activity
+    });
+
+    const dndSprintActivity = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : undefined
+    };
+
     return (
-        <Flex onClick={() => showActivity(activity)} justify="space-between" align="center" style={{ background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" }}>
-            <Space>
+        <Flex
+            ref={setNodeRef}  {...attributes} {...listeners}
+            justify="space-between" align="center"
+            style={Object.assign({}, dndSprintActivity, { background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" })}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+        >
+            <Space onClick={() => showActivity(activity)}>
                 {activity.type.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "bug" && <BugOutlined style={{ color: yellow[6] }} />}

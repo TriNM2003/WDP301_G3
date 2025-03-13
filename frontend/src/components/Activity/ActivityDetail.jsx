@@ -14,7 +14,7 @@ import SubMenu from 'antd/es/menu/SubMenu'
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI, site, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI,stages, setStages, site,handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
@@ -241,6 +241,7 @@ function ActivityDetail() {
       footer={[]}
       onClose={closeActivity}
       closeIcon={null}
+      
       style={{ borderRadius: "0" }}
       modalRender={(node) => (
         <div>
@@ -701,14 +702,14 @@ function ActivityDetail() {
                   <Skeleton.Input active size="small" style={{ width: "100%" }} />
                 ) : (
                   <Select
-                    value={activity?.stage?.stageName?.toUpperCase() || ""}
-                    onChange={"setMoveTo"}
+                    value={activity?.stage?._id}
+                    onChange={(value)=>handleMoveActivity("stage",activity,value)}
                     style={{ width: "60%", borderRadius: "0" }}
                     dropdownStyle={{ borderRadius: 0 }}
                   >
-                    <Option value="Todo">Todo</Option>
-                    <Option value="Doing">Doing</Option>
-                    <Option value="Done">Done</Option>
+                    {stages?.map((stage)=>{
+                      return <Option key={stage?._id} value={stage?._id}>{stage?.stageName}</Option>
+                    })}
                   </Select>
                 )}
               </Col>
