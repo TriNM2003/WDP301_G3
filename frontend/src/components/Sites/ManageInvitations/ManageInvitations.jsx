@@ -37,7 +37,13 @@ const ManageInvitations = () => {
       const formattedInvitation = invitationsRaw.data.invitations.map((invitation, index) => {
         const isExpired = compareDates(invitation.createdAt, invitation.expireAt);
         return {
-          key: index+1, invitationId:invitation._id,  receiver: invitation.receiver.email, receiverAvatar:invitation.receiver.userAvatar, createDate:formatDate(invitation.createdAt), lastUpdated: formatDate(invitation.updatedAt), expireDate: formatDate(invitation.expireAt),  status: isExpired ? "expired" : invitation.status
+          key: index+1, invitationId:invitation._id,
+          receiver: invitation.receiver.email,
+          receiverAvatar:invitation.receiver.userAvatar,
+          createDate:formatDate(invitation.createdAt),
+          lastUpdated: formatDate(invitation.updatedAt),
+          expireDate: formatDate(invitation.expireAt),
+          status: isExpired ? "expired" : invitation.status
         }
       })
       setInvitationList(formattedInvitation);
@@ -58,13 +64,8 @@ const ManageInvitations = () => {
 
   const handleCancelInvitation = async (invitationId) => {
     console.log(invitationId)
-    const response = await authAxios.delete(`${siteAPI}/${site._id}/cancel-invitation`, {data: {invitationId: invitationId}});
-    const formattedInvitation = response.data.invitations.map((invitation, index) => {
-      return {
-        key: index+1, invitationId:invitation._id,  receiver: invitation.receiver.email, receiverAvatar:invitation.receiver.userAvatar, createDate:formatDate(invitation.createdAt), lastUpdated: formatDate(invitation.updatedAt), expireDate: formatDate(invitation.expireAt),  status: invitation.status
-      }
-    })
-    setInvitationList(formattedInvitation);
+    await authAxios.delete(`${siteAPI}/${site._id}/cancel-invitation`, {data: {invitationId: invitationId}});
+    fetchInvitation();
     showMessage("success", "Invitation cancel successfully!", 2);
   };
 
@@ -83,7 +84,7 @@ const ManageInvitations = () => {
         <Breadcrumb.Item>Manage Invitations</Breadcrumb.Item>
       </Breadcrumb>
       <InvitationSearchFilter searchEmail={searchEmail} setSearchEmail={setSearchEmail} setFilterStatus={setFilterStatus} />
-      <InvitationTable handleCancelInvitation={handleCancelInvitation} filteredInvitations={filteredInvitations} />
+      <InvitationTable handleCancelInvitation={handleCancelInvitation} filteredInvitations={filteredInvitations}/>
     </div>
   );
 };

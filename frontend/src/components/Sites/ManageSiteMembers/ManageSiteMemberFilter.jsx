@@ -4,7 +4,7 @@ import React from 'react'
 
 const ManageSiteMemberFilter = ({site, formatRole, setSelectedFilterRole}) => {
   return (
-    <div style={{ display: "flex", marginBottom: "20px" }}>
+    <div style={{ display: "flex", marginBottom: "1%", marginTop: "1%" }}>
         <p>Filter</p>
       <Select
             placeholder="All"

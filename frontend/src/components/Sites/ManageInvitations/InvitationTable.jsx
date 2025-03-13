@@ -18,22 +18,26 @@ const InvitationTable = ({handleCancelInvitation, filteredInvitations}) => {
                     <Avatar src={record.receiverAvatar || ""} style={{marginRight: "2%"}}/>
                     {record.receiver}
                 </span>
-              )
+              ),
+            sorter: (a,b) => a.receiver.localeCompare(b.receiver)
           },
         {
           title: "Create date",
           dataIndex: "createDate",
           key: "createDate",
+          sorter: (a,b) => new Date(a.createDate) - new Date(b.createDate)
         },
         {
             title: "Last updated",
             dataIndex: "lastUpdated",
             key: "lastUpdated",
+            sorter: (a,b) => new Date(a.lastUpdated) - new Date(b.lastUpdated)
           },
           {
             title: "Expire date",
             dataIndex: "expireDate",
             key: "expireDate",
+            sorter: (a,b) => new Date(a.expireDate) - new Date(b.expireDate)
           },
           {
             title: "Status",
@@ -44,6 +48,7 @@ const InvitationTable = ({handleCancelInvitation, filteredInvitations}) => {
                 {text.toUpperCase() || "Error"}
               </span>
             ),
+            sorter: (a,b) => a.status.localeCompare(b.status)
           },
         {
           title: "Action",
@@ -66,7 +71,7 @@ const InvitationTable = ({handleCancelInvitation, filteredInvitations}) => {
 
 
   return (
-    <Table columns={columns} dataSource={filteredInvitations} pagination={{ pageSize: 5 }} />
+    <Table columns={columns} dataSource={filteredInvitations} pagination={{ pageSize: 5 }} style={{marginTop: "2%"}} />
   )
 }
 

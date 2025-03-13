@@ -3,7 +3,7 @@ import { Avatar, Button, Modal, Select, Spin } from 'antd'
 import Title from 'antd/es/skeleton/Title'
 import React, { useState } from 'react'
 
-const InviteMemberModal = ({inviteModalVisible, setInviteModalVisible, handleInviteMember, selectedEmail, setSelectedEmail, userEmails}) => {
+const InviteMemberModal = ({inviteModalVisible, setInviteModalVisible, handleInviteMember, selectedEmail, setSelectedEmail, userEmails, inviteLoading}) => {
   const [searchValue, setSearchValue] = useState(""); // Giá trị ô tìm kiếm
   const [filteredOptions, setFilteredOptions] = useState([]); // Lưu options hiển thị
 
@@ -26,7 +26,7 @@ const InviteMemberModal = ({inviteModalVisible, setInviteModalVisible, handleInv
       visible={inviteModalVisible}
       onCancel={() => setInviteModalVisible(false)}
       footer={[
-        <Button key="add" style={{ backgroundColor: green[6], color: "#fff" }} onClick={handleInviteMember}>
+        <Button key="add" style={{ backgroundColor: green[6], color: "#fff" }} onClick={handleInviteMember} loading={inviteLoading}>
           Invite
         </Button>,
         <Button key="cancel" danger onClick={() => setInviteModalVisible(false)}>

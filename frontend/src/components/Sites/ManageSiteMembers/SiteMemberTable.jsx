@@ -1,5 +1,5 @@
 import { DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
-import { Avatar, Button, Dropdown, Menu, Popconfirm, Radio, Space, Table } from 'antd'
+import { Avatar, Button, Checkbox, Dropdown, Menu, Popconfirm, Radio, Space, Table } from 'antd'
 import React from 'react'
 
 const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRevokeAccess}) => {
@@ -7,19 +7,19 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
   const roleMenu = (record) => (
     <Menu>
       <Menu.ItemGroup title="Select role">
-        <Radio.Group
+        <Checkbox.Group
           value={record.siteMemberRole}
-          onChange={(e) => handleRoleChange(record.siteMemberId, record.siteMemberRole, e.target.value)}
+          onChange={(values) => handleRoleChange(record.siteMemberId, record.siteMemberRole, values)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
           {site?.siteRoles?.map((role, index) => {
             return (
-              <Radio key={index} value={role} disabled={role === "siteOwner"}>
+              <Checkbox key={index} value={role} disabled={role === "siteOwner"}>
                 {formatRole(role)}
-              </Radio>
+              </Checkbox>
             );
-          }) || <Radio key={1} value="not found">Not found</Radio>}
-        </Radio.Group>
+          }) || <Checkbox key={1} value="not found">Not found</Checkbox>}
+        </Checkbox.Group>
       </Menu.ItemGroup>
     </Menu>
   );

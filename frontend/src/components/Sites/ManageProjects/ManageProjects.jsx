@@ -198,7 +198,7 @@ const ManageProjects = () => {
 
   // render fe
   return (
-    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', height: "calc(100vh - 90px)", overflowY: "hidden"}}>
+    <div style={{ padding: "40px", textAlign: "left", backgroundColor: 'white', minHeight: "calc(100vh - 90px)", overflowY: "unset"}}>
       {/* hien thi message api */}
       {messageHolder}
       {/* Breadcrumb */}

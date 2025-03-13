@@ -198,9 +198,9 @@ const handleRoleChange = async (key, updatedRoleList, projectMemberId, projectMe
       {/* hien thi message api */}
       {messageHolder}
       {/* Breadcrumb */}
-      <ManageProjectMemberBreadcrump />
+      <ManageProjectMemberBreadcrump project={project}/>
       {/* search and add */}
-      <SearchAddProjectMember searchTerm={searchTerm} setSearchTerm={setSearchTerm} setAddMemberModalVisible={setAddMemberModalVisible} />
+      <SearchAddProjectMember searchTerm={searchTerm} setSearchTerm={setSearchTerm} setAddMemberModalVisible={setAddMemberModalVisible}/>
       {/* filter members by role */}
       <FilterProjectMember project={project} setSelectedRole={setSelectedRole} formatRole={formatRole} />
 
