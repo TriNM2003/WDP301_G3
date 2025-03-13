@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Table, Input, Button, Dropdown, Modal, Typography, Avatar, Breadcrumb, Col, Row, message } from "antd";
+
 import { MoreOutlined, SearchOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { AppContext } from '../../context/AppContext'
 import { Link, useNavigate } from "react-router-dom";
@@ -87,7 +88,7 @@ const ProjectTrash = () => {
                     alert("Project name does not match!");
                     return;
                 }
-                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`, {
+                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/delete`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                 });
                 message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);

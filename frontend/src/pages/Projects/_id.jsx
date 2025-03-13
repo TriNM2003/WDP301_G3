@@ -12,6 +12,8 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 
+
+
 function _id() {
     const {activity, project, setProject,activityLoading,isActivityTitle,stages, setStages, setIsActivityTitle, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
     const { projectSlug } = useParams();
@@ -62,6 +64,7 @@ function _id() {
     return (
         <Flex vertical style={{ height: "100%" }}>
             <Outlet />
+       
         </Flex>
     )
 }

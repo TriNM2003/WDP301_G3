@@ -7,10 +7,11 @@ import { message, notification } from 'antd';
 
 export const AppContext = createContext();
 
-const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password", "/processing-invitation"];
+const excludedRoutes = ["/", "/home", "/welcome", "/auth/login", "/auth/register", "/active-account", "/forgot-password", "/reset-password", "/processing-invitation", "/processing-invitation"];
 
 const AppProvider = ({ children }) => {
   //parameter
+
 
   const accessToken = localStorage.getItem("accessToken");
 
@@ -19,8 +20,10 @@ const AppProvider = ({ children }) => {
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
   const [site, setSite] = useState({})
 
+
   const location = useLocation();
   const nav = useNavigate();
+
 
   const [messageApi, messageHolder] = message.useMessage();
 
@@ -43,12 +46,16 @@ const AppProvider = ({ children }) => {
   const [activityName, setActivityName] = useState("");
   const [isActivityTitle, setIsActivityTitle] = useState(false)
   const [activityLoading, setActivityLoading] = useState(false)
-
   const [userActivities, setUserActivities] = useState([]);
   // Team
 
   const [teams, setTeams] = useState({});
 
+
+
+
+  //parameter
+  const [user, setUser] = useState({});
 
   const [activities, setActivities] = useState([]);
   const [activity, setActivity] = useState({});
@@ -59,10 +66,6 @@ const AppProvider = ({ children }) => {
 
 
 
-  //parameter
-  const [user, setUser] = useState({});
-
-
   // api
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
@@ -71,13 +74,15 @@ const AppProvider = ({ children }) => {
   const activityTypeAPI = "http://localhost:9999/activityTypes";
 
 
+
   // State lưu thông tin user & accessToken
 
 
 
 
-  // check token
+
   useEffect(() => {
+
     if (location.pathname !== '/login') {
       localStorage.setItem("lastVisitedUrl", location.pathname);
     }
@@ -90,6 +95,27 @@ const AppProvider = ({ children }) => {
 
   //call api
   useEffect(() => {
+
+    axios.get(`${userApi}/user-profile`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+      .then(res => {
+        setUser(res.data);
+      })
+      .catch(error => {
+        console.log(error.response?.data?.message);
+      });
+  }, []);
+
+
+
+
+  // get project in site
+
+  useEffect(() => {
+
 
     if (accessToken) {
       axios.get(`${userApi}/user-profile`, {
@@ -185,6 +211,8 @@ const AppProvider = ({ children }) => {
   }, [user]);
 
 
+
+
   // get teams in site
   useEffect(() => {
     if (site._id) {
@@ -201,6 +229,7 @@ const AppProvider = ({ children }) => {
         });
     }
   }, [site]);
+
 
 
 
@@ -357,13 +386,13 @@ const AppProvider = ({ children }) => {
     setActivityModal(true);
     setActivity(activity)
 
-
   };
 
   const closeActivity = () => {
     setActivityModal(false);
     setActivity()
   };
+
 
 
   //Complete sprint
@@ -391,6 +420,13 @@ const AppProvider = ({ children }) => {
 
   };
 
+  const handleAddTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+  }
+
+  const handleKickTeamMember = () => {
+    showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
+  }
 
   return (
     <AppContext.Provider value={{
@@ -417,6 +453,6 @@ const AppProvider = ({ children }) => {
     </AppContext.Provider>
   );
 };
-
+  
 
 export default AppProvider;

@@ -50,6 +50,9 @@ import ManageSites from './pages/Sites/ManageSites';
 import CreateSite from './pages/Sites/CreateSite';
 import ProcessingInvitation from './pages/Sites/ProcessingInvitation';
 import TeamListLayout from './components/Teams/Layout/TeamListLayout';
+import Stage from './pages/Stage/Stage';
+
+
 
 
 function App() {
@@ -135,11 +138,12 @@ function App() {
                     <Route index element={<TeamPerformance />} />
                     <Route path="manage-member" element={<TeamMemberManagement />} />
                     <Route path="performance" element={<TeamPerformance />} />
-                    <Route path="member-performance" element={<TeamMemberPerformance />} />
+                    <Route path="member-performance/:userId" element={<TeamMemberPerformance />} />
                   </Route>
                 </Route>
 
               </Route>
+              <Route path="stage" element={<Stage />} />
 
               <Route path='/create-site' element={<CreateSite />} />
 

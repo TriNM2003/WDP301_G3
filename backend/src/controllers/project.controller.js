@@ -186,7 +186,7 @@ const editProjectMemberRole = async (req, res, next) => {
         console.error("Error editing project member:", error);
         return res.status(400).json({ message: error.message });
     }
-}
+} 
 
 const removeProjectMember = async (req, res, next) => {
     try {

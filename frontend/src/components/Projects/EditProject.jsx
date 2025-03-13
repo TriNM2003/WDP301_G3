@@ -115,7 +115,6 @@ const EditProject = () => {
         }
 
         try {
-            setLoading(true);
             const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -124,10 +123,7 @@ const EditProject = () => {
             });
             message.success("Project updated successfully!");
             setImagePreview(response.data.projectAvatar);
-            setTimeout(() => {window.location.reload();}, 1000);
-            
             navigate("/site/list/projects")
-
         } catch (error) {
             console.error("Error updating project:", error);
             message.error("Failed to update project.");
@@ -141,7 +137,6 @@ const EditProject = () => {
             return;
         }
         try {
-            setLoading(true);
             await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("accessToken")}`

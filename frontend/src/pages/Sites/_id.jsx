@@ -14,14 +14,16 @@ function _id() {
                 <Sider
                 width={"15%"}
              style={{
-                height: '100%',
+                maxHeight: '100%',
                 background: "white",
-                borderRight: `solid 1px ${cyan[`1`]}`
+                borderRight: `solid 1px ${cyan[`1`]}`,
+                overflow: "auto"
+
             }}>
                 <SiteSider />
             </Sider>
             
-            <Content style={{height: '100%', background: "white", overflowX: "unset" }} >
+            <Content style={{maxHeight: '100%', background: "white", overflowX: "unset" }} >
                 <SiteContent />
 
             </Content>

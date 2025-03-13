@@ -103,7 +103,7 @@ const getActivitiesByUserId = async (userId) => {
                 { path: "createBy", select: "fullName email" },
                 { path: "assignee", select: "_id" },
                 { path: "type", select: "name" },
-                { path: "project", select: "projectName" },
+                { path: "project", select: "projectName projectSlug" },
                 { path: "sprint", select: "title" },
                 { path: "stage", select: "title" }
             ]
@@ -118,6 +118,35 @@ const getActivitiesByUserId = async (userId) => {
         throw error;
     }
 };
+
+// get user info by userId from params
+const getUserInfoByUserIdFromParams = async (userId) =>{
+    try {
+        const user = await db.User.findById(userId)
+        .select("username email userAvatar fullName address phoneNumber dob")
+        .populate({
+            path: "activities",
+            populate: [
+                { path: "createBy", select: "fullName email" },
+                { path: "assignee", select: "_id" },
+                { path: "type", select: "name" },
+                { path: "sprint", select: "title" },
+                { path: "stage", select: "stageStatus stageName" },
+                { path: "project", select:"projectName"}
+            ]
+        })
+        .populate({
+            path: "projects",
+            select: "projectName projectAvatar",
+            
+        });
+
+       
+        return user
+    } catch(error){
+        throw error;
+    }
+}
 
 
 const confirmDeleteAccount = async (token) => {
@@ -141,7 +170,8 @@ const userService = {
     editProfile,
     sendDeleteAccountEmail,
     confirmDeleteAccount,
-    getActivitiesByUserId
+    getActivitiesByUserId,
+    getUserInfoByUserIdFromParams
 }
 
 
