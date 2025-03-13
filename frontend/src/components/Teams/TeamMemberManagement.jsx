@@ -344,12 +344,12 @@ const TeamMemberManagement = () => {
                     style={{ width: "100%" }}
                     options={filteredMembers} // Danh sách gợi ý
                     onSearch={(value) => {
-                        setSearchUser(value);  // ✅ Cập nhật giá trị nhập vào
+                        setSearchUser(value);  // Cập nhật giá trị nhập vào
                         handleSearchUser(value);
                     }}
-                    onChange={(value) => setSearchUser(value)}  // ✅ Cập nhật khi nhập chữ
-                    onSelect={(value) => setSearchUser(value)}  // ✅ Cập nhật khi chọn từ gợi ý
-                    value={searchUser}  // ✅ Đảm bảo input hiển thị giá trị hiện tại
+                    onChange={(value) => setSearchUser(value)}  // Cập nhật khi nhập chữ
+                    onSelect={(value) => setSearchUser(value)}  // Cập nhật khi chọn từ gợi ý
+                    value={searchUser}  // Đảm bảo input hiển thị giá trị hiện tại
                     placeholder="Enter username"
                     allowClear
                 />
