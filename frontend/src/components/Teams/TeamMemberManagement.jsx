@@ -318,7 +318,7 @@ const TeamMemberManagement = () => {
                         return (
                             <Option key={user._id} value={user.username}>
                                 <Avatar src={user.userAvatar} size="small" style={{ marginRight: 8 }} />
-                                <span>{user.fullName || user.username} ({user.username})</span>
+                                <span>{user.fullName || user.username} ({user.email})</span>
                             </Option>
                         );
                     })}
