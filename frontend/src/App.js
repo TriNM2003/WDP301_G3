@@ -16,12 +16,12 @@ import Summary from './components/Projects/Detail/Summary';
 import SprintBoard from './components/Projects/Detail/Sprint/SprintBoard';
 import KanbanBoard from './components/Projects/Detail/Kanban/KanbanBoard';
 import ManageProjectLayout from './components/Projects/Layout/ManageProjectLayout';
-import ManageProjectMember from './components/Projects/ManageProjectMember';
+import ManageProjectMember from './components/Projects/ManageProjectMembers/ManageProjectMember';
 import EditProject from './components/Projects/EditProject';
 import ManageTeams from './components/Teams/ManageTeams';
-import ManageSiteMembers from './components/Sites/ManageSiteMembers';
-import ManageInvitations from './components/Sites/ManageInvitations';
-import ManageProjects from './components/Sites/ManageProjects';
+import ManageSiteMembers from './components/Sites/ManageSiteMembers/ManageSiteMembers';
+import ManageInvitations from './components/Sites/ManageInvitations/ManageInvitations';
+import ManageProjects from './components/Sites/ManageProjects/ManageProjects';
 import { cyan } from '@ant-design/colors';
 import Login from './pages/Auth/Login';
 import LoginForm from './components/Auth/LoginForm';
@@ -51,6 +51,7 @@ import CreateSite from './pages/Sites/CreateSite';
 import ProcessingInvitation from './pages/Sites/ProcessingInvitation';
 import TeamListLayout from './components/Teams/Layout/TeamListLayout';
 import Stage from './pages/Stage/Stage';
+
 
 
 function App() {

@@ -8,6 +8,7 @@ const { siteController } = require("../controllers");
 const authMiddleware = require("../middlewares/auth.middleware");
 const adminMiddleware = require("../middlewares/admin.middleware");
 const siteMiddleware = require("../middlewares/site.middleware");
+const { siteService } = require("../services");
 const siteRouter = express.Router({mergeParams: true});
 
 siteRouter.use(bodyParser.json());
@@ -21,6 +22,8 @@ siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin], SiteCon
 siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite], siteController.inviteMemberByEmail) //hung
 siteRouter.post("/processing-invitation", siteController.processingInvitation) //hung
 siteRouter.delete("/:siteId/revoke-site-member-access/:siteMemberId", [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.revokeSiteMemberAccess) //hung
+siteRouter.get("/:siteId/get-invitations-by-site",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.getInvitaionsBySiteId); //hung
+siteRouter.delete("/:siteId/cancel-Invitation",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.cancelInvitationById);
 
 siteRouter.get("/get-by-user-id",
     [authMiddleware.verifyAccessToken],

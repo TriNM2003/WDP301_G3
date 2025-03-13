@@ -6,7 +6,7 @@ const createHttpErrors = require("http-errors");
 
 const getActivitiesByProjectId = async (projectId) => {
     try {
-        const activities = await db.Activity.find({ project: projectId })
+        const activities = await db.Activity.find({ project: projectId, isDestroyed: { $ne: true } })
             .populate("createBy")
             .populate("assignee")
             .populate("type")
@@ -21,7 +21,7 @@ const getActivitiesByProjectId = async (projectId) => {
 
 const getById = async (id) => {
     try {
-        const activity = await db.Activity.findById(id)
+        const activity = await db.Activity.findOne({ _id: id, isDestroyed: { $ne: true } })
             .populate("createBy")
             .populate("assignee")
             .populate("type")
@@ -68,67 +68,168 @@ const create = async (data, project) => {
 
 const edit = async (data, activityId) => {
     try {
-        const activity = await db.Activity.findById(activityId);
-        const {
-            activityTitle,
-            description,
-            parent,
-            sprint,
-            stage,
-            priority,
-            startDate,
-            dueDate,
-            child,
-        } = data;
+        // Tìm activity để kiểm tra trước khi cập nhật
+        const currentActivity = await db.Activity.findOne({
+            _id: activityId,
+            isDestroyed: { $ne: true }
+        });
 
+        if (!currentActivity) {
+            throw new Error("Activity not found or already deleted");
+        }
+
+        // Lấy dữ liệu cập nhật từ `data`
+        const { activityTitle, description, parent, priority, startDate, dueDate, child } = data;
+
+        // Cập nhật activity
         const updatedActivity = await db.Activity.findOneAndUpdate(
-            // activityId,
-            // {
-            //     activityTitle,
-            //     description,
-            //     parent,
-            //     sprint,
-            //     stage,
-            //     priority,
-            //     startDate,
-            //     dueDate,
-            //     child,
-
-            // },
-            // { new: true, runValidators: true }
-            { _id: activityId },
-
+            { _id: activityId, isDestroyed: { $ne: true } },
             {
                 $set: {
-                    activityTitle: activityTitle || activity?.activityTitle,
-                    description: description,
-                    parent: parent || activity?.parent,
-                    sprint: sprint || activity?.sprint,
-                    stage: stage || activity?.stage,
-                    priority: priority || activity?.priority,
-                    startDate: startDate || activity?.startDate,
-                    dueDate: dueDate || activity?.dueDate,
-                    child: child || activity?.child,
+                    activityTitle: activityTitle || currentActivity.activityTitle,
+                    description: description !== undefined ? description : currentActivity.description,
+                    parent: parent || currentActivity.parent,
+                    priority: priority || currentActivity.priority,
+                    startDate: startDate || currentActivity.startDate,
+                    dueDate: dueDate || currentActivity.dueDate,
+                    child: child || currentActivity.child,
                 }
             },
-
             { new: true, runValidators: true }
+        );
 
-        )
         if (!updatedActivity) {
-            throw new Error("Activity not found");
+            throw new Error("Failed to update activity");
         }
+
+        // Nếu có thay đổi `parent`, cập nhật parent mới và parent cũ
+        if (parent && parent !== currentActivity.parent) {
+            // Xóa activity khỏi parent cũ
+            await db.Activity.findOneAndUpdate(
+                { _id: currentActivity.parent, isDestroyed: { $ne: true } },
+                { $pull: { child: activityId } }
+            );
+
+            // Thêm activity vào parent mới
+            await db.Activity.findOneAndUpdate(
+                { _id: parent, isDestroyed: { $ne: true } },
+                { $addToSet: { child: activityId } }
+            );
+        }
+
         return updatedActivity;
     } catch (error) {
+        console.error("Error updating activity:", error);
         throw error;
     }
-}
+};
+
+const moveActivity = async (data, activityId) => {
+    try {
+        // Kiểm tra nếu người dùng gửi cả sprint và stage
+        if (data.sprint && data.stage) {
+            throw new Error("You can only update either sprint or stage at a time.");
+        }
+
+        // Tìm activity gốc và populate subactivities
+        const currentActivity = await db.Activity.findOne({
+            _id: activityId,
+            isDestroyed: { $ne: true }
+        }).populate("child");
+
+        if (!currentActivity) {
+            throw new Error("Activity not found or already deleted");
+        }
+
+        let updatedActivity = null;
+
+        // Nếu cập nhật `stage`
+        if (data.stage) {
+            const newStage = data.stage;
+            const newStageData = await db.Stage.findOne({ _id: newStage });
+
+            if (!newStageData) {
+                throw new Error("Stage not found");
+            }
+
+            // Nếu stage mới có `stageStatus` là "done", kiểm tra subactivities
+            if (newStageData.stageStatus === "done") {
+                const unfinishedSubActivities = await db.Activity.find({
+                    parent: activityId,
+                    isDestroyed: { $ne: true }
+                }).populate("stage");
+
+                // Kiểm tra nếu có subactivity nào chưa có stage "done"
+                const hasUnfinishedSubActivities = unfinishedSubActivities.some(sub => sub.stage.stageStatus !== "done");
+
+                if (hasUnfinishedSubActivities) {
+                    throw new Error(`Cannot move activity to ${newStageData?.stageName}. Please complete all subactivities first.`);
+                }
+            }
+
+            // Cập nhật `stage`
+            updatedActivity = await db.Activity.findOneAndUpdate(
+                { _id: activityId, isDestroyed: { $ne: true } },
+                { $set: { stage: newStage } },
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedActivity) {
+                throw new Error("Failed to update activity stage.");
+            }
+
+        } 
+        // Nếu cập nhật `sprint`
+        else {
+            const newSprint = data.sprint; // Sprint có thể null (Backlog)
+
+            // Cập nhật activity gốc
+            updatedActivity = await db.Activity.findOneAndUpdate(
+                { _id: activityId, isDestroyed: { $ne: true } },
+                { $set: { sprint: newSprint } },
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedActivity) {
+                throw new Error("Failed to update activity sprint.");
+            }
+
+            // Hàm đệ quy để cập nhật tất cả subactivities
+            const updateSubActivities = async (parentId, newSprint) => {
+                const subActivities = await db.Activity.find({
+                    parent: parentId,
+                    isDestroyed: { $ne: true }
+                });
+
+                for (const sub of subActivities) {
+                    await db.Activity.findOneAndUpdate(
+                        { _id: sub._id },
+                        { $set: { sprint: newSprint } },
+                        { new: true }
+                    );
+
+                    // Đệ quy cập nhật tiếp subactivity con
+                    await updateSubActivities(sub._id, newSprint);
+                }
+            };
+
+            // Nếu activity có Sprint mới, cập nhật cho tất cả subactivities
+            await updateSubActivities(activityId, newSprint);
+        }
+
+        return updatedActivity;
+    } catch (error) {
+        console.error("Error updating activity:", error);
+        throw error;
+    }
+};
+
 
 const assignMember = async (data, activityId) => {
     try {
 
-        const updatedActivity = await db.Activity.findByIdAndUpdate(
-            activityId,
+        const updatedActivity = await db.Activity.findOneAndUpdate(
+            { _id: activityId, isDestroyed: { $ne: true } },
             { $addToSet: { assignee: data } }, // Tránh trùng lặp thành viên
             { new: true, runValidators: true }
         );
@@ -151,9 +252,9 @@ const assignMember = async (data, activityId) => {
 const removeAssignMember = async (data, activityId) => {
     try {
 
-        const updatedActivity = await db.Activity.findByIdAndUpdate(
-            activityId,
-            { $pull: { assignee: data } }, // Tránh trùng lặp thành viên
+        const updatedActivity = await db.Activity.findOneAndUpdate(
+            { _id: activityId, isDestroyed: { $ne: true } },
+            { $pull: { assignee: data } },
             { new: true, runValidators: true }
         );
 
@@ -176,18 +277,9 @@ const removeAssignMember = async (data, activityId) => {
 const remove = async (activityId) => {
     try {
         // Tìm và xóa activity theo ID
-        const removedActivity = await db.Activity.findByIdAndDelete(activityId);
-        if (!removedActivity) {
-            throw new Error("Activity not found");
-        }
+        await db.Activity.updateOne({ _id: activityId }, { $set: { isDestroyed: true } });
 
-        // Xóa reference của activity khỏi mảng activities trong tất cả các user có chứa activityId đó
-        await db.User.updateMany(
-            { activities: activityId },
-            { $pull: { activities: activityId } }
-        );
-
-        return removedActivity;
+        return;
     } catch (error) {
         throw error;
     }
@@ -199,6 +291,7 @@ const activityService = {
     getById,
     create,
     edit,
+    moveActivity,
     assignMember,
     removeAssignMember,
     remove

@@ -6,6 +6,7 @@ const { projectController } = require("../controllers");
 const cloudinary = require("../configs/cloudinary");
 const authMiddleware = require("../middlewares/auth.middleware");
 const { projectMiddleware, siteMiddleware } = require("../middlewares");
+const { isSiteOwner } = require("../middlewares/site.middleware");
 
 
 const projectRouter = express.Router({ mergeParams: true });
@@ -54,9 +55,22 @@ projectRouter.put("/:projectId/project-setting",
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
+// for site owner
+projectRouter.put("/:projectId/project-setting-v2",
+    authMiddleware.verifyAccessToken,
+    siteMiddleware.isSiteOwner,
+    cloudinary.upload.single("projectAvatar"),
+    projectController.editProject
+)
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    projectController.removeToTrash
+);
+// for site owner
+projectRouter.put("/:projectId/remove-to-trash-v2",
+    authMiddleware.verifyAccessToken,
+    siteMiddleware.isSiteOwner,
     projectController.removeToTrash
 );
 
@@ -85,6 +99,10 @@ projectRouter.post("/create",
     projectController.createProject
 )
 
-
+// for site owner
+projectRouter.post("/create-v2",
+    [authMiddleware.verifyAccessToken, isSiteOwner],
+    projectController.createProjectV2
+)
 
 module.exports = projectRouter;

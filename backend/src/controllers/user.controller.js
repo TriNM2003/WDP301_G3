@@ -94,6 +94,15 @@ const getUserInfoByUserIdFromParams = async (req, res, next) =>{
         next(error);
     }
 }
+const getOtherUserById = async (req, res , next) => {
+    try {
+        const userId = req.params.userId;
+        const user = await userService.getUserById(userId);
+        res.status(200).json({ status: 200, user });
+    } catch (error) {
+        next(error)
+    }
+}
 
 
 const UserControllers = {
@@ -105,8 +114,9 @@ const UserControllers = {
     sendDeleteAccountEmail,
     confirmDeleteAccount,
      getUserActivities,
-     getUserInfoByUserIdFromParams
+     getUserInfoByUserIdFromParams,
 
+     getOtherUserById,
 };
 
 module.exports = UserControllers;

@@ -41,7 +41,7 @@ import { AppContext } from "../../../context/AppContext";
 function DeleteActivityModal() {
     const { activity, setActivity, handleActivityCreate, createActivityModal, setCreateActivityModal,
         activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity,
-        handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete,
+        handleDeleteActivity, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete,
         confirmActivity, setConfirmActivity, showNotification }
         = useContext(AppContext);
 
@@ -59,13 +59,13 @@ function DeleteActivityModal() {
                 <Button key="cancel" onClick={handleCloseDeleteActivityModal}>
                     Cancel
                 </Button>,
-                <Button key="delete" type="primary" danger onClick={handleDelete} disabled={confirmActivity !== activityToDelete}>
+                <Button key="delete" type="primary" danger onClick={handleDeleteActivity} disabled={confirmActivity !== activityToDelete?.activityTitle}>
                     Delete
                 </Button>,
             ]}
         >
-            <p>Are you sure you want to delete <strong>{activityToDelete}</strong>?</p>
-            <p>Please type <strong>"{activityToDelete}"</strong> to confirm:</p>
+            <p>Are you sure you want to delete <strong>{activityToDelete?.activityTitle}</strong>?</p>
+            <p>Please type <strong>"{activityToDelete?.activityTitle}"</strong> to confirm:</p>
             <Input placeholder="Enter activity name" value={confirmActivity} onChange={(e) => setConfirmActivity(e.target.value)} />
         </Modal>
     )

@@ -39,10 +39,17 @@ userRouter.delete("/confirm-delete",
     UserController.confirmDeleteAccount
 );
 
+
+userRouter.put("/change-password",
+    authMiddleware.verifyAccessToken,
+    UserController.changePassword
+);
+
 // get activity by userId
 userRouter.get("/user-activities", 
     authMiddleware.verifyAccessToken, 
     UserController.getUserActivities
+
 );
 
 // getUserInfoByUserIdFromParams
@@ -50,5 +57,9 @@ userRouter.get("/user/:userId",
     authMiddleware.verifyAccessToken,
     UserController.getUserInfoByUserIdFromParams
 );
+userRouter.get("/:userId/get-user-by-id",
+    authMiddleware.verifyAccessToken,
+    UserController.getOtherUserById
+)
 
 module.exports = userRouter

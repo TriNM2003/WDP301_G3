@@ -133,6 +133,28 @@ const revokeSiteMemberAccess = async (req, res, next) => {
     }
 }
 
+const getInvitaionsBySiteId = async (req, res, next) => {
+    try {
+        const {siteId} = req.params;
+        const allInvitations = await siteService.getInvitaionsBySiteId(siteId);
+        res.status(200).json(allInvitations);
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+const cancelInvitationById = async (req, res, next) => {
+    try {
+        const {invitationId} = req.body;
+        const {siteId} = req.params;
+        const resullt = await siteService.cancelInvitationById(siteId, invitationId);
+        res.status(200).json(resullt);
+    } catch (error) {
+        next(error);
+    }
+}
+
 const siteController = {
     getSiteById,
     createSite,
@@ -143,6 +165,8 @@ const siteController = {
     getAllUsersInSite,
     revokeSiteMemberAccess,
 
+    getInvitaionsBySiteId,
+    cancelInvitationById,
 }
 
 module.exports = siteController;

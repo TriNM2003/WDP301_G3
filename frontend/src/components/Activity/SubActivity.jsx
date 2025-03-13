@@ -8,7 +8,7 @@ import React, { useContext, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
 
 function SubActivity({ activity }) {
-    const { showActivity } = useContext(AppContext)
+    const { showActivity ,showDeleteActivity,activityModalLoading} = useContext(AppContext)
     return (
         <List.Item style={{ width: "100%", }} >
             <Row style={{ width: "100%" }}>
@@ -48,8 +48,8 @@ function SubActivity({ activity }) {
                         <Dropdown
                             overlay={
                                 <Menu>
-                                    <Menu.Item onClick={() => { showActivity(activity) }}>Show activity detail</Menu.Item>
-                                    <Menu.Item icon={<DeleteOutlined />} danger >
+                                    <Menu.Item onClick={() => { activityModalLoading();showActivity(activity); }}>Show activity detail</Menu.Item>
+                                    <Menu.Item icon={<DeleteOutlined />} danger onClick={() => showDeleteActivity(activity)} >
 
                                         Remove subactivity
                                     </Menu.Item>
