@@ -4,7 +4,7 @@ import { Card, Col, Dropdown, Flex, Menu, Modal, Button, Input, message } from "
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../../../context/AppContext";
 
-function KanbanTitle({ stage }) {
+function KanbanTitle({ sprint, stage }) {
     const {showNotification} =useContext(AppContext)
     const [deleteModal, setDeleteModal] = useState(false);
     const [inputValue, setInputValue] = useState("");
@@ -19,9 +19,9 @@ function KanbanTitle({ stage }) {
     };
 
     const handleDelete = (stage) => {
-        if (inputValue == stage?._stageName) {
-            message.success(`Stage "${stage?._stageName}" has been deleted successfully!`);
-            showNotification(`Project update`,`User1 just delete stage ${stage?._stageName}.`)
+        if (inputValue == stage?.stageName) {
+            message.success(`Stage "${stage?.stageName}" has been deleted successfully!`);
+            showNotification(`Project update`,`User1 just delete stage ${stage?.stageName}.`)
             handleCloseModal();
         } else {
             message.error("Stage name does not match. Please try again!");
@@ -32,7 +32,7 @@ function KanbanTitle({ stage }) {
         <Col span={6}>
             <Card style={{ height: `100%`, borderRadius: "0", background: "#F5F5F5" }} bodyStyle={{ height: `100%`, padding: "2%" }}>
                 <Flex justify="space-between" align="center" style={{ padding: "0 2%", height: "100%" }}>
-                    <small style={{ margin: 0, fontWeight: "bolder", color: grey[2] }}>{stage?._stageName}</small>
+                    <small style={{ margin: 0, fontWeight: "bolder", color: grey[2] }}>{stage?.stageName.toUpperCase()}</small>
                     <Dropdown
                         overlay={
                             <Menu>
@@ -67,9 +67,9 @@ function KanbanTitle({ stage }) {
                 ]}
             >
                 <p>
-                    Are you sure you want to delete <strong>{stage?._stageName}</strong>
+                    Are you sure you want to delete <strong>{stage?.stageName}</strong>
                 </p>
-                <p>Please type <strong>"{stage}"</strong> to confirm:</p>
+                <p>Please type <strong>"{stage?.stageName}"</strong> to confirm:</p>
                 <Input
                     placeholder="Enter stage name"
                     value={inputValue}

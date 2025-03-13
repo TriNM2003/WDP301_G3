@@ -18,9 +18,9 @@ const SprintBoard = () => {
   const { activities, activityTypes, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   // Activities
-  const [filterActivity, setFliterActivity] = useState(["task"]);
-  const filteredActivitites = activities?.filter((a) => a && (filterActivity.length > 0 ? filterActivity.includes(a?.type?.typeName) : true));
-
+  const [filterActivityType, setFliterActivityType] = useState(["task"]);
+  const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
+  
   //DND
   const handleDragEnd = (e) => {
     const { over, active } = e;
@@ -93,7 +93,7 @@ const SprintBoard = () => {
                 value={activityName}
                 onChange={(e) => setActivityName(e.target.value)}
                 onPressEnter={() => { handleActivityCreate("", "to do", "task", null) }}
-                onBlur={() => setCreateActivityModal(false)}
+                onBlur={() =>  setCreateActivityModal(false)}
                 placeholder="Enter activity name"
                 prefix={<FormOutlined style={{ color: blue[6] }} />}
                 style={{ width: "100%", borderRadius: "0", margin: "1% 0", padding: "0.5% 1%" }}

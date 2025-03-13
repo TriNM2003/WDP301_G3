@@ -14,7 +14,7 @@ import SubMenu from 'antd/es/menu/SubMenu'
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI,stages, setStages, site,handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI, stages,sprints, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([
     { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
     { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
@@ -28,7 +28,6 @@ function ActivityDetail() {
     { id: 10, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
     { id: 11, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
   ]);
-
 
   const [newComment, setNewComment] = useState("");
   const [editComment, setEditComment] = useState(false);
@@ -241,7 +240,7 @@ function ActivityDetail() {
       footer={[]}
       onClose={closeActivity}
       closeIcon={null}
-      
+
       style={{ borderRadius: "0" }}
       modalRender={(node) => (
         <div>
@@ -697,21 +696,42 @@ function ActivityDetail() {
 
                 </Space>
               </Col>
-              <Col span={5} align="center" style={{ padding: "0 1%" }}>
-                {activityLoading ? (
-                  <Skeleton.Input active size="small" style={{ width: "100%" }} />
-                ) : (
-                  <Select
-                    value={activity?.stage?._id}
-                    onChange={(value)=>handleMoveActivity("stage",activity,value)}
-                    style={{ width: "60%", borderRadius: "0" }}
-                    dropdownStyle={{ borderRadius: 0 }}
-                  >
-                    {stages?.map((stage)=>{
-                      return <Option key={stage?._id} value={stage?._id}>{stage?.stageName}</Option>
-                    })}
-                  </Select>
-                )}
+              <Col span={8} align="center" style={{ padding: "0 1%" }}>
+                <Space>
+                  {activityLoading ? (
+                    <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                  ) : (
+                    <Select
+                      value={activity?.sprint?._id || null}
+                      onChange={(value) => handleMoveActivity("sprint", activity, value)}
+                      style={{ width: "100%", borderRadius: "0" }}
+                      dropdownStyle={{ borderRadius: 0 }} 
+                      disabled={activity?.sprint?.sprintStatus=="completed"}
+                    >
+                      <Option key={null} value={null}>Backlog</Option>
+                      {sprints?.map((sprint) => {
+                        return <Option key={sprint?._id} value={sprint?._id}
+                         disabled={sprint?.sprintStatus == "completed" || sprint?._id == activity?.sprint?._id}
+                         >{sprint?.sprintName}</Option>
+                      })}
+                    </Select>
+                  )}
+                  {activityLoading ? (
+                    <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                  ) : (
+                    <Select
+                      value={activity?.stage?._id}
+                      onChange={(value) => handleMoveActivity("stage", activity, value)}
+                      style={{ width: "100%", borderRadius: "0" }}
+                      dropdownStyle={{ borderRadius: 0 }}
+                      disabled={activity?.sprint?.sprintStatus=="completed"}
+                    >
+                      {stages?.map((stage) => {
+                        return <Option key={stage?._id} value={stage?._id}>{stage?.stageName}</Option>
+                      })}
+                    </Select>
+                  )}
+                </Space>
               </Col>
               <Col span={22} style={{ padding: "0 1%" }}>
                 <Space direction="vertical" style={{ width: "100%", textAlign: "center", padding: "2% 0" }}>
