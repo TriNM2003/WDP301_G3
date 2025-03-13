@@ -10,13 +10,13 @@ import Search from "antd/es/input/Search";
 import { Option } from "antd/es/mentions";
 import { AppContext } from "../../../../context/AppContext";
 import CompleteSprintModal from "../Sprint/CompleteSprintModal";
+import ActivityDetail from "../../../Activity/ActivityDetail";
 
 const { Title } = Typography;
 
 const KanbanBoard = () => {
-    const { showNotification,stages,setStages, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+    const { showNotification, sprints, stages, setStages, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
 
-    const columns = ["To Do", "In Progress", "Review", "Done", "Done 2"];
 
 
 
@@ -32,70 +32,83 @@ const KanbanBoard = () => {
     const onSearch = (e) => {
         console.log("Tìm kiếm:", e.target.value);
     };
+    const activeSprint = sprints.find((s) => s.sprintStatus == "active") || null;
+
     return (
-        <div style={{ height: "100%", width: "100%", padding: "0 2%", overflowX: "auto", overflowY: "unset" }}>
-            <Row style={{
-                height: `10% `, margin: "0 2%"
-            }} justify="space-between">
-                <Col span={6} align="center">
-                    <Input
-                        placeholder="Search activity"
-                        allowClear
-                        size="middle"
-                        onChange={onSearch}
-                        style={{ width: "100%", borderRadius: "2%" }}
-                        prefix={<SearchOutlined />}
-                    />
+        (activeSprint != null ? (
+            <div style={{ height: "100%", width: "100%", padding: "0 2%", overflowX: "auto", overflowY: "unset" }}>
+                <Row style={{
+                    height: `10% `, margin: "0 2%"
+                }} justify="space-between">
+                    <Col span={6} align="center">
+                        <Input
+                            placeholder="Search activity"
+                            allowClear
+                            size="middle"
+                            onChange={onSearch}
+                            style={{ width: "100%", borderRadius: "2%" }}
+                            prefix={<SearchOutlined />}
+                        />
 
-                </Col>
-                <Col span={5}>
-                    <Flex justify="space-around" >
-                        <Dropdown overlay={
-                            <Menu>
-                                <Menu.Item key="1">
-                                    <Checkbox checked={filters.assigned}
-                                        onChange={(e) => handleChangeFilter("assigned", e.target.checked)} >
-                                        Assigned to me
-                                    </Checkbox>
-                                </Menu.Item>
-                                <Menu.Item key="2">
-                                    <Checkbox checked={filters.recentlyUpdated}
-                                        onChange={(e) => handleChangeFilter("recentlyUpdated", e.target.checked)}>
-                                        Recently Updated
-                                    </Checkbox>
-                                </Menu.Item>
-                            </Menu>
-                        } trigger={["click"]}>
-                            <Button style={{ borderRadius: "0%" }}>
-                                Filter   <DownOutlined />
-                            </Button>
-                        </Dropdown>
-                        <Button variant="solid" color="green" style={{ borderRadius: "0%" }} onClick={showCompletedSprint}><CheckOutlined /> Complete sprint</Button>
-                        <CompleteSprintModal />
+                    </Col>
+                    <Col span={5}>
+                        <Flex justify="space-around" >
+                            <Dropdown overlay={
+                                <Menu>
+                                    <Menu.Item key="1">
+                                        <Checkbox checked={filters.assigned}
+                                            onChange={(e) => handleChangeFilter("assigned", e.target.checked)} >
+                                            Assigned to me
+                                        </Checkbox>
+                                    </Menu.Item>
+                                    <Menu.Item key="2">
+                                        <Checkbox checked={filters.recentlyUpdated}
+                                            onChange={(e) => handleChangeFilter("recentlyUpdated", e.target.checked)}>
+                                            Recently Updated
+                                        </Checkbox>
+                                    </Menu.Item>
+                                </Menu>
+                            } trigger={["click"]}>
+                                <Button style={{ borderRadius: "0%" }}>
+                                    Filter   <DownOutlined />
+                                </Button>
+                            </Dropdown>
+                            <Button variant="solid" color="green" style={{ borderRadius: "0%" }} onClick={showCompletedSprint}><CheckOutlined /> Complete sprint</Button>
+                            <CompleteSprintModal />
 
-                    </Flex>
-                </Col>
+                        </Flex>
+                    </Col>
 
-            </Row>
+                </Row>
 
-            <Row gutter={16} style={{
-                height: `7 % `, position: 'sticky',
-                top: 0,
-                zIndex: 10, margin: "0 2%", flexWrap: "nowrap"
-            }}>
-                {stages?.map((stage)=>{
-                    return <KanbanTitle stage={stage} />
-                })}
+                <Row gutter={16} style={{
+                    height: `7 % `, position: 'sticky',
+                    top: 0,
+                    zIndex: 10, margin: "0 2%", flexWrap: "nowrap"
+                }}>
+                    {stages?.map((stage) => {
+                        return <KanbanTitle sprint={activeSprint} stage={stage} />
+                    })}
+
+
+                </Row>
+                <Row gutter={16} style={{ height: `83 % `, margin: "0 2%", flexWrap: "nowrap" }}>
+
+                    {stages?.map((stage) => {
+                        return <KanbanBody sprint={activeSprint} stage={stage} />
+                    })}
+                </Row>
+                <ActivityDetail />
                 
-
-            </Row>
-            <Row gutter={16} style={{ height: `83 % `, margin: "0 2%", flexWrap: "nowrap" }}>
-
-                {stages?.map((stage)=>{
-                    return <KanbanBody stage={stage} />
-                })}
-            </Row>
-        </div>
+            </div>
+            
+        ) : (
+            <div style={{ height: "100%", width: "100%", padding: "0 2%", overflowX: "auto", overflowY: "unset" }}>
+                <Flex justify="center">
+                    <p>Please active sprint to display activities ...</p>
+                </Flex>
+            </div>
+        ))
     );
 };
 
