@@ -40,9 +40,11 @@ const ProjectList = () => {
 
 
   // filter project by user
-  const filteredProjectsByUser = Array.isArray(projects)
-    ? projects.filter((project) =>
-      project.projectMember?.some(member => member._id?._id === user._id)
+
+    const filteredProjectsByUser = Array.isArray(projects)
+    ? projects.filter(project => 
+        project?.projectStatus === "active" && 
+        project.projectMember?.some(member => member._id?._id === user._id)
     )
     : [];
 
@@ -106,7 +108,7 @@ const ProjectList = () => {
         width: "100%",
         maxWidth: "100vw",
         overflowX: "hidden",
-        minHeight: "100vh",
+        maxHeight: "100%",
         display: "flex",
         flexDirection: "column",
     }}>
