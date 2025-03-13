@@ -55,6 +55,10 @@ const activitySchema = new mongoose.Schema({
         ref: 'user',
         default:[]
     }],
+    isDestroyed: {
+        type: Boolean,
+        default: false 
+    },
     comments: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId
@@ -102,6 +106,7 @@ const activitySchema = new mongoose.Schema({
             }
         }
     ],
+    
     startDate: {
         type: Date
     },
@@ -115,7 +120,8 @@ const activitySchema = new mongoose.Schema({
             }
         },
         message: 'Due date must be greater than or equal to start date'
-    }
+    },
+    
 
 }
 }, { timestamps: true });

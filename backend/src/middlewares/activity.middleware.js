@@ -7,7 +7,7 @@ const isInActivity = async (req, res, next) => {
     try {
         const { id } = req.payload;
         const { activityId } = req.params;
-        const checkActivity = await db.Activity.findById(activityId).populate("project");
+        const checkActivity = await db.Activity.findOne({_id:activityId, isDestroyed: { $ne: true }}).populate("project");
 
         if (!checkActivity  ) {
             return res.status(400).json({ error: { status: 400, message: "Activity not found" } })

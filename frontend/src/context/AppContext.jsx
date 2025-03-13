@@ -18,13 +18,18 @@ const AppProvider = ({ children }) => {
 
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState(null);
   const [site, setSite] = useState({})
-  const [projects, setProjects] = useState([]);
-  const [project, setProject] = useState({});
+
   const location = useLocation();
   const nav = useNavigate();
-  const [activityTypes, setActivityTypes] = useState([]);
+
+  //Project
+  const [projects, setProjects] = useState([]);
+  const [project, setProject] = useState({});
+  //Stage
+  const [stages, setStages] = useState([]);
 
   // Activity
+  const [activityTypes, setActivityTypes] = useState([]);
   const [deleteActivity, setDeleteActivity] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState("");
   const [confirmActivity, setConfirmActivity] = useState("");
@@ -144,25 +149,25 @@ const AppProvider = ({ children }) => {
     }
   }, [site]);
 
-// get activities by userId
-    useEffect(() => {
-      if (user._id) {
-        axios.get(`${userApi}/user-activities`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
+  // get activities by userId
+  useEffect(() => {
+    if (user._id) {
+      axios.get(`${userApi}/user-activities`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then((res) => {
+          setUserActivities(res.data.activities);
         })
-          .then((res) => {
-            setUserActivities(res.data.activities);
-          })
-          .catch((err) => {
-            console.error("Error fetching projects in site:", err);
-          });
-      }
-    }, [user]);
+        .catch((err) => {
+          console.error("Error fetching projects in site:", err);
+        });
+    }
+  }, [user]);
 
 
-// get teams in site
+  // get teams in site
   useEffect(() => {
     if (site._id) {
       axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
@@ -193,7 +198,7 @@ const AppProvider = ({ children }) => {
     });
   };
   //create activity
-  const handleActivityCreate =  (sprint, stage, type, parent) => {
+  const handleActivityCreate = (sprint, stage, type, parent) => {
     if (activityName.trim().length < 3) {
       message.warning("Activity title must be at least 3 characters!");
       return;
@@ -207,7 +212,7 @@ const AppProvider = ({ children }) => {
         sprint: sprintId ? sprintId : null,
         stage: stageId,
         type: typeId,
-        parent: parent ,
+        parent: parent,
         createBy: user?._id,
       },
       {
@@ -231,18 +236,52 @@ const AppProvider = ({ children }) => {
 
         setCreateActivityModal(false);
       })
-    
+
 
   };
+  const activityModalLoading = () => {
+    setActivityLoading(true);
+    setTimeout(() => {
+      setActivityLoading(false);
+    }, 1000);
+  }
+  // moveActivity
+  const handleMoveActivity = async (field, selectedActivity, data) => {
+    axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${selectedActivity?._id}/move`,
+      {
+        [field]: data
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+
+    )
+      .then((res) => {
+        activityModalLoading();
+        setActivity(res?.data?.activity);
+        const updateActivities = activities.map((a) =>
+          a._id === res?.data?.activity?._id ? res?.data?.activity : a
+        );
+        setActivities(updateActivities)
+        message.success(`Activity "${selectedActivity?.activityTitle}" moved successfully!`);
+        showNotification(`Project update`, `User1 just edit activity "${selectedActivity?.activityTitle}".`);
+      })
+      .catch((err) => {
+        message.error(err.response?.data?.error?.message || "Move activity failed");
+        console.log(err);
+      })
+  }
   // delete Activity
-  const showDeleteActivity = (activityName) => {
-    setActivityToDelete(activityName);
+  const showDeleteActivity = (activity) => {
+    setActivityToDelete(activity);
     setDeleteActivity(true);
   };
 
   const handleCloseDeleteActivityModal = () => {
     setDeleteActivity(false);
-    setConfirmActivity(""); // Xóa input khi đóng modal
+    setConfirmActivity("");
   };
 
   const checkLoginStatus = () => {
@@ -263,12 +302,27 @@ const AppProvider = ({ children }) => {
   }
 
 
-  const handleDelete = () => {
-    if (confirmActivity === activityToDelete) {
-      message.success(`Activity "${activityToDelete}" has been deleted successfully!`);
-      showNotification(`Project update`, `User1 just deleted activity ${activityToDelete}.`);
-      handleCloseDeleteActivityModal();
-      closeActivity();
+  const handleDeleteActivity = async () => {
+    if (confirmActivity === activityToDelete?.activityTitle) {
+      try {
+        axios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          })
+        const updateActivities = activities?.filter((a) =>
+          a._id != activityToDelete?._id
+        );
+        setActivities(updateActivities)
+
+        message.success(`Activity "${activityToDelete}" has been deleted successfully!`);
+        showNotification(`Project update`, `User1 just deleted activity ${activityToDelete}.`);
+        handleCloseDeleteActivityModal();
+        closeActivity();
+      } catch (error) {
+
+      }
     } else {
       message.error("Activity name does not match. Please try again!");
     }
@@ -285,6 +339,7 @@ const AppProvider = ({ children }) => {
     setActivityModal(false);
     setActivity()
   };
+
 
   //Complete sprint
   const showCompletedSprint = () => {
@@ -327,14 +382,15 @@ const AppProvider = ({ children }) => {
       //setAccessToken,
       defaultSelectedKeys, setDefaultSelectedKeys,
       showNotification,
-      showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
+      showDeleteActivity, handleDeleteActivity, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity,
       activityModal, setActivityModal, showActivity, closeActivity,
       handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName,
       completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel,
       handleAddTeamMember, handleKickTeamMember,
-      project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity,activityLoading, setActivityLoading,
-      createSubActivity, setCreateSubActivity,isActivityTitle, setIsActivityTitle,
-      userActivities, setUserActivities, teams, setTeams
+      stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
+      createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
+      userActivities, setUserActivities, teams, setTeams, activityModalLoading,
+      handleMoveActivity
 
     }}>
       {children}
