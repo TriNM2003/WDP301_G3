@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin } from "antd";
+import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin, AutoComplete } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -26,6 +26,7 @@ const TeamMemberManagement = () => {
     const [isLeader, setIsLeader] = useState(false);
     const [loading, setLoading] = useState(true);
     const [siteMembers, setSiteMembers] = useState([]);
+    const [filteredMembers, setFilteredMembers] = useState([]);
     const { teamSlug } = useParams();
     const nav = useNavigate();
 
@@ -74,6 +75,30 @@ const TeamMemberManagement = () => {
             console.error("Error fetching site members:", error);
             message.error("Failed to fetch site members.");
         }
+    };
+
+    // Hàm này chạy khi user nhập vào AutoComplete
+    const handleSearchUser = (value) => {
+        if (!value) {
+            setFilteredMembers([]);
+            return;
+        }
+
+        const filtered = siteMembers
+            .map(member => member._id)
+            .filter(user => user.username.toLowerCase().includes(value.toLowerCase()) ||
+                (user.fullName && user.fullName.toLowerCase().includes(value.toLowerCase())))
+            .map(user => ({
+                value: user.username,
+                label: (
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <Avatar src={user.userAvatar} size="small" style={{ marginRight: 8 }} />
+                        <span>{user.fullName || user.username} ({user.email})</span>
+                    </div>
+                ),
+            }));
+
+        setFilteredMembers(filtered);
     };
 
     // 🔹 Fetch thành viên của team bằng `teamId`
@@ -158,6 +183,14 @@ const TeamMemberManagement = () => {
             message.error("Please select a member.");
             return;
         }
+
+        // 🔹 Kiểm tra xem thành viên đã có trong team chưa
+        const isAlreadyInTeam = members.some(member => member.username === searchUser);
+        if (isAlreadyInTeam) {
+            message.warning(`${searchUser} is already in the team.`);
+            return;
+        }
+
         setLoadingAdd(true);
         try {
             await axios.post(
@@ -168,8 +201,10 @@ const TeamMemberManagement = () => {
 
             message.success(`Successfully added ${searchUser} to the team`);
             showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+
             setIsAddMemberModalVisible(false);
             setSearchUser(""); // Reset input sau khi thêm thành viên thành công
+            setFilteredMembers([]);
             fetchTeamMembers(teamId); // Cập nhật danh sách thành viên trong team
         } catch (error) {
             console.error("Error adding team member:", error);
@@ -288,12 +323,14 @@ const TeamMemberManagement = () => {
                 open={isAddMemberModalVisible}
                 onCancel={() => {
                     setIsAddMemberModalVisible(false);
-                    setSearchUser(""); // Xóa dữ liệu input khi đóng modal
+                    setSearchUser(""); // Reset input khi đóng modal
+                    setFilteredMembers([]);
                 }}
                 footer={[
                     <Button key="cancel" onClick={() => {
                         setIsAddMemberModalVisible(false);
-                        setSearchUser(""); // Xóa dữ liệu input khi bấm Cancel
+                        setSearchUser(""); // Reset input khi bấm Cancel
+                        setFilteredMembers([]);
                     }}>
                         Cancel
                     </Button>,
@@ -302,27 +339,20 @@ const TeamMemberManagement = () => {
                     </Button>
                 ]}
             >
-                <div style={{ marginBottom: "10px" }}>Select Member</div>
-                <Select
-                    showSearch
-                    placeholder="Select a member"
-                    value={searchUser}
-                    onChange={setSearchUser}
+                <div style={{ marginBottom: "10px" }}>Enter Username</div>
+                <AutoComplete
                     style={{ width: "100%" }}
-                    filterOption={(input, option) =>
-                        option?.value?.toLowerCase().includes(input.toLowerCase())
-                    }
-                >
-                    {siteMembers.map(member => {
-                        const user = member._id; // Lấy thông tin user từ API
-                        return (
-                            <Option key={user._id} value={user.username}>
-                                <Avatar src={user.userAvatar} size="small" style={{ marginRight: 8 }} />
-                                <span>{user.fullName || user.username} ({user.email})</span>
-                            </Option>
-                        );
-                    })}
-                </Select>
+                    options={filteredMembers} // Danh sách gợi ý
+                    onSearch={(value) => {
+                        setSearchUser(value);  // ✅ Cập nhật giá trị nhập vào
+                        handleSearchUser(value);
+                    }}
+                    onChange={(value) => setSearchUser(value)}  // ✅ Cập nhật khi nhập chữ
+                    onSelect={(value) => setSearchUser(value)}  // ✅ Cập nhật khi chọn từ gợi ý
+                    value={searchUser}  // ✅ Đảm bảo input hiển thị giá trị hiện tại
+                    placeholder="Enter username"
+                    allowClear
+                />
 
                 <div style={{ marginBottom: "10px", marginTop: "10px" }}>Role</div>
                 <Select value={selectedRole} onChange={setSelectedRole} style={{ width: "100%" }}>
