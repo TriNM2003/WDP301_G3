@@ -132,25 +132,29 @@ const EditSite = () => {
         setIsDeactivateModalVisible(true);
     };
 
-    const handleConfirmDeactivate = async () => {
-        if (confirmSiteName !== siteData?.siteName) {
+    const handleDeactivateReqest = async () => {
+        if(confirmSiteName !== siteData.siteName) {
             message.error("Site name does not match!");
             return;
         }
 
-        try {
-            await axios.put(`${siteAPI}/${site._id}/deactivate`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
-
-            message.success(`Site "${siteData.siteName}" has been deactivated.`);
-            showNotification("Site Deactivated", `The site "${siteData.siteName}" has been deactivated.`);
+        setLoading(true);
+        axios.post(`${siteAPI}/${site._id}/send-deactivate-email`, {}, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        })
+        .then(() => {
+            message.success("Deactivation request sent!");
+            showNotification("Deactivation Request", "The deactivation request has been sent to the site owner.");
             setIsDeactivateModalVisible(false);
-            navigate("/site"); // Chuyển hướng sau khi deactive
-        } catch (error) {
-            console.error("Error deactivating site:", error);
-            message.error("Failed to deactivate site.");
-        }
+            setLoading(false);
+        })
+        .catch((error) => {
+            console.error("Error sending deactivation email:", error);
+            message.error("Failed to send deactivation email.");
+            setLoading(false);
+        });
+
+
     };
 
     if (isDeactivated) {
@@ -258,7 +262,7 @@ const EditSite = () => {
                 onCancel={() => setIsDeactivateModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsDeactivateModalVisible(false)}>Cancel</Button>,
-                    <Button key="confirm" type="primary" danger onClick={handleConfirmDeactivate}>Deactivate</Button>
+                    <Button key="confirm" type="primary" loading={loading} danger onClick={handleDeactivateReqest}>Deactivate</Button>
                 ]}
             >
                 <p>To confirm deactivation, please type the site name: <strong>{siteData.siteName}</strong></p>

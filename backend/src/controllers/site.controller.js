@@ -76,6 +76,18 @@ const editSite = async (req, res, next) => {
     }
 };
 
+const sendDeactivateSiteEmail = async (req, res, next) => {
+    try {
+        const { siteId } = req.params;
+        const response = await siteService.sendDeactivateSiteEmail(siteId);
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(403).json({
+            message: error.message
+        });
+    }
+};
+
 const deactivateSite = async (req, res, next) => {
     try {
         const { siteId } = req.params;
@@ -206,6 +218,7 @@ const siteController = {
 
     getInvitaionsBySiteId,
     cancelInvitationById,
+    sendDeactivateSiteEmail
 }
 
 module.exports = siteController;

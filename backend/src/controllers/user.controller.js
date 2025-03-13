@@ -33,13 +33,13 @@ const changePassword = async (req, res) => {
 const editProfile = async (req, res) => {
     try {
         console.log("Req file:", req.file);
-        const { fullName, address, dob, phoneNumber } = req.body;
-        const response = await userService.editProfile(req.payload.id, fullName, address, dob, phoneNumber, req.file);
+        const profileData = req.body;
+        const response = await userService.editProfile(req.payload.id, profileData, req.file);
         res.status(200).json(response);
     } catch (error) {
-        console.error("Cloudinary Upload Error:", error);
-        fs.unlink(req.file.path, () => { });
-        return res.status(500).json({ message: "Cant't update profile! Try again." });
+        res.status(403).json({
+            message: error.message
+        });
 
     }
 };

@@ -10,7 +10,7 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const nodemailer = require("nodemailer")
-const {slugify} = require("../utils/slugify.util");
+const { slugify } = require("../utils/slugify.util");
 const { mailer } = require("../configs");
 const { default: mongoose } = require("mongoose");
 
@@ -123,7 +123,7 @@ const editSite = async (siteId, updateData, imageFile) => {
             siteSlug: slugify(updateData.siteSlug || site.siteSlug),
         }
 
-        await Site.findByIdAndUpdate(siteId, {
+        const updatedSite = await Site.findByIdAndUpdate(siteId, {
             $set: {
                 siteName: newSite.siteName,
                 siteDescription: newSite.siteDescription,
@@ -132,11 +132,56 @@ const editSite = async (siteId, updateData, imageFile) => {
             }
         }, { new: true });
 
-        return site;
+        return updatedSite;
     } catch (error) {
         throw error;
     }
 };
+
+//gửi email xác nhận deactive site đến siteOwner
+const sendDeactivateSiteEmail = async (siteId) => {
+    try {
+        const site = await Site.findById(siteId).populate("siteMember._id");
+        if (!site) {
+            throw new Error("Site not found");
+        }
+
+        const siteOwner = site.siteMember.find(member => member.roles.includes("siteOwner"));
+        if (!siteOwner) {
+            throw new Error("Site owner not found");
+        }
+
+        const deactivatedLink = `http://localhost:3000/site/deactivate-site`;
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: siteOwner._id.email,
+            subject: "Confirm Deactivate Site",
+            html: `<h2>Are you sure you want to deactivate site ${site.siteName}?</h2>
+                <p>Click the link below to confirm deactivation:</p>
+            <a href="${deactivatedLink}" style="padding: 10px 20px; background: red; color: #fff; text-decoration: none; border-radius: 5px;">Confirm Deactivate</a>`
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            return { message: "Deactivate site email sent successfully!" };
+        }
+        catch (error) {
+            console.error("Error sending email notification:", error);
+            throw new Error("Failed to send email notification");
+        }
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 
 const deactivateSite = async (siteId) => {
@@ -197,64 +242,64 @@ const getAllUsersInSite = async (siteId) => {
 
 const inviteMemberByEmail = async (senderId, receiverId, siteId) => {
     const sender = await User.findById(senderId);
-    if(!sender){
-         throw new Error("Sender does not exist!");
+    if (!sender) {
+        throw new Error("Sender does not exist!");
     }
-   const receiver = await User.findById(receiverId);
-   if(!receiver){
+    const receiver = await User.findById(receiverId);
+    if (!receiver) {
         throw new Error("Receiver does not exist!");
-   }
-   const site = await Site.findById(siteId);
-   if(!site){
+    }
+    const site = await Site.findById(siteId);
+    if (!site) {
         throw new Error("Site does not exist!");
-   }
-   if(receiver.site === site._id){
+    }
+    if (receiver.site === site._id) {
         throw new Error("Receiver already site member!");
-   }
+    }
 
-   // tao invitation moi
-   const invitationId = new mongoose.Types.ObjectId();
-   site.invitations.push({
+    // tao invitation moi
+    const invitationId = new mongoose.Types.ObjectId();
+    site.invitations.push({
         _id: invitationId,
         sender: sender._id,
         receiver: receiver._id,
-   })
-   const updatedSite = await site.save();
+    })
+    const updatedSite = await site.save();
 
-   await mailer.sendInvitation(receiver.email, invitationId, site.siteName);
+    await mailer.sendInvitation(receiver.email, invitationId, site.siteName);
 
     return updatedSite.invitations;
 }
 
 const processingInvitation = async (invitationId, decision) => {
-   const invitationSite = await Site.findOne({"invitations._id": invitationId});
-   if(!invitationSite){
-    throw new Error("Invitation does not exist!");
-   }
-   const invitation = invitationSite.invitations.find(item => item._id.toString() === invitationId);
-//    if(invitation.receiver !== user._id){
-//     throw new Error("User are not receiver!");
-//    }
-   //check status == pending
-   if(invitation.status !== "pending"){
+    const invitationSite = await Site.findOne({ "invitations._id": invitationId });
+    if (!invitationSite) {
+        throw new Error("Invitation does not exist!");
+    }
+    const invitation = invitationSite.invitations.find(item => item._id.toString() === invitationId);
+    //    if(invitation.receiver !== user._id){
+    //     throw new Error("User are not receiver!");
+    //    }
+    //check status == pending
+    if (invitation.status !== "pending") {
         throw new Error("Invitation has been processed or expired!");
-   }
+    }
 
-   // Kiểm tra nếu invitation đã hết hạn
-   if (invitation.expireAt && invitation.expireAt < new Date()) {
-    invitation.status = "expired",
-    await invitationSite.save();
-    throw new Error("Invitation has expired!");
+    // Kiểm tra nếu invitation đã hết hạn
+    if (invitation.expireAt && invitation.expireAt < new Date()) {
+        invitation.status = "expired",
+            await invitationSite.save();
+        throw new Error("Invitation has expired!");
     }
 
     // xu ly invitation
-    if(decision === "accepted"){
+    if (decision === "accepted") {
         invitation.status = "accepted"
         const newMember = await User.findById(invitation.receiver);
         if (!newMember) {
             throw new Error("Receiver does not exist!");
         }
-        if(newMember.status !== "active"){
+        if (newMember.status !== "active") {
             throw new Error("Receiver is not activated!");
         }
         invitationSite.siteMember.push({
@@ -264,27 +309,27 @@ const processingInvitation = async (invitationId, decision) => {
         newMember.site = invitationSite._id;
         await invitationSite.save();
         await newMember.save();
-    }else if (decision === "declined"){
+    } else if (decision === "declined") {
         invitation.status = "declined"
         await invitationSite.save();
-    }else{
+    } else {
         throw new Error("No decision provided!");
     }
 
-   return {
-     decision: decision,
-     invitation: invitation
-   };
+    return {
+        decision: decision,
+        invitation: invitation
+    };
 }
 
 const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
     const site = await Site.findById(siteId);
-    if(!site){
+    if (!site) {
         throw new Error("Site does not exist!");
     }
 
-     // Kiểm tra nếu user có activity chưa hoàn thành
-     const activeTasks = await db.Activity.find({
+    // Kiểm tra nếu user có activity chưa hoàn thành
+    const activeTasks = await db.Activity.find({
         assignee: siteMemberId,
     }).populate("stage");
 
@@ -299,28 +344,28 @@ const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
         { "siteMember._id": siteMemberId },
         { $pull: { siteMember: { _id: siteMemberId } } }, // Xóa member khỏi danh sách
         { new: true } // Trả về tài liệu sau khi cập nhật
-      ).select("siteMember").populate("siteMember._id");
-      
+    ).select("siteMember").populate("siteMember._id");
+
     await User.findOneAndUpdate(
         { _id: siteMemberId }, // Tìm user theo _id
         { $unset: { site: "" } } // Xóa trường site
-      );
-      
+    );
+
 
     return {
-        message:`Revoke site memeber ${siteMemberId} from site ${siteId} successfully!`,
+        message: `Revoke site memeber ${siteMemberId} from site ${siteId} successfully!`,
         siteMember: updateSiteMember
     };
 }
 
 const getInvitaionsBySiteId = async (siteId) => {
     const allInvitations = await Site.findOne(
-        {_id: siteId},
-        {invitations: 1, _id: 0}
+        { _id: siteId },
+        { invitations: 1, _id: 0 }
     ).populate("invitations.receiver");
-    if(allInvitations === null){
+    if (allInvitations === null) {
         throw new Error("Site not found!")
-    } 
+    }
     return allInvitations || [];
 }
 
@@ -359,13 +404,14 @@ const siteService = {
     createSite,
     editSite,
     getSiteByUserId,
-    inviteMemberByEmail, processingInvitation, 
+    inviteMemberByEmail, processingInvitation,
     getAllSites,
-    deactivateSite,    revokeSiteMemberAccess,
+    deactivateSite, revokeSiteMemberAccess,
     getSiteMembersById,
     getAllUsersInSite,
     getInvitaionsBySiteId,
     cancelInvitationById,
+    sendDeactivateSiteEmail
 }
 
 module.exports = siteService;

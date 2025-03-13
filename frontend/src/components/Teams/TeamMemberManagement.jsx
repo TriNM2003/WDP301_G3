@@ -112,8 +112,9 @@ const TeamMemberManagement = () => {
             if (Array.isArray(response.data)) {
                 setMembers(response.data);
 
-                const currentUser = response.data.find(member => member._id === user?._id);
-                setIsLeader(currentUser?.role === "teamLeader");
+                //currentUser check role theo array roles
+                const currentUser = response.data.find(member => member._id == user._id);
+                setIsLeader(currentUser?.roles.includes("teamLeader"));
 
                 if (!currentUser || currentUser.role !== "teamLeader") {
                     message.warning("You are not a team leader. Access is restricted!");
