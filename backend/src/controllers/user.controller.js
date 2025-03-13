@@ -108,7 +108,6 @@ const getOtherUserById = async (req, res , next) => {
 const UserControllers = {
     getAllUsers,
     getUserById,
-
     changePassword,
     editProfile,
     sendDeleteAccountEmail,

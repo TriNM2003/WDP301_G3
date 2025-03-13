@@ -22,6 +22,15 @@ siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin], SiteCon
 siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite], siteController.inviteMemberByEmail) //hung
 siteRouter.post("/processing-invitation", siteController.processingInvitation) //hung
 siteRouter.delete("/:siteId/revoke-site-member-access/:siteMemberId", [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.revokeSiteMemberAccess) //hung
+siteRouter.put("/:siteId/edit",
+    [verifyAccessToken, siteMiddleware.isInSite],
+    cloudinary.upload.single("siteAvatar"),
+    siteController.editSite
+);
+siteRouter.put("/:siteId/deactivate",
+    [verifyAccessToken, siteMiddleware.isInSite],
+    siteController.deactivateSite
+);
 siteRouter.get("/:siteId/get-invitations-by-site",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.getInvitaionsBySiteId); //hung
 siteRouter.delete("/:siteId/cancel-Invitation",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.cancelInvitationById);
 

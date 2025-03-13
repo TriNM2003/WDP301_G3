@@ -31,13 +31,12 @@ activityRouter.put("/:activityId/move",
     activityController.moveActivity
 )
 activityRouter.put("/:activityId/assignMember",
-[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
     activityController.assignMember
 )
 activityRouter.put("/:activityId/removeAssignee",
-[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
 [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
-    activityController.assignMember
+    activityController.removeAssignMember
 )
 activityRouter.delete("/:activityId/delete",
 [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],

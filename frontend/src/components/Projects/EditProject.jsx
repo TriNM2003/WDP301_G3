@@ -17,6 +17,7 @@ const EditProject = () => {
     const [projectData, setProjectData] = useState({
         projectName: '',
         projectAvatar: '',
+        projectSlug: '',
         projectManager: '',
     });
     const [imagePreview, setImagePreview] = useState(null);
@@ -82,6 +83,7 @@ const EditProject = () => {
                 projectName,
                 projectAvatar,
                 projectManager: manager ? manager._id.username : "Unknown",
+                projectSlug,
                 projectStatus
             });
     
@@ -107,6 +109,7 @@ const EditProject = () => {
     const handleSave = async () => {
         const formData = new FormData();
         formData.append("projectName", projectData.projectName);
+        formData.append("projectSlug", projectData.projectSlug);
         if (selectedFile) {
             formData.append("projectAvatar", selectedFile);
         }
@@ -124,6 +127,8 @@ const EditProject = () => {
         } catch (error) {
             console.error("Error updating project:", error);
             message.error("Failed to update project.");
+        } finally {
+            setLoading(false);
         }
     };
     const handleRemoveToTrash = async () => {
@@ -138,10 +143,12 @@ const EditProject = () => {
                 }
             });
             message.success("Project moved to trash!");
-            navigate("/site/team");
+            navigate("/site");
         } catch (error) {
             console.error("Error moving project to trash:", error);
             message.error("Failed to move project to trash.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -205,6 +212,10 @@ const EditProject = () => {
                                 
                             </Form.Item>
 
+                            <Form.Item label="Project Slug">
+                                <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} />
+                            </Form.Item>
+
                             <Form.Item>
                                 <Button type="primary" onClick={handleSave} loading={loading} style={{ width: "100%" }}>
                                     Save Changes
@@ -226,7 +237,7 @@ const EditProject = () => {
                 onCancel={() => setIsDeleteModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="confirm" type="primary" danger onClick={handleRemoveToTrash}>
+                    <Button key="confirm" type="primary" loading={loading} danger onClick={handleRemoveToTrash}>
                         Confirm
                     </Button>
                 ]}

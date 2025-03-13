@@ -5,8 +5,10 @@ const { projectController } = require("../controllers");
 
 const cloudinary = require("../configs/cloudinary");
 const authMiddleware = require("../middlewares/auth.middleware");
-const { projectMiddleware, siteMiddleware } = require("../middlewares");
+
+const { projectMiddleware, siteMiddleware, } = require("../middlewares");
 const { isSiteOwner } = require("../middlewares/site.middleware");
+
 
 
 const projectRouter = express.Router({ mergeParams: true });
@@ -52,6 +54,7 @@ projectRouter.delete("/:projectId/remove-project-member",
 projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    projectMiddleware.isProjectManager,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
@@ -65,6 +68,7 @@ projectRouter.put("/:projectId/project-setting-v2",
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    projectMiddleware.isProjectManager,
     projectController.removeToTrash
 );
 // for site owner
@@ -77,19 +81,22 @@ projectRouter.put("/:projectId/remove-to-trash-v2",
 projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    projectMiddleware.isProjectManager,
     projectController.getProjectTrash
 );
 
 projectRouter.put("/:projectId/restore",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    projectMiddleware.isProjectManager,
     projectController.restoreProject
 );
 
-projectRouter.delete("/:projectId/delete",
+projectRouter.delete("/:projectId/destroy",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
-    projectController.deleteProject
+    projectMiddleware.isProjectManager,
+    projectController.destroyProject
 );
 
 

@@ -99,8 +99,9 @@ const getProjectById = async (req, res, next) => {
 const editProject = async (req, res, next) => {
     try {
         const projectId = req.params.projectId;
+        const {projectSlug} = req.body;
         const { projectName } = req.body;
-        const updatedProject = await projectService.editProject(projectId, projectName, req.file);
+        const updatedProject = await projectService.editProject(projectId, projectName, projectSlug, req.file);
         res.status(200).json(updatedProject);
     } catch (error) {
         console.error("Cloudinary Upload Error:", error);
@@ -140,7 +141,7 @@ const getProjectTrash = async (req, res, next) => {
     }
 };
 
-const deleteProject = async (req, res, next) => {
+const destroyProject = async (req, res, next) => {
     try {
         const projectId = req.params.projectId;
         await projectService.deleteProject(projectId);
@@ -206,7 +207,7 @@ const projectController = {
     removeToTrash,
     getProjectTrash,
     restoreProject,
-    deleteProject,
+    destroyProject,
     getAllProjects,
     getProjectsInSite,
     createProject, createProjectV2,

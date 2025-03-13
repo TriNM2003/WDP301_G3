@@ -3,30 +3,20 @@ const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const teamService = require("../services/team.service");
 
+const getAllTeams = async (req, res) => {
+    try {
+        const teams = await teamService.getAllTeams();
+        res.status(200).json(teams);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const getTeamMembers = async (req, res) => {
     try {
-        const  teamId  = '67c5263a1584be9f82734433';
-
-        // Kiểm tra xem team có tồn tại không
-        const team = await db.Team.findById(teamId).populate("teamMembers._id");
-
-        if (!team) {
-            return res.status(404).json({ message: "Team not found" });
-        }
-
-        // Lấy thông tin team members
-        const members = team.teamMembers.map(member => {
-            return {
-                _id: member._id._id,
-                username: member._id.username,
-                email: member._id.email,
-                fullName: member._id.fullName,
-                userAvatar: member._id.userAvatar || "default.jpg",
-                role: member.roles.length > 0 ? member.roles[0] : "teamMember",
-                dateAdded: team.createdAt
-            };
-        });
-
+        const teamId = req.params.teamId;
+        const members = await teamService.getTeamMembers(teamId);
         res.status(200).json(members);
     } catch (error) {
         console.error(error);
@@ -37,45 +27,9 @@ const getTeamMembers = async (req, res) => {
 const addTeamMember = async (req, res) => {
     try {
         const { username, email, role } = req.body;
-        const teamId = '67c5263a1584be9f82734433';
-
-        // Kiểm tra xem team có tồn tại không
-        const team = await db.Team.findById(teamId);
-        if (!team) {
-            return res.status(404).json({ message: "Team not found" });
-        }
-
-        // Tìm user trong site theo username hoặc email
-        const site = await db.Site.findById(team.site).populate("siteMember._id");
-        if (!site) {
-            return res.status(404).json({ message: "Site not found" });
-        }
-
-        let user = site.siteMember.find(member => 
-            (username && member._id.username === username) || 
-            (email && member._id.email === email)
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found in site members" });
-        }
-
-        user = user._id;
-
-        // Kiểm tra xem user đã là thành viên của team chưa
-        const isMember = team.teamMembers.some(member => member._id.toString() === user._id.toString());
-        if (isMember) {
-            return res.status(400).json({ message: "User is already a member of the team" });
-        }
-
-        // Thêm user vào team
-        team.teamMembers.push({ _id: user._id, roles: [role || 'teamMember'] });
-        await team.save();
-
-        // Gửi email thông báo
-        await sendEmailNotification(user.email, team.teamName);
-
-        res.status(200).json({ message: "User added to the team and email sent", userId: user._id });
+        const teamId = req.params.teamId;
+        const result = await teamService.addTeamMember(teamId, username, email, role);
+        res.status(200).json(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
@@ -84,35 +38,10 @@ const addTeamMember = async (req, res) => {
 
 const kickTeamMember = async (req, res) => {
     try {
-        console.log("Kick API called, Body:", req.body);
-        
         const { userId } = req.body;
-        console.log("UserId received:", userId);
-        const teamId = '67c5263a1584be9f82734433';
-
-        // Kiểm tra xem team có tồn tại không
-        const team = await db.Team.findById(teamId);
-        if (!team) {
-            return res.status(404).json({ message: "Team not found" });
-        }
-
-        // Kiểm tra xem user có trong team không
-        const isMember = team.teamMembers.find(member => member._id.toString() === userId);
-        if (!isMember) {
-            return res.status(404).json({ message: "User is not a member of this team" });
-        }
-
-        // Xóa user khỏi team
-        team.teamMembers = team.teamMembers.filter(member => member._id.toString() !== userId);
-        await team.save();
-
-        // Tìm email của user để gửi thông báo
-        // const user = await db.User.findById(userId);
-        // if (user) {
-        //     await sendEmailNotification(user.email, team.teamName, "removed");
-        // }
-
-        res.status(200).json({ message: "User kicked from the team" });
+        const teamId = req.params.teamId;
+        const result = await teamService.kickTeamMember(teamId, userId);
+        res.status(200).json(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
@@ -206,6 +135,7 @@ const getTeamActivities = async (req, res, next) => {
 
 
 const teamController = {
+    getAllTeams,
     getTeamMembers,
     addTeamMember,
     kickTeamMember,
