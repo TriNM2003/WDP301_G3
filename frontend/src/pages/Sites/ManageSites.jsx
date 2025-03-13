@@ -118,14 +118,20 @@ const fetchUserEmails = () => {
   // get user emails
   authAxios.get(`${userApi}/all`)
   .then(res => {
-    const emails = res.data.map(currUser => {
-      return {
+    const emails = res.data.reduce((acc, currUser) => {
+      const isInSite = currUser.site !== undefined;
+      const isActive = currUser.status === "active";
+      if(!isInSite && isActive){
+        acc.push({
           value: currUser.email,
           label: currUser.email,
           avatar: currUser.userAvatar,
           userId: currUser._id
-        }
+        }) 
       }
+      return acc;
+      
+      }, []
     )
     // console.log(emails);
     setUserEmails(emails);
@@ -160,23 +166,10 @@ const handleCreateSite = async () => {
       const values = form.getFieldsValue();
       const formData = new FormData();
       formData.append("siteName", values.siteName);
-      formData.append("siteDescription", values.siteDescription);
       formData.append("siteOwner", values.siteOwner);
-      if(fileList[0]){
-        formData.append("siteAvatar", fileList[0].originFileObj);
-        console.log("has file");
-      }
-      console.log("FormData Entries:");
-for (let pair of formData.entries()) {
-  console.log(pair[0], pair[1]);
-}
-      await authAxios.post(`${siteApi}/create`, formData,{
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          'Content-Type': 'multipart/form-data'
-      }
-      }
-      );
+
+    console.log(values.siteName, values.siteOwner)
+      await authAxios.post(`${siteApi}/create`, {siteName: values.siteName, siteOwner: values.siteOwner});
       
       messageApi.open({
           type: 'success',
@@ -390,15 +383,6 @@ for (let pair of formData.entries()) {
             />
           </Form.Item>
 
-            {/* site description input */}
-          <Form.Item label="Site description" name="siteDescription"
-            hasFeedback
-          >
-            <Input.TextArea
-              rows={2}
-              placeholder="Site description"
-            />
-          </Form.Item>
 
           {/* site owner input */}
           <Form.Item label="Site owner" name="siteOwner"
@@ -427,17 +411,6 @@ for (let pair of formData.entries()) {
             />
           </Form.Item>
 
-          {/* site avatar input */}
-          <Form.Item label="Site avatar" valuePropName="fileList" getValueFromEvent={normFile}>
-            <Upload listType="picture" 
-            beforeUpload={() => false} // Ngăn upload tự động
-            onChange={handleAvatarChange} // Giới hạn số file
-            >
-              {fileList.length < 1 && (
-              <Button icon={<UploadOutlined />}>Upload Image</Button>
-            )}
-            </Upload>
-          </Form.Item>
 
           <Button key="add" htmlType="submit"  disabled={loading} style={{ backgroundColor: green[6], color: "#fff", marginLeft: "2%"}}>
                 {loading ? <LoadingOutlined spin /> : "Create"}

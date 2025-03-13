@@ -48,7 +48,9 @@ import S_id from './pages/Sites/_id';
 import SitePage from './pages/Sites/SitePage';
 import ManageSites from './pages/Sites/ManageSites';
 import CreateSite from './pages/Sites/CreateSite';
+import ProcessingInvitation from './pages/Sites/ProcessingInvitation';
 import TeamListLayout from './components/Teams/Layout/TeamListLayout';
+
 
 function App() {
 
@@ -112,7 +114,7 @@ function App() {
                     <Route index element={<ProjectList />} />
                     <Route path=':projectSlug' element={<P_id />}>
                       <Route path='' element={<ProjectLayout />}  >
-                        <Route index element={<Summary />} />
+                        <Route index element={<KanbanBoard />} />
                         <Route path='summary' element={<Summary />} />
                         <Route path='sprint' element={<SprintBoard />} />
                         <Route path='board' element={<KanbanBoard />} />
@@ -133,7 +135,7 @@ function App() {
                     <Route index element={<TeamPerformance />} />
                     <Route path="manage-member" element={<TeamMemberManagement />} />
                     <Route path="performance" element={<TeamPerformance />} />
-                    <Route path="member-performance/:memberId" element={<TeamMemberPerformance />} />
+                    <Route path="member-performance/:userId" element={<TeamMemberPerformance />} />
                   </Route>
                 </Route>
 
@@ -145,6 +147,9 @@ function App() {
 
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
+
+            {/* xu ly invitation ko can dang nhap */}
+            <Route path="/processing-invitation" element={<ProcessingInvitation />} />
 
           </Routes>
         </Content>

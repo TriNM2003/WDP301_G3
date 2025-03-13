@@ -91,7 +91,12 @@ const login = async (username, password, res) => {
         message: "Account not activated! Redirecting to activation page...",
         token
     };
-} 
+} if(user.status === "deactived") {
+    return {
+        status: 400,
+        message: "Account is deactived!"
+    };
+}
     // accessToken
     const accessToken = jwtUtils.generateAccessToken(user._id);
     // refresh token

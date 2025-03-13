@@ -62,8 +62,8 @@ app.use(async (req, res, next) => {
   next(httpsErrors(404, "Bad Request"));
 });
 app.use(async (err, req, res, next) => {
-  res.status = err.status || 500;
-  res.send({ error: { status: err.status, message: err.message } });
+  resStatus = err.status || 500;
+  return res.status(resStatus||500).json({ error: { status: err.status, message: err.message } });
 });
 
 const host = process.env.HOSTNAME;

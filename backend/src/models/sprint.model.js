@@ -20,21 +20,24 @@ const sprintSchema = new mongoose.Schema({
         type: String,
 
     },
-    activities:[{
+    activities: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'activity',
     }],
     startDate: {
         type: Date,
-        required: true
+
     },
     dueDate: {
         type: Date,
-        required: true,
+
         //due date lon hon start date
+
         validate: {
-            validator: function(v) {
-                return this.startDate < v;
+            validator: function (v) {
+                if (v != null && this.startDate != null) {
+                    return this.startDate < v;
+                }
             },
             message: props => `${props.value} must be greater than start date`
         }
