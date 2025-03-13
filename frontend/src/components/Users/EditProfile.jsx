@@ -62,9 +62,7 @@ const EditProfile = () => {
         if (selectedFile) {
             formData.append("userAvatar", selectedFile);  // Gửi file ảnh
         }
-
         setLoading(true)
-
         axios.put('http://localhost:9999/users/edit-profile', formData, {
             headers: { 
                 Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

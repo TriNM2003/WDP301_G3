@@ -157,7 +157,7 @@ const ChangePassword = () => {
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" loading={loading} onClick={handleSave} style={{ marginRight: '10px' }}>Save changes</Button>
+                                <Button type="primary" onClick={handleSave} loading={loading} style={{ marginRight: '10px' }}>Save changes</Button>
                                 <Button danger onClick={handleDiscard}>Discard changes</Button>
                             </Form.Item>
                         </Form>

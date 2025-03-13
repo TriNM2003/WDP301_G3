@@ -1,70 +1,108 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message } from "antd";
+import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { AppContext } from '../../context/AppContext'
+
 
 const { Column } = Table;
 const { Title } = Typography;
 const { Option } = Select;
 
+
 const TeamMemberManagement = () => {
-    const {handleAddTeamMember, handleKickTeamMember} = useContext(AppContext);
+    const {showNotification,siteAPI,site, accessToken, user} = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
+    const [teamId, setTeamId] = useState(null); 
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
     const [isKickMemberModalVisible, setIsKickMemberModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [members, setMembers] = useState([]);
     const [searchUser, setSearchUser] = useState("");
-    const [foundUser, setFoundUser] = useState(null);
-    const [loadingUser, setLoadingUser] = useState(false);
     const [selectedRole, setSelectedRole] = useState("teamMember");
+    const [loadingAdd, setLoadingAdd] = useState(false);
     const [loadingKick, setLoadingKick] = useState(false);
-    const [allMembers, setAllMembers] = useState([]); 
+    const [isLeader, setIsLeader] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const { teamSlug } = useParams();
     const nav = useNavigate();
 
     useEffect(() => {
-        fetchTeamMembers();
-    }, []);
+        if (site._id && accessToken) {
+            fetchTeamIdBySlug();
+        }
+    }, [site, accessToken, teamSlug]);
 
-    const fetchTeamMembers = async () => {
+    // 🔹 Fetch team ID bằng slug
+    const fetchTeamIdBySlug = async () => {
         try {
-            const response = await axios.get("http://localhost:9999/teams/team-members", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+            const response = await axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
             });
-    
+
+            const teams = response.data;
+            if (!teams || teams.length === 0) {
+                message.error("No teams found!");
+                return;
+            }
+
+            const team = teams.find(t => t.teamSlug === teamSlug);
+            if (!team) {
+                message.error("Team not found!");
+                nav('/site');
+                return;
+            }
+
+            setTeamId(team._id);
+            fetchTeamMembers(team._id);
+        } catch (error) {
+            console.error("Error fetching teams:", error);
+            message.error("Failed to fetch teams.");
+        }
+    };
+
+    // 🔹 Fetch thành viên của team bằng `teamId`
+    const fetchTeamMembers = async (teamId) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${siteAPI}/${site._id}/teams/${teamId}/team-members`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
             if (Array.isArray(response.data)) {
-                const membersData = response.data.filter(member => member.role === "teamMember");
-                setMembers(membersData);
-                setAllMembers(membersData); // Lưu danh sách gốc
+                setMembers(response.data);
+
+                const currentUser = response.data.find(member => member._id === user?._id);
+                setIsLeader(currentUser?.role === "teamLeader");
+
+                if (!currentUser || currentUser.role !== "teamLeader") {
+                    message.warning("You are not a team leader. Access is restricted!");
+                    nav('/site');
+                }
             } else {
                 setMembers([]);
-                setAllMembers([]);
-                console.error("Invalid data format:", response.data);
             }
         } catch (error) {
             console.error("Error fetching team members:", error);
-            setMembers([]);
-            setAllMembers([]);
+            message.error("Failed to load team members.");
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSearch = (e) => {
         const value = e.target.value.toLowerCase();
         setSearchText(value);
-    
+
         if (value) {
-            const filteredMembers = allMembers.filter(member => {
-                return (
-                    (member.username && member.username.toLowerCase().includes(value)) ||
-                    (member.email && member.email.toLowerCase().includes(value)) ||
-                    (member.fullName && member.fullName.toLowerCase().includes(value))
-                );
-            });
-            setMembers(filteredMembers);
+            setMembers(members.filter(member => 
+                member.username.toLowerCase().includes(value) || 
+                member.email.toLowerCase().includes(value) || 
+                member.fullName.toLowerCase().includes(value)
+            ));
         } else {
-            setMembers(allMembers); // Reset danh sách từ allMembers thay vì gọi API
+            fetchTeamMembers(teamId);
         }
     };
 
@@ -81,20 +119,22 @@ const TeamMemberManagement = () => {
             message.error("Error: User ID is missing");
             return;
         }
-    
+        setLoadingKick(true);
         try {
             const response = await axios.post(
-                "http://localhost:9999/teams/kick-team-member",
+                `http://localhost:9999/sites/${site._id}/teams/${teamId}/kick-team-member`,
                 { userId },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
             message.success(`Successfully removed ${selectedUser.username} from the team`);
-            handleKickTeamMember();
+            showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
             setIsKickMemberModalVisible(false);
-            fetchTeamMembers(); // Cập nhật danh sách
+            fetchTeamMembers(teamId); // Cập nhật danh sách
         } catch (error) {
             console.error("Kick Member Error:", error.response ? error.response.data : error);
             message.error(error.response?.data?.message || "Failed to remove user.");
+        } finally {
+            setLoadingKick(false);
         }
     };
 
@@ -104,22 +144,26 @@ const TeamMemberManagement = () => {
             message.error("Please enter a username or email.");
             return;
         }
+        setLoadingAdd(true);
         try {
             await axios.post(
-                "http://localhost:9999/teams/add-team-member",
+                `http://localhost:9999/sites/${site._id}/teams/${teamId}/add-team-member`,
                 { username: searchUser, email: searchUser, role: selectedRole },
                 { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
             );
             message.success(`Successfully added ${searchUser} to the team`);
-            handleAddTeamMember();
+            showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
             setIsAddMemberModalVisible(false);
-            fetchTeamMembers();
+            fetchTeamMembers(teamId);
         } catch (error) {
             console.error("Error adding team member:", error);
             message.error(error.response?.data?.message || "Failed to add user.");
+        } finally {
+            setLoadingAdd(false);
         }
     };
 
+    if (loading) return <Spin tip="Loading..." style={{ display: "block", marginTop: 50 }} />;
 
     return (
         <Layout style={{ padding: "24px", minHeight: "100%", background: "white" }}>
@@ -141,16 +185,20 @@ const TeamMemberManagement = () => {
                 <Col>
                     <Title level={3}>All member <span style={{ color: "#999" }}>{members.length}</span></Title>
                 </Col>
-                <Col>
-                    <Input
-                        placeholder="Search"
-                        prefix={<SearchOutlined />}
-                        style={{ width: 250, marginRight: "10px" }}
-                        value={searchText}
-                        onChange={handleSearch}
-                    />
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddMemberModalVisible(true)}>Add member</Button>
-                </Col>
+                {isLeader && (
+                    <Col>
+                        <Input
+                            placeholder="Search"
+                            prefix={<SearchOutlined />}
+                            style={{ width: 250, marginRight: "10px" }}
+                            value={searchText}
+                            onChange={handleSearch}
+                        />
+                        <Button type="primary" icon={<PlusOutlined />}  onClick={() => setIsAddMemberModalVisible(true)}>
+                            Add Member
+                        </Button>
+                    </Col>
+                )}
             </Row>
 
             {/* Table */}
@@ -194,18 +242,28 @@ const TeamMemberManagement = () => {
                     )}
                 />
                 <Column title="Date added" dataIndex="dateAdded" key="dateAdded" sorter={(a, b) => new Date(a.dateAdded) - new Date(b.dateAdded)} />
-                <Column
-                    title="Action"
-                    key="actions"
-                    render={(text, record) => (
-                        <Dropdown
-                            overlay={<Button danger onClick={() => showKickMemberModal(record)}>Kick Member</Button>}
-                            trigger={["click"]}
-                        >
-                            <Button icon={<MoreOutlined />} type="text" />
-                        </Dropdown>
-                    )}
-                />
+                {isLeader && (
+                    <Column
+                        title="Action"
+                        key="actions"
+                        render={(text, record) => (
+                            record.access[0] !== "teamLeader" && (
+                                <Dropdown
+                                    overlay={
+                                        <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
+                                            <Button type="link" danger onClick={() => showKickMemberModal(record)}>
+                                                Kick Member
+                                            </Button>
+                                        </div>
+                                    }
+                                    trigger={["click"]}
+                                >
+                                    <Button icon={<MoreOutlined />} type="text" />
+                                </Dropdown>
+                            )
+                        )}
+                    />
+                )}
             </Table>
 
             {/* Modal: Add Member */}
@@ -215,7 +273,7 @@ const TeamMemberManagement = () => {
                 onCancel={() => setIsAddMemberModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsAddMemberModalVisible(false)}>Cancel</Button>,
-                    <Button key="ok" type="primary" onClick={handleAddMember}>Add</Button>
+                    <Button key="ok" type="primary" loading={loadingAdd} onClick={handleAddMember}>Add</Button>
                 ]}
             >
                 <div style={{ marginBottom: "10px" }}>Enter Username or Email</div>
