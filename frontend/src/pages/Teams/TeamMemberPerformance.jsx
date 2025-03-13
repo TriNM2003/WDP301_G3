@@ -178,6 +178,8 @@ const TeamMemberPerformance = () => {
     }
   };
 
+
+
   const [startDate, endDate] = getFilteredDateRange();
 
 
@@ -534,6 +536,9 @@ const TeamMemberPerformance = () => {
           </Row>
         </Content>
       </Layout>
+
+      {/* Modal hiển thị toàn bộ activity với bộ lọc */}
+ 
 
       {/* Modal hiển thị toàn bộ activity với bộ lọc */}
       <Modal

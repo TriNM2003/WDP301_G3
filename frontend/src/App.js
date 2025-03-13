@@ -50,6 +50,7 @@ import ManageSites from './pages/Sites/ManageSites';
 import CreateSite from './pages/Sites/CreateSite';
 import ProcessingInvitation from './pages/Sites/ProcessingInvitation';
 import TeamListLayout from './components/Teams/Layout/TeamListLayout';
+import Stage from './pages/Stage/Stage';
 
 
 function App() {
@@ -140,6 +141,7 @@ function App() {
                 </Route>
 
               </Route>
+              <Route path="stage" element={<Stage />} />
 
               <Route path='/create-site' element={<CreateSite />} />
 

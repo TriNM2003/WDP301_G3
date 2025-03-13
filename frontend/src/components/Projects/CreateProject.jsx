@@ -17,7 +17,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
   useEffect(() => {
     if (site._id && accessToken) {
       axios
-        .get(`http://localhost:9999/sites/${site._id}/get-site-members`, {
+        .get(`http://localhost:9999/sites/${site._id}/members`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
         .then((res) => {
@@ -29,6 +29,8 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
     }
   }, [site, accessToken, user]);
 
+
+  
   // Lọc thành viên theo từ khóa tìm kiếm
   const filteredUsers = searchTerm
     ? siteMembers.filter(

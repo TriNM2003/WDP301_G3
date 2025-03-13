@@ -12,8 +12,8 @@ const { Content } = Layout;
 
 
 const colors = [
-    "magenta", "red", "volcano", "orange", "gold",
-    "lime", "green", "cyan", "blue", "geekblue", "purple"
+    "#ff85c0", "#b37feb", "#91d5ff", "#87e8de", "#95de64",
+    "#bae637", "#fff566", "#ffd666", "#ffd591", "#ffbb96", "#ffa39e"
 ];
 
 
@@ -119,6 +119,7 @@ const ProjectList = () => {
     );
     const weeklyActivities = filterActivitiesByWeek(currentWeekStart, currentWeekEnd);
 
+    
 
 
     // Tính số project active của user hiện tại
@@ -148,9 +149,9 @@ const ProjectList = () => {
                 padding: "10px 10px",
                 textAlign: "left",
                 width: "100%",
-                maxWidth: "100vw",
+                maxWidth: "100%",
                 overflowX: "hidden",
-                minHeight: "100vh", 
+                maxHeight: "100%", 
                 display: "flex",
                 flexDirection: "column", 
                 }}>
@@ -250,7 +251,8 @@ const ProjectList = () => {
                                                     />
                                                 }
                                                 bodyStyle={{ padding: "7px" }}
-                                                onClick={() => navigate(`${project.projectSlug}`)}
+                                                onClick={() => navigate(`/site/list/projects/${project.projectSlug}`)} 
+                                                
                                             >
                                                 <Title level={5} style={{ margin: "0", textAlign: "left" }}>
                                                     {project?.projectName}
@@ -421,13 +423,12 @@ const ProjectList = () => {
                                             return (
                                                 <div
                                                     key={item.id}
-                                                    onClick={() => navigate(`/list/projects/${item.project?.projectSlug}`)}
-
+                                                    onClick={() => navigate(`/site/list/projects/${item.project?.projectSlug}`)}
                                                     style={{
                                                         gridColumn: `${startIndex + 1} / span ${span}`,
                                                         background: "white",
                                                         padding: "8px",
-                                                        borderLeft: `4px solid  ${getUniqueColor(item.activityTitle)}`,
+                                                        borderLeft: `4px solid  ${getUniqueColor(item?.activityTitle)}`,
                                                         borderRadius: "8px",
                                                         boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
                                                         cursor: "pointer",

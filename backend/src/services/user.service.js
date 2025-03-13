@@ -103,7 +103,7 @@ const getActivitiesByUserId = async (userId) => {
                 { path: "createBy", select: "fullName email" },
                 { path: "assignee", select: "_id" },
                 { path: "type", select: "name" },
-                { path: "project", select: "projectName" },
+                { path: "project", select: "projectName projectSlug" },
                 { path: "sprint", select: "title" },
                 { path: "stage", select: "title" }
             ]
