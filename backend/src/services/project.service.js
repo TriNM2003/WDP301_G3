@@ -193,16 +193,20 @@ const removeToTrash = async (projectId) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
-    project.projectStatus = "archived";
-    return await project.save();
+    const removedProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: { projectStatus: "archived" }
+    }, { new: true });
+    return removedProject;
 };
 
 const restoreProject = async (projectId) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
-    project.projectStatus = "active";
-    return await project.save();
+    const restoredProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: { projectStatus: "active" }
+    }, { new: true });
+    return restoredProject;
 };
 
 const getProjectTrash = async (siteId, userId) => {
@@ -247,8 +251,11 @@ const deleteProject = async (projectId) => {
     if (!project) throw new Error("Project not found");
 
     // chuyen project sang trang thai destroyed
-    project.projectStatus = "destroyed";
-    await project.save();
+    const deletedProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: { projectStatus: "destroyed" }
+    }, { new: true });
+
+    return deletedProject;
 };
 
 

@@ -190,9 +190,9 @@ const deactivateSite = async (siteId) => {
         if (!site) throw new Error("Site not found");
 
         // 🔹 Chuyển trạng thái site thành "deactivated"
-        await Site.findByIdAndUpdate(siteId, { $set: { siteStatus: "deactivated" } }, { new: true });
+        const DeactivateSite = await Site.findByIdAndUpdate(siteId, { $set: { siteStatus: "deactivated" } }, { new: true });
 
-        return { message: "Site has been deactivated successfully", site };
+        return { message: "Site has been deactivated successfully", DeactivateSite };
     } catch (error) {
         throw error;
     }

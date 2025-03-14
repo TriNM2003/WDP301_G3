@@ -171,9 +171,9 @@ const confirmDeleteAccount = async (token) => {
         const user = await db.User.findById(decoded.id);
         if (!user) throw new Error("User not found!");
 
-        user.status = "deactived";
-        await user.save();
-        return { message: "Account deactivated successfully" };
+        // chuyển trạng thái của user thành "deactived"
+        const deactivedUser = await db.User.findByIdAndUpdate(user._id, { status: "deactived" }, { new: true });
+        return { message: "Account deactivated successfully",deactivedUser };
     } catch (error) {
         throw new Error("Invalid or expired token!");
     }
