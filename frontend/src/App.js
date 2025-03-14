@@ -58,11 +58,31 @@ import Stage from './pages/Stage/Stage';
 function App() {
 
 
-  const { accessToken, site, user } = useContext(AppContext)
+  const { accessToken, site, user, showMessage, project, messageHolder } = useContext(AppContext)
+  const checkSiteAccess = () => {
+    if(site?.siteStatus === "deactivated"){
+      // showMessage("warning","Site is deactivated", 2);
+      return false;
+    }else if(user?.roles?.some(role => role.roleName === "admin")){
+      // showMessage("warning","Admin cannot access site", 2);
+      return false;
+    }else{
+      return true;
+    }
+  }
+  const isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
+  const isAdmin = user?.roles?.some(role => role.roleName === "admin");
+
+  let isProjectManager = false;
+  if (project) {
+      // console.log(project?.projectMember?.find(member => member._id._id === user._id).roles.includes("projectManager"))
+      isProjectManager = project?.projectMember?.find(member => member._id._id === user._id).roles.includes("projectManager");
+  }
 
 
   return (
     <div className="App">
+      {messageHolder}
       <Layout>
         <Header style={{ padding: "0", borderBottom: `solid 1px ${cyan[`1`]}` }}>
           <AppHeader />
@@ -96,11 +116,14 @@ function App() {
                 <Route path="edit-profile" element={<EditProfile />} />
               </Route>
               <Route path="/profile/confirm-delete" element={<ConfirmDelete />} />
-              {site?.siteStatus != "deactivated" &&
-              <Route path="site" element={<S_id />} >
+              {checkSiteAccess() &&
+            <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
 
+
                 <Route path='recycle' element={<RestoreProject />} />
+                {isSiteOwner &&
+                <>
                 <Route path="site-setting" element={<EditSite />} />
                 <Route path='manage' >
                   <Route index element={<ManageProjects />} />
@@ -109,8 +132,10 @@ function App() {
                   <Route path='members' element={<ManageSiteMembers />} />
                   <Route path='teams' element={<ManageTeams />} />
                 </Route>
-
-
+                </>
+                }
+                
+              
 
                 <Route path='list'>
                   <Route index element={<ProjectList />} />
@@ -123,10 +148,15 @@ function App() {
                         <Route path='sprint' element={<SprintBoard />} />
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>
+
+                      {isProjectManager && <>
                       <Route path='manage' element={<ManageProjectLayout />}>
                         <Route path='members' element={<ManageProjectMember />} />
                       </Route>
                       <Route path="project-setting" element={<EditProject />} />
+
+                      </>}
+                      
                     </Route>
                   </Route>
 
@@ -143,12 +173,14 @@ function App() {
                   </Route>
                 </Route>
 
-              </Route>}
+              </Route>
+            
+              } 
               <Route path="stage" element={<Stage />} />
 
 
-              <Route path='/manage-sites' element={<ManageSites />} />
-
+              {isAdmin && <Route path='/manage-sites' element={<ManageSites />} />}
+            
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 

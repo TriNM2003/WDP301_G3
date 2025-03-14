@@ -13,6 +13,12 @@ function SiteSider() {
   const { defaultSelectedKeys, setDefaultSelectedKeys, site, projects, user, teams } = useContext(AppContext)
   const navigate = useNavigate();
 
+  let isSiteOwner = false;
+  if(site){
+      isSiteOwner = site?.siteMember?.find(siteMember => siteMember._id === user._id).roles.includes("siteOwner"); 
+  }
+  
+
   // Tìm 4 project có thời gian cập nhật gần nhất của tài khoản hiện tại
   const recentProjects = Array.isArray(projects)
     ? projects
@@ -162,6 +168,7 @@ function SiteSider() {
 
 
         {/* Settings */}
+        {isSiteOwner &&
         <SubMenu key="setting" icon={<SettingTwoTone />} title="Settings">
           <Menu.ItemGroup style={{ "text-align": "start" }} key="s" >
             <Menu.Item icon={<SettingOutlined style={{ color: grey[6] }} />} key="s1" onClick={() => { navigate("site-setting") }}>Setting</Menu.Item>
@@ -171,6 +178,8 @@ function SiteSider() {
             <Menu.Item icon={<MailOutlined style={{ color: blue[3] }} />} key="s5" onClick={() => { navigate("manage/invitations") }}>Manage Invitations</Menu.Item>
           </Menu.ItemGroup>
         </SubMenu>
+        }
+        
       </Menu>
     </>
   )

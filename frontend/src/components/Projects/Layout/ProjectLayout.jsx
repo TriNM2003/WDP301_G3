@@ -1,5 +1,5 @@
 import TabPane from 'antd/es/tabs/TabPane'
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Title from 'antd/es/typography/Title'
 
 
@@ -8,10 +8,23 @@ import { BarChartOutlined, BarsOutlined, DeleteOutlined, GroupOutlined, MoreOutl
 import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import DeleteActivityModal from '../Detail/DeleteActivityModal'
+import { AppContext } from '../../../context/AppContext'
 function ProjectLayout() {
+    const {user, project} = useContext(AppContext);
+
     const nav = useNavigate();
     const location = useLocation();
     const {projectSlug} = useParams();
+
+
+    let isProjectManager = false;
+        if (project) {
+            // console.log(project?.projectMember?.find(member => member._id._id === user._id).roles.includes("projectManager"))
+            isProjectManager = project?.projectMember?.find(member => member._id._id === user._id).roles.includes("projectManager");
+        }
+    
+    
+    
    
     const getActiveKey = () => {
         if (location.pathname.includes("summary")) return "summary";
@@ -37,7 +50,7 @@ function ProjectLayout() {
                             overlay={
                                 <Menu>
                                     <Menu.Item key="1" icon={<SettingOutlined />} > Project settings</Menu.Item>
-                                    <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>
+                                    {isProjectManager && <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>}
                                     <Menu.Item key="3" icon={<DeleteOutlined style={{ color: red[6] }} />} > Delete project</Menu.Item>
 
                                 </Menu>

@@ -110,7 +110,7 @@ const fetchSites = () => {
   })
   .catch(err => {
     console.log(err);
-    nav("/home");
+    // nav("/home");
   });
 }
 

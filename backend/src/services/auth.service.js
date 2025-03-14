@@ -54,7 +54,8 @@ const register = async (req) => {
 
 
 const login = async (username, password, res) => {
-    const user = await User.findOne({username: username});
+    const user = await User.findOne({username: username}).populate("roles");
+    console.log(user)
     if (!user) {
         return {
             status: 404,
@@ -135,7 +136,7 @@ const getUserByAccessToken = async (accessToken) => {
     const decodedAccessToken = jwtUtils.decode(accessToken);
 
     // get user
-    const user = await User.findById(decodedAccessToken.id);
+    const user = await User.findById(decodedAccessToken.id).populate("roles");
 
     // Nếu tài khoản chưa kích hoạt, gửi token về FE để kích hoạt
   if (user.status === "inactive") {
