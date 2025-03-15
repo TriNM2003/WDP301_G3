@@ -15,8 +15,7 @@ import ActivityDetail from "../../../Activity/ActivityDetail";
 const { Title } = Typography;
 
 const KanbanBoard = () => {
-    const { showNotification, sprints, stages, setStages, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
-
+    const { showNotification, sprints, stages, setStages,searchActivity,setSearchActivity, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
 
 
 
@@ -30,7 +29,8 @@ const KanbanBoard = () => {
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
     const onSearch = (e) => {
-        console.log("Tìm kiếm:", e.target.value);
+        // console.log("Tìm kiếm:", e.target.value);
+        setSearchActivity(e.target.value)
     };
     const activeSprint = sprints.find((s) => s.sprintStatus == "active") || null;
 

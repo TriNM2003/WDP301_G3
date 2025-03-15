@@ -3,7 +3,7 @@ const JWT = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
-const { activityService } = require('../services');
+const { activityService, notificationService } = require('../services');
 
 
 
@@ -32,6 +32,7 @@ const getById = async (req, res, next) => {
 
 const createActivity = async (req, res, next) => {
     try {
+        const{id} = req.payload;
         const { activityTitle, stage, type,sprint, createBy, parent } = req.body;
         const {projectId} = req.params;
 
@@ -69,11 +70,12 @@ const createActivity = async (req, res, next) => {
             return res.status(400).json({ error: { status: 400, message: "Activity created fail" }})
 
         }
-
+        const user = await db.User.findById(id)
+        const receivers = checkProject?.projectMember?.map(m=>m._id)
         const updatedSprint = await db.Sprint.findByIdAndUpdate(sprint,{$addToSet:{activities: newActivity._id}});
         const updatedStage = await db.Stage.findByIdAndUpdate(stage,{$addToSet:{activities: newActivity._id}});
         const updatedParent = await db.Activity.findByIdAndUpdate(parent,{$addToSet:{child: newActivity._id}});
-        
+        await notificationService.createNotification(id,receivers,`${user?.username} just created a new activity in project ${checkProject?.projectName}`,"project");
 
 
         res.status(201).json({  status: 201,  message: "Activity created successfully", activity: newActivity  })
@@ -207,6 +209,26 @@ const removeActivity = async (req, res, next) => {
     }
 }
 
+const createComment = async(req, res, next) => {
+    try {
+        const {id}=req.payload;
+        const {activityId}=req.params;
+        const {content} = req.body;
+        if(!content){
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: content ." } })
+        }
+        const updatedActivity = await activityService.createComment(activityId,id,content)
+        if(!content){
+            return res.status(400).json({ error: { status: 400, message: "Fail to post comment!" } })
+        }
+        res.status(200).json({ status: 200, message: "Post comment successfully", activity:updatedActivity  })
+        
+    } catch (error) {
+        next(error);
+        
+    }
+}
+
 const activityController = {
     getActivityByProjectId,
     getById,
@@ -215,7 +237,8 @@ const activityController = {
     assignMember,
     removeAssignMember,
     removeActivity,
-    moveActivity
+    moveActivity,
+    createComment
 }
 
 module.exports = activityController;

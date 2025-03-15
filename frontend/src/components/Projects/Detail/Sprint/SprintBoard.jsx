@@ -11,16 +11,17 @@ import CompleteSprintModal from "./CompleteSprintModal";
 import ActivityDetail from "../../../Activity/ActivityDetail";
 import SprintActivity from "../../../Activity/SprintActivity";
 import { AppContext } from "../../../../context/AppContext";
+import axios from "axios";
 
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, sprints,siteAPI,site,accessToken,project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   // Activities
   const [filterActivityType, setFliterActivityType] = useState(["task"]);
   const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
-  
+
   //DND
   const handleDragEnd = (e) => {
     const { over, active } = e;
@@ -38,6 +39,20 @@ const SprintBoard = () => {
   //     console.log("handle open",(prev) => [...prev, over.id]);
   //   }
   // };
+  const handleCreateSprint = async () => {
+    axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/create`,
+      {
+        sprintName: `Sprint ${Number(sprints?.length) + 1}`
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+
+    )
+
+  }
 
   const ACTIVE_DRAG_ITEM_TYPE = {
     STAGE: "ACTIVE_DRAG_ITEM_TYPE_STAGE",
@@ -72,7 +87,12 @@ const SprintBoard = () => {
 
               </Space>
               <Space>
-                <Button size="small" variant="outlined" color="default" style={{ borderRadius: "0%" }}> Create sprint</Button>
+                <Button size="small" variant="outlined" color="default" style={{ borderRadius: "0%" }}
+                  onClick={(e) => {
+                    e.stopPropagation(); 
+                    handleCreateSprint(); 
+                }}
+                > Create sprint</Button>
               </Space>
             </Flex>
           } key="0">
@@ -93,7 +113,7 @@ const SprintBoard = () => {
                 value={activityName}
                 onChange={(e) => setActivityName(e.target.value)}
                 onPressEnter={() => { handleActivityCreate("", "to do", "task", null) }}
-                onBlur={() =>  setCreateActivityModal(false)}
+                onBlur={() => setCreateActivityModal(false)}
                 placeholder="Enter activity name"
                 prefix={<FormOutlined style={{ color: blue[6] }} />}
                 style={{ width: "100%", borderRadius: "0", margin: "1% 0", padding: "0.5% 1%" }}
@@ -105,7 +125,7 @@ const SprintBoard = () => {
             )}
           </Panel>
           {/* Sprint */}
-          {sprints?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((sprint) => {
+          {sprints?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).map((sprint) => {
             return (<Panel style={{ background: "#F5F5F5", margin: "0 0 2% 0", borderRadius: 0 }}
 
               header={
@@ -171,12 +191,12 @@ const SprintBoard = () => {
                   .map(activity => activity._id)}
                 strategy={verticalListSortingStrategy} >
                 <div style={{
-                  minHeight: "150px", 
-                  border: filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length>0 ? "":"2px dashed lightgray", 
+                  minHeight: "150px",
+                  border: filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0 ? "" : "2px dashed lightgray",
                 }} >
-                  {!filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length>0 
-                  && 
-                  (<p style={{ color: "gray", fontStyle: "italic" }}><DownloadOutlined/> Drop activities here</p>)
+                  {!filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0
+                    &&
+                    (<p style={{ color: "gray", fontStyle: "italic" }}><DownloadOutlined /> Drop activities here</p>)
                   }
                   {filteredActivitites?.filter((activity) => activity?.sprint?._id == sprint?._id)
                     .map((activity) => (
