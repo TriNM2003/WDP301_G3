@@ -12,7 +12,7 @@ const getAllUsers = async () => {
 
 const getUserById = async (userId) => {
     try {
-        return await db.User.findById(userId);
+        return await db.User.findById(userId).populate('roles').populate('projects').populate('teams').populate('site').populate('notifications._id').populate('activities');
     } catch (error) {
         throw error;
     }

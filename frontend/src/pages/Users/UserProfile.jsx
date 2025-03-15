@@ -13,11 +13,10 @@ const UserProfile = () => {
       }
     })
       .then(res => {
-        console.log(res.data);
         setUser(res.data);
       })
       .catch(error => {
-        console.log(error.response?.data?.message);
+        console.error(error.response?.data?.message);
       });
   }, []);
 

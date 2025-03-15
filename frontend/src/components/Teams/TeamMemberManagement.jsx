@@ -31,7 +31,7 @@ const TeamMemberManagement = () => {
     const nav = useNavigate();
 
     useEffect(() => {
-        if (site._id && accessToken) {
+        if (site?._id && accessToken) {
             fetchTeamIdBySlug();
             fetchSiteMembers();
         }
@@ -40,7 +40,7 @@ const TeamMemberManagement = () => {
     // 🔹 Fetch team ID bằng slug
     const fetchTeamIdBySlug = async () => {
         try {
-            const response = await axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+            const response = await axios.get(`${siteAPI}/${site?._id}/teams/get-teams-in-site`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
 
@@ -50,15 +50,15 @@ const TeamMemberManagement = () => {
                 return;
             }
 
-            const team = teams.find(t => t.teamSlug === teamSlug);
+            const team = teams.find(t => t?.teamSlug === teamSlug);
             if (!team) {
                 message.error("Team not found!");
                 nav('/site');
                 return;
             }
 
-            setTeamId(team._id);
-            fetchTeamMembers(team._id);
+            setTeamId(team?._id);
+            fetchTeamMembers(team?._id);
         } catch (error) {
             console.error("Error fetching teams:", error);
             message.error("Failed to fetch teams.");
@@ -70,7 +70,7 @@ const TeamMemberManagement = () => {
             const response = await axios.get(`${siteAPI}/${site._id}/get-site-members`, {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
-            setSiteMembers(response.data || []);
+            setSiteMembers(response?.data || []);
         } catch (error) {
             console.error("Error fetching site members:", error);
             message.error("Failed to fetch site members.");
@@ -85,8 +85,8 @@ const TeamMemberManagement = () => {
         }
 
         const filtered = siteMembers
-            .map(member => member._id)
-            .filter(user => user.username.toLowerCase().includes(value.toLowerCase()) ||
+            .map(member => member?._id)
+            .filter(user => user?.username.toLowerCase().includes(value.toLowerCase()) ||
                 (user.fullName && user.fullName.toLowerCase().includes(value.toLowerCase())))
             .map(user => ({
                 value: user.username,
@@ -109,19 +109,25 @@ const TeamMemberManagement = () => {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
 
+
             if (Array.isArray(response.data)) {
-                setMembers(response.data);
+                const processedMembers = response.data.map(member => ({
+                    ...member,
+                    roles: Array.isArray(member.roles) && member.roles.length > 0 ? member.roles : ["teamMember"], // Luôn đảm bảo có ít nhất 1 role
+                }));
 
-                //currentUser check role theo array roles
-                const currentUser = response.data.find(member => member._id == user._id);
-                setIsLeader(currentUser?.roles.includes("teamLeader"));
+                setMembers(processedMembers); // Cập nhật state React
 
-                if (!currentUser || currentUser.role !== "teamLeader") {
-                    message.warning("You are not a team leader. Access is restricted!");
-                    nav('/site');
+                // Kiểm tra nếu user hiện tại có phải teamLeader không
+                const currentUser = processedMembers.find(member => member._id === user._id);
+                if (currentUser && currentUser.roles.includes("teamLeader")) {
+                    setIsLeader(true);
+                } else {
+                    setIsLeader(false);
                 }
             } else {
                 setMembers([]);
+                setIsLeader(false);
             }
         } catch (error) {
             console.error("Error fetching team members:", error);
@@ -131,19 +137,23 @@ const TeamMemberManagement = () => {
         }
     };
 
+
     const handleSearch = (e) => {
         const value = e.target.value.toLowerCase();
         setSearchText(value);
 
-        if (value) {
-            setMembers(members.filter(member =>
-                member.username.toLowerCase().includes(value) ||
-                member.email.toLowerCase().includes(value) ||
-                member.fullName.toLowerCase().includes(value)
-            ));
-        } else {
+        if (!value) {
             fetchTeamMembers(teamId);
+            return;
         }
+
+        const filtered = members.filter(member =>
+            member.username.toLowerCase().includes(value) ||
+            member.email.toLowerCase().includes(value) ||
+            (member.fullName && member.fullName.toLowerCase().includes(value))
+        );
+
+        setMembers(filtered);
     };
 
     const showKickMemberModal = (record) => {
@@ -255,20 +265,27 @@ const TeamMemberManagement = () => {
 
             {/* Table */}
             <Table
-                dataSource={Array.isArray(members) ? members.map(member => ({
-                    key: member._id,  // Đặt key là _id để Table hoạt động tốt hơn
+                dataSource={members.map(member => ({
+                    key: member._id,
                     _id: member._id,
                     avatar: member.userAvatar || "default.jpg",
                     username: member.username || "Unknown",
                     email: member.email || "Unknown",
-                    access: [member.role] || ["member"],
+                    roles: Array.isArray(member.roles) ? member.roles : ["teamMember"], // Luôn đảm bảo có ít nhất 1 role
                     fullName: member.fullName || "Unknown",
-                    dateAdded: new Date(member.dateAdded).toDateString()
-                })) : []}
+                    dateAdded: member.dateAdded ? new Date(member.dateAdded).toDateString() : "Unknown",
+                }))}
                 pagination={{ pageSize: 5 }}
                 rowClassName={() => "custom-table-row"}
-                style={{ borderRadius: "8px", overflow: "hidden", border: "1px solid #d9d9d9", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+                style={{
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    border: "1px solid #d9d9d9",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+                }}
             >
+
+
                 <Column
                     title="Member"
                     key="username"
@@ -286,23 +303,46 @@ const TeamMemberManagement = () => {
                 <Column title="Full Name" dataIndex="fullName" key="fullName" sorter={(a, b) => a.fullName.localeCompare(b.fullName)} />
                 <Column
                     title="Role"
-                    key="access"
-                    render={(text, record) => (
-                        <Tag color={record.access[0] === "teamMember" ? "blue" : "purple"}>
-                            {record.access[0]}
-                        </Tag>
-                    )}
+                    key="roles"
+                    render={(text, record) => {
+                        if (!Array.isArray(record.roles) || record.roles.length === 0) {
+                            return <Tag color="red">No role</Tag>;
+                        }
+
+                        return (
+                            <>
+                                {record.roles.map((role, index) => (
+                                    <Tag key={index} color={role === "teamLeader" ? "purple" : "blue"}>
+                                        {role}
+                                    </Tag>
+                                ))}
+                            </>
+                        );
+                    }}
                 />
                 <Column title="Date added" dataIndex="dateAdded" key="dateAdded" sorter={(a, b) => new Date(a.dateAdded) - new Date(b.dateAdded)} />
                 {isLeader && (
                     <Column
                         title="Action"
                         key="actions"
-                        render={(text, record) => (
-                            record.access[0] !== "teamLeader" && (
+                        render={(text, record) => {
+                            if (!record.roles || !Array.isArray(record.roles)) {
+                                return null;
+                            }
+
+                            // Chỉ hiển thị nút kick nếu người bị kick KHÔNG PHẢI leader
+                            const isTargetLeader = record.roles.includes("teamLeader");
+                            if (isTargetLeader) return null;
+
+                            return (
                                 <Dropdown
                                     overlay={
-                                        <div style={{ background: "white", padding: "10px", borderRadius: "5px", boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
+                                        <div style={{
+                                            background: "white",
+                                            padding: "10px",
+                                            borderRadius: "5px",
+                                            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)"
+                                        }}>
                                             <Button type="link" danger onClick={() => showKickMemberModal(record)}>
                                                 Kick Member
                                             </Button>
@@ -312,8 +352,8 @@ const TeamMemberManagement = () => {
                                 >
                                     <Button icon={<MoreOutlined />} type="text" />
                                 </Dropdown>
-                            )
-                        )}
+                            );
+                        }}
                     />
                 )}
             </Table>

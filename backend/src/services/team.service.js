@@ -32,7 +32,8 @@ const getTeamMembers = async (teamId) => {
             email: member._id.email,
             fullName: member._id.fullName,
             userAvatar: member._id.userAvatar || "default.jpg",
-            role: member.roles.length > 0 ? member.roles[0] : "teamMember",
+            //role la 1 mang
+            roles: member.roles || [],
             dateAdded: team.createdAt
         }));
     } catch (error) {

@@ -1,30 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Avatar, Button, Row, Col, Typography, Modal } from 'antd';
 import { MailOutlined, PhoneOutlined, RocketOutlined, CalendarOutlined, UserOutlined, EnvironmentOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const { Text } = Typography;
 
 const ViewProfile = () => {
   const [user, setUser] = useState({});
-  const projects = [
-    { id: 1, name: 'WDP301_G3', icon: '🖥️', platform: 'Skrumio', color: '#ff5722' },
-    { id: 2, name: 'SDN302_G3', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
-    { id: 3, name: 'EXE3', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
-    { id: 4, name: 'MMA', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
-    { id: 5, name: 'PRN', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
-    { id: 6, name: 'PRM', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
-    { id: 6, name: 'PRM', icon: '👥', platform: 'Skrumio', color: '#ff5722' },
-    { id: 6, name: 'PRM', icon: '👥', platform: 'Skrumio', color: '#ff5722' }
-  ];
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
+  const [projects, setProjects] = useState([]);
+  const navigate = useNavigate();
   useEffect(() => {
     axios.get('http://localhost:9999/users/user-profile', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
     })
-      .then(res => setUser(res.data))
+      .then(res => {
+        setUser(res.data);
+        setProjects(res.data.projects || []);
+      })
       .catch(error => console.log(error.response?.data?.message));
   }, []);
 
@@ -102,20 +95,13 @@ const ViewProfile = () => {
                       cursor: 'pointer',
                       width: '100%'
                     }}
-                    onClick={() => alert(`Clicked on ${project.name}`)}
+                    onClick={() => navigate(`/site/list/projects/${project.projectSlug}`)}
                   >
-                    <Col span={4}>
-                      <RocketOutlined style={{ fontSize: '18px', color: '#1890ff' }} />
-                    </Col>
-                    <Col span={4}>
-                      <Avatar size={40} shape="square" style={{ backgroundColor: project.color }}>{project.icon}</Avatar>
-                    </Col>
+                     <Col span={4}><RocketOutlined style={{ fontSize: '18px', color: '#1890ff' }} /></Col>
+                    <Col span={4}><Avatar size={40} shape="square" src={project.projectAvatar} /></Col>
                     <Col span={16}>
-                      <Text strong>{project.platform}</Text>
-                      <br />
-                      <Text style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>{project.name}</Text>
-    
-                </Col>
+                      <Text strong>{project.projectName}</Text>
+                    </Col>
                   </Row>
                 </Col>
               ))}
