@@ -3,6 +3,8 @@ const JWT = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
+const { default: mongoose } = require('mongoose');
+const notificationService = require('./notification.service');
 
 const getActivitiesByProjectId = async (projectId) => {
     try {
@@ -45,6 +47,26 @@ const create = async (data, project) => {
             createBy,
         } = data;
 
+        if (data?.parent) {
+            const parentActivity = await db.Activity.findById(parent).populate("type");
+            const inputType = await db.ActivityType.findById(type);
+            if (!parentActivity) {
+                throw new Error("Parent activity not found.");
+            }
+
+            if (parentActivity?.type.typeName == "task") {
+                if (inputType.typeName !== "subtask" && inputType.typeName !== "bug") {
+                    throw new Error("Invalid subactivity type. A task can only have subtasks or bugs.");
+                }
+            } else if (parentActivity?.type.typeName == "subtask") {
+                if (inputType.typeName !== "bug") {
+                    throw new Error("Invalid subactivity type. A subtask can only have bugs.");
+                }
+            } else if (parentActivity?.type.typeName == "bug") {
+                throw new Error("A bug cannot have subactivities.");
+            }
+        }
+
         const newActivity = new db.Activity({
             activityTitle,
             project,
@@ -60,6 +82,7 @@ const create = async (data, project) => {
             $addToSet: { activities: createdActivity._id }
         }
         )
+        
         return createdActivity;
     } catch (error) {
         throw error;
@@ -178,7 +201,7 @@ const moveActivity = async (data, activityId) => {
                 throw new Error("Failed to update activity stage.");
             }
 
-        } 
+        }
         // Nếu cập nhật `sprint`
         else {
             const newSprint = data.sprint; // Sprint có thể null (Backlog)
@@ -286,6 +309,27 @@ const remove = async (activityId) => {
 };
 
 
+const createComment = async (activityId, userId, content) => {
+    try {
+
+        const activity = await db.Activity.findOne({ _id: activityId, isDestroyed: { $ne: true } })
+        if (!activity) {
+            throw new Error("Activity not found or already deleted");
+        }
+        const newComment = {
+            _id: new mongoose.Types.ObjectId(),
+            commenter: userId,
+            content: content,
+        }
+        const updateActivity = await db.Activity.findOneAndUpdate({ _id: activityId }, { $addToSet: { comments: newComment } }, { new: true, runValidators: true })
+
+        return updateActivity
+    } catch (error) {
+        throw error;
+
+    }
+}
+
 const activityService = {
     getActivitiesByProjectId,
     getById,
@@ -294,7 +338,9 @@ const activityService = {
     moveActivity,
     assignMember,
     removeAssignMember,
-    remove
+    remove,
+    //comment
+    createComment
 }
 
 module.exports = activityService;

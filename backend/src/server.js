@@ -11,10 +11,15 @@ const path = require("path");
 const passport = require("./configs/passport.config");
 const cookieParser = require("cookie-parser");
 
+const http = require("http");
+
 
 const app = express();
 const db = require("./models/index");
+const server = http.createServer(app);
 const { systemRoleRouter, authRouter, userRouter, projectRouter, activityRouter, siteRouter, activityTypeRouter, notificationRouter, sprintRouter, stageRouter, teamRouter } = require("./routes");
+const { setupSocket } = require("./services/socket-io.service");
+
 // Sử dụng cors middleware để cho phép request từ localhost:3000
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -57,7 +62,7 @@ app.use("/sites/:siteId/projects/:projectId/stages", stageRouter);
 app.use("/sites/:siteId/teams", teamRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
+setupSocket(server);
 app.use(async (req, res, next) => {
   next(httpsErrors(404, "Bad Request"));
 });
