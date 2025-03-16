@@ -39,6 +39,7 @@ const AppProvider = ({ children }) => {
   // Activity
   const [activityTypes, setActivityTypes] = useState([]);
   const [deleteActivity, setDeleteActivity] = useState(false);
+  const [searchActivity,setSearchActivity]= useState("");
   const [activityToDelete, setActivityToDelete] = useState("");
   const [confirmActivity, setConfirmActivity] = useState("");
   const [activityModal, setActivityModal] = useState(false);
@@ -285,7 +286,7 @@ const AppProvider = ({ children }) => {
         setCreateActivityModal(false);
       })
       .catch((err) => {
-        message.error(`Activity created failed!`);
+        message.error(err?.response?.data?.error?.message||"Activity created failed!");
         setActivityName("");
 
         setCreateActivityModal(false);
@@ -445,7 +446,7 @@ const AppProvider = ({ children }) => {
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
-      handleMoveActivity
+      handleMoveActivity,searchActivity,setSearchActivity
 
 
     }}>

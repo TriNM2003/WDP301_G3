@@ -43,5 +43,11 @@ activityRouter.delete("/:activityId/delete",
     activityController.removeActivity
 )
 
+//Comment 
+activityRouter.post("/:activityId/comments/post",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    activityController.createComment
+)
+
 
 module.exports = activityRouter;
