@@ -46,13 +46,14 @@ import ActivityDetail from "../../../Activity/ActivityDetail";
 import DeleteActivityModal from "../DeleteActivityModal";
 
 function KanbanBody({ sprint, stage }) {
-    const { activity, setActivity, activities, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
+    const { activity, setActivity, activities,searchActivity,setSearchActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
 
 
 
 
     const [filterActivityType, setFliterActivityType] = useState(["task"]);
-    const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
+    const filteredActivitites = activities?.filter((activity)=> activity&& activity?.activityTitle.toUpperCase().includes(searchActivity?.toUpperCase()))
+    .filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
 
 
 
