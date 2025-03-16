@@ -141,6 +141,17 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
         projectAvatar: "https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg",
     })
 
+    // Tạo 3 stage mặc định
+    const stages = [
+        { stageName: "To Do", project: newProject._id, stageStatus: "todo" },
+        { stageName: "Doing", project: newProject._id, stageStatus: "doing" },
+        { stageName: "Done", project: newProject._id, stageStatus: "done" }
+    ];
+
+    const createdStages = await db.Stage.insertMany(stages);
+    newProject.stages = createdStages.map(stage => stage._id);
+    await newProject.save()
+
     //theo project vao user
     await db.User.findOneAndUpdate(
         { _id: projectManager._id },

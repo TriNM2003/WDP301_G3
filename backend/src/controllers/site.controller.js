@@ -202,9 +202,10 @@ async function activeSite(req, res, next){
 
 async function adminEditSite(req, res, next) {
     try {
+        const {id} = req.payload;
         const {siteId} = req.params;
         const {siteOwnerId} = req.body;
-        const result = await siteService.adminEditSite(siteId, siteOwnerId);
+        const result = await siteService.adminEditSite(siteId, siteOwnerId, id);
         res.status(200).json(result);
     } catch (error) {
         next(error)

@@ -106,7 +106,7 @@ function ProjectLayout() {
           await showMessage("success", `Project ${projectName} moved to trashcan successfully`, 2);
           await showNotification(`📑 Project ${projectName} has been moved to trashcan 🗑 by John Smith 👋`)
 
-          nav("/site/recycle");
+          nav("/site");
           window.location.reload();
         } catch (error) {
             console.error("Error moving project to trash:", error);
@@ -133,7 +133,7 @@ function ProjectLayout() {
                         <Dropdown style={{ height: "100%" }}
                             overlay={
                                 <Menu>
-                                    <Menu.Item key="1" icon={<SettingOutlined />} onClick={() => setEditProjectModalVisible(true)}> Project settings</Menu.Item>
+                                    <Menu.Item key="1" icon={<SettingOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/project-setting`)}> Project settings</Menu.Item>
                                     <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>
                                     <Menu.Item key="3" icon={<DeleteOutlined style={{ color: red[6] }} />}>
                                         <Popconfirm

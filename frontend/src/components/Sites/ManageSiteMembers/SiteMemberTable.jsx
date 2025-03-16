@@ -1,4 +1,5 @@
-import { DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
+import { red } from '@ant-design/colors';
+import { CloseCircleOutlined, DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import { Avatar, Button, Checkbox, Dropdown, Menu, Popconfirm, Radio, Space, Table } from 'antd'
 import React from 'react'
 
@@ -14,7 +15,7 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
         >
           {site?.siteRoles?.map((role, index) => {
             return (
-              <Checkbox key={index} value={role} disabled={role === "siteOwner"}>
+              <Checkbox key={index} value={role} disabled={role.includes("siteOwner")}>
                 {formatRole(role)}
               </Checkbox>
             );
@@ -80,14 +81,14 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button danger type="text">Revoke access</Button>
+                  <span style={{color: red[6]}}><CloseCircleOutlined /> Revoke access</span>
                 </Popconfirm>
               </Menu.Item>
             </Menu>
           }
           trigger={["click"]}
         >
-          {record.siteMemberRole === "siteMember" && <Button icon={<MoreOutlined />} type="text" />}
+          {!record.siteMemberRole.includes("siteOwner") && <Button icon={<MoreOutlined />} type="text" />}
         </Dropdown>
       )
       ,

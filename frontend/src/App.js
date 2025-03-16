@@ -1,7 +1,7 @@
 
 import { useContext, useEffect } from 'react';
 import './App.css';
-import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
 import { Layout } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
@@ -56,9 +56,17 @@ import Stage from './pages/Stage/Stage';
 
 
 function App() {
-  const navigate = useNavigate();
-  const { accessToken, site, user, showMessage, project, messageHolder } = useContext(AppContext)
-  const checkSiteAccess = () => {
+  const location = useLocation();
+  const { accessToken, site, user, project } = useContext(AppContext)
+  
+  let siteAccess = true, isSiteOwner = true, isAdmin = true, isProjectManager = true
+
+  useEffect(() => {
+    checkRole();
+  },[location.pathname, user, site])
+
+  function checkRole(){
+    siteAccess = async function(){
     if(site?.siteStatus === "deactivated"){
       // showMessage("warning","Site is deactivated", 2);
       return false;
@@ -69,15 +77,15 @@ function App() {
       return true;
     }
   }
-  let isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
-  let isAdmin = user?.roles?.some(role => role.roleName === "admin");
-  let isProjectManager = project?.projectMember?.find(member => member._id._id === user._id)?.roles.includes("projectManager");
-
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
+  isAdmin = user?.roles?.some(role => role.roleName === "admin");
+  isProjectManager = project?.projectMember?.find(member => member._id._id === user._id)?.roles.includes("projectManager");
+  }
+  
 
 
   return (
     <div className="App">
-      {messageHolder}
       <Layout>
         <Header style={{ padding: "0", borderBottom: `solid 1px ${cyan[`1`]}` }}>
           <AppHeader />
@@ -111,7 +119,7 @@ function App() {
                 <Route path="edit-profile" element={<EditProfile />} />
               </Route>
               <Route path="/profile/confirm-delete" element={<ConfirmDelete />} />
-              {checkSiteAccess() &&
+              {siteAccess &&
             <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
 

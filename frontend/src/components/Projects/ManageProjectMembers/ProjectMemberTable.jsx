@@ -1,5 +1,6 @@
-import { DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import { Avatar, Button, Dropdown, Menu, Popconfirm, Space, Table, Checkbox  } from 'antd';
+import {red} from '@ant-design/colors'
 import React from 'react'
 
 const ProjectMemberTable = ({project, formatRole, handleRoleChange, handleRemoveMember, filteredMembers}) => {
@@ -79,7 +80,7 @@ const columns = [
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button danger type="text">Remove</Button>
+                  <span style={{color: red[6]}}><DeleteOutlined /> Remove</span>
                 </Popconfirm>
               </Menu.Item>
             </Menu>

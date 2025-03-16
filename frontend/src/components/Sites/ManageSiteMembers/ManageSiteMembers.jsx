@@ -120,7 +120,7 @@ const fetchData = async () => {
       }
       // console.log(result.data)
       const memberData = result?.data?.siteMember?.siteMember?.map((member, index) => {
-        return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
+        return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles, siteMemberAvatar: member._id.userAvatar }
       }) || []
       setTableData(memberData);
       // get user emails

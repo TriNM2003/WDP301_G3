@@ -13,6 +13,7 @@ const nodemailer = require("nodemailer")
 const {slugify} = require("../utils/slugify.util");
 const { mailer } = require("../configs");
 const { default: mongoose } = require("mongoose");
+const notificationService = require("./notification.service");
 
 
 const getAllSites = async () => {
@@ -370,7 +371,7 @@ async function activeSite(siteId){
     return updatedSite;
 }
 
-async function adminEditSite(siteId, siteOwnerId){
+async function adminEditSite(siteId, siteOwnerId, adminId){
     const site = await Site.findById(siteId);
     if (!site) {
         throw new Error("Site not found");
@@ -405,6 +406,14 @@ async function adminEditSite(siteId, siteOwnerId){
             {$set: {siteMember: updatedMemberList}},
             {new: true}
         );
+        const admin = await User.findById(adminId);
+        await notificationService.createNotification(adminId, 
+            updatedMemberList.map(receiver => {
+                return receiver._id
+            }),
+            `Site ${site.siteName}: site owner role has been assign to user ${siteOwner.email} by Admin ${admin.email}`,
+            "site"
+        )
         return updatedSite;
     }else{
         throw new Error("Cannot assign member of other site as this site owner!");
