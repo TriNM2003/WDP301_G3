@@ -2,6 +2,7 @@ const db = require('../models');
 const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 const teamService = require("../services/team.service");
+const notificationService = require("../services/notification.service");
 
 const getAllTeams = async (req, res) => {
     try {
@@ -26,10 +27,28 @@ const getTeamMembers = async (req, res) => {
 
 const addTeamMember = async (req, res) => {
     try {
+        const { id } = req.payload;
         const { username, email, role } = req.body;
         const teamId = req.params.teamId;
+
+        const checkTeam = await db.Team.findById(teamId).populate("teamMembers._id");
+        if (!checkTeam) {
+            return res.status(404).json({ error: { status: 404, message: "Team not found" } });
+        }
         const result = await teamService.addTeamMember(teamId, username, email, role);
-        res.status(200).json(result);
+
+        const user = await db.User.findById(id);
+        
+        // Gửi thông báo đến tất cả thành viên
+        const receivers = checkTeam.teamMembers.map(member => member._id);
+        await notificationService.createNotification(
+            id,
+            receivers,
+            `${user?.username} added ${username} to the team ${checkTeam.teamName}.`,
+            "team"
+        );
+
+        res.status(201).json({ status: 201, message: "User added to team successfully", result });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
@@ -38,10 +57,27 @@ const addTeamMember = async (req, res) => {
 
 const kickTeamMember = async (req, res) => {
     try {
+        const {id} = req.payload
         const { userId } = req.body;
         const teamId = req.params.teamId;
+        const checkTeam = await db.Team.findById(teamId).populate("teamMembers._id");
         const result = await teamService.kickTeamMember(teamId, userId);
-        res.status(200).json(result);
+        const user = await db.User.findById(userId);
+        const teamLead = await db.User.findById(id);
+
+        if (!checkTeam) {
+            return res.status(404).json({ error: { status: 404, message: "Team not found" } });
+        }
+        
+        // Gửi thông báo đến tất cả thành viên còn lại
+        const receivers = checkTeam.teamMembers.map(member => member._id).filter(id => id.toString() !== userId);
+        await notificationService.createNotification(
+            id,
+            receivers,
+            `${teamLead?.username} removed ${user?.username} from the team ${checkTeam.teamName}.`,
+            "team"
+        );
+        res.status(200).json({ status: 200, message: "User removed from team successfully", result });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });

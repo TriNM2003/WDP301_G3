@@ -186,13 +186,35 @@ const sendDeactivateSiteEmail = async (siteId) => {
 
 const deactivateSite = async (siteId) => {
     try {
-        const site = await Site.findById(siteId);
+        const site = await Site.findById(siteId).populate("siteMember._id");
         if (!site) throw new Error("Site not found");
 
         // 🔹 Chuyển trạng thái site thành "deactivated"
         const DeactivateSite = await Site.findByIdAndUpdate(siteId, { $set: { siteStatus: "deactivated" } }, { new: true });
 
-        return { message: "Site has been deactivated successfully", DeactivateSite };
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            //send to all member in site
+            to: site.siteMember.map(member => member._id.email).join(", "),
+            subject: "Site Deactivated",
+            html: `<h2>Your site ${site.siteName} has been deactivated!</h2>`
+        };
+        try {
+            await transporter.sendMail(mailOptions);
+            return {DeactivateSite, message: "Site deactivated successfully!"};
+        }
+        catch (error) {
+            console.error("Error sending email notification:", error);
+            throw new Error("Failed to send email notification");
+        } 
     } catch (error) {
         throw error;
     }

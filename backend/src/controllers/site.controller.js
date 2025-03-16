@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const { siteService } = require('../services');
+const notificationService = require('../services/notification.service');
 const cloudinaryFile = require('../configs/cloudinary')
 
 const getAllSites = async (req, res, next) => {
@@ -68,6 +69,15 @@ const editSite = async (req, res, next) => {
             updatedSite = await siteService.editSite(siteId, updateData, null);
         }
 
+        const site = await db.Site.findById(siteId).populate("siteMember._id");
+        const receivers = site.siteMember.map(member => member._id._id);
+        await notificationService.createNotification(
+            req.payload.id,
+            receivers,
+            `Site ${site.siteName} has been updated by the site owner.`,
+            "site"
+        );
+
         res.status(200).json(updatedSite);
     } catch (error) {
         res.status(403).json({
@@ -93,6 +103,15 @@ const deactivateSite = async (req, res, next) => {
         const { siteId } = req.params;
 
         const response = await siteService.deactivateSite( siteId);
+
+        const site = await db.Site.findById(siteId).populate("siteMember._id");
+        const receivers = site.siteMember.map(member => member._id._id);
+        await notificationService.createNotification(
+            req.payload.id,
+            receivers,
+            `Site ${site.siteName} has been deactivated by the site owner.`,
+            "site"
+        );
 
         res.status(200).json(response);
     } catch (error) {

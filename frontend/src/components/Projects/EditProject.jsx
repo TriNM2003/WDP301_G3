@@ -113,7 +113,7 @@ const EditProject = () => {
         if (selectedFile) {
             formData.append("projectAvatar", selectedFile);
         }
-
+        setLoading(true);
         try {
             const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
                 headers: {

@@ -17,6 +17,7 @@ const ProjectTrash = () => {
     const [searchText, setSearchText] = useState("");
     const [confirmProjectName, setConfirmProjectName] = useState("");
     const [hasAccess, setHasAccess] = useState(true);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -76,6 +77,7 @@ const ProjectTrash = () => {
 
     const handleConfirm = async () => {
         if (!selectedProject) return;
+        setLoading(true);
         try {
             if (modalType === "Restore") {
                 await axios.put(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/restore`, {}, {
@@ -88,7 +90,7 @@ const ProjectTrash = () => {
                     alert("Project name does not match!");
                     return;
                 }
-                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/delete`, {
+                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                 });
                 message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);
@@ -98,6 +100,8 @@ const ProjectTrash = () => {
             fetchProjects();
         } catch (error) {
             console.error(`Error performing ${modalType.toLowerCase()} project:`, error);
+        } finally {
+            setLoading(false); 
         }
     };
 
