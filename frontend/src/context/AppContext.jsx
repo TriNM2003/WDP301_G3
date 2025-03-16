@@ -120,7 +120,7 @@ const AppProvider = ({ children }) => {
     }
     if (!excludedRoutes.includes(location.pathname)) {
       if (accessToken) {
-        axios.get(`${userApi}/user-profile`, {
+        authAxios.get(`${userApi}/user-profile`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`
           }

@@ -31,6 +31,11 @@ siteRouter.put("/:siteId/deactivate",
     [verifyAccessToken, siteMiddleware.isInSite],
     siteController.deactivateSite
 );
+// for admin
+siteRouter.put("/:siteId/adminDeactivate",
+    [verifyAccessToken, adminMiddleware.isAdmin],
+    siteController.deactivateSite,
+);
 siteRouter.get("/:siteId/get-invitations-by-site",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.getInvitaionsBySiteId); //hung
 siteRouter.delete("/:siteId/cancel-Invitation",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.cancelInvitationById);
 
@@ -41,5 +46,7 @@ siteRouter.get("/get-by-user-id",
 
 // get all user in site
 siteRouter.get("/:siteId/members", verifyAccessToken, siteController.getAllUsersInSite)
+siteRouter.put("/:siteId/active", [verifyAccessToken, adminMiddleware.isAdmin], siteController.activeSite);
+siteRouter.put("/:siteId/adminEdit", [verifyAccessToken, adminMiddleware.isAdmin], siteController.adminEditSite);
 
 module.exports = siteRouter;

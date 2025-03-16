@@ -39,20 +39,24 @@ const ManageProjects = () => {
 
   const tableData = (rawProjects, userList) => {
     try {
-      return rawProjects?.map((project, index) => {
-        const projectManagerId = project.projectMember.find(member => member.roles.includes("projectManager"))._id;
-        const projectManager = userList.find(user => user._id === projectManagerId);
-        return  { key: index+1, 
-          projectId: project._id,
-          projectName: project.projectName,
-          projectAvatar: project.projectAvatar, 
-          projectManager: projectManager.email, 
-          projectManagerAvatar: projectManager.userAvatar,
-          projectStatus: project.projectStatus,
-          createDate: formatDate(project.createdAt), 
-          updateDate: formatDate(project.updatedAt)
-        } || {}
-      }) || []
+      return rawProjects?.reduce((acc, project, index) => {
+        const projectManagerId = project?.projectMember.find(member => member.roles.includes("projectManager"))._id;
+        const projectManager = userList?.find(user => user._id === projectManagerId);
+        if(project.projectStatus === "active"){
+          acc.push({
+            key: index + 1,
+            projectId: project._id,
+            projectName: project.projectName,
+            projectAvatar: project.projectAvatar,
+            projectManager: projectManager.email,
+            projectManagerAvatar: projectManager.userAvatar,
+            projectStatus: project.projectStatus,
+            createDate: formatDate(project.createdAt),
+            updateDate: formatDate(project.updatedAt)
+        })
+        }
+        return acc;
+      }, [])
     } catch (error) {
       console.log(error)
     }

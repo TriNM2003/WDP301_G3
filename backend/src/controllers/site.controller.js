@@ -190,6 +190,27 @@ const cancelInvitationById = async (req, res, next) => {
     }
 }
 
+async function activeSite(req, res, next){
+    try {
+        const {siteId} = req.params;
+        const result = await siteService.activeSite(siteId);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error)
+    }
+}
+
+async function adminEditSite(req, res, next) {
+    try {
+        const {siteId} = req.params;
+        const {siteOwnerId} = req.body;
+        const result = await siteService.adminEditSite(siteId, siteOwnerId);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error)
+    }
+}
+
 const siteController = {
     getSiteById,
     createSite,
@@ -206,6 +227,8 @@ const siteController = {
 
     getInvitaionsBySiteId,
     cancelInvitationById,
+    activeSite,
+    adminEditSite,
 }
 
 module.exports = siteController;

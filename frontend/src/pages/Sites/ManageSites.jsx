@@ -15,7 +15,8 @@ import {
   Modal,
   Select,
   Form,
-  Upload
+  Upload,
+  Row
 } from "antd";
 import {
   UserOutlined,
@@ -25,9 +26,12 @@ import {
   FileImageOutlined,
   UploadOutlined,
   LoadingOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import {useNavigate} from "react-router-dom"
-import { green, red } from "@ant-design/colors";
+import { blue, green, red } from "@ant-design/colors";
 import { AppContext } from "../../context/AppContext";
 import authAxios from "../../utils/authAxios";
 
@@ -53,26 +57,23 @@ const mockSiteData = [
     { key: "2", name: "WDP301", projectAvatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s", projectManager: "TriNM@gmail.com", projectManagerAvatar: "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png", createAt: "10/02/2004", updateAt: "15/02/2024"},
 ]
 
-const siteApi = "http://localhost:9999/sites"
 const userApi = "http://localhost:9999/users"
 
 // component
 const ManageSites = () => {
+  const {user, showNotification, siteAPI, accessToken} = useContext(AppContext);
   const [loading, setLoading] = useState(false);
-  const {user, showNotification} = useContext(AppContext);
-  const [fileList, setFileList] = useState([]);
-  const nav = useNavigate();
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [createSiteModalVisisble, setCreateSiteModalVisisble] = useState(false);
   const [sites, setSites] = useState(mockSiteData);
   const [userEmails, setUserEmails] = useState(mockEmailOptions);
   const [selectedEmail, setSelectedEmail] = useState("");
-    // search state
-    const [searchTerm, setSearchTerm] = useState("");
-    // top pop up message
-    const [messageApi, contexHolder] = message.useMessage();
-
-
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editSiteModalVisible, setEditSiteModalVisible] = useState(false);
+  const [siteMemberOption, setSiteMemberOption] = useState([]);
 
 useEffect(() => {
   // get all sites
@@ -83,10 +84,10 @@ useEffect(() => {
 
 const fetchSites = () => {
   // get all sites
-  authAxios.get(`${siteApi}/get-all`)
+  authAxios.get(`${siteAPI}/get-all`)
   .then(res => {
     const sites = res.data.map((site, index) => {
-      const siteOwner = site.siteMember.find(member => member.roles[0] === "siteOwner");
+      const siteOwner = site?.siteMember.find(member => member?.roles.includes("siteOwner"));
       let siteAvatar = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s";
       const siteOwnerEmail = siteOwner._id.email;
       const siteOwnerAvatar = siteOwner._id.userAvatar;
@@ -98,9 +99,13 @@ const fetchSites = () => {
         siteId: site._id,
         name: site.siteName, 
         siteAvatar: siteAvatar,
+        siteDescription: site.siteDescription,
+        siteSlug: site.siteSlug,
         siteStatus: site.siteStatus || "not found", 
-        siteOwner: siteOwnerEmail || "Not found", 
+        siteOwner: siteOwnerEmail || "Not found",
+        siteOwnerId: siteOwner._id._id || "Id not found",
         siteOwnerAvatar: siteOwnerAvatar || "https://api.dicebear.com/7.x/miniavs/svg?seed=1", 
+        siteMember: site.siteMember,
         createAt: formatDate(site.createdAt), 
         updateAt: formatDate(site.updatedAt)
       }
@@ -147,19 +152,6 @@ const formatDate = (isoString) => {
 
 
 
-// hien thi avatar sau khi upload
-const normFile = (e) => {
-  if (Array.isArray(e)) {
-    return e;
-  }
-  // giu lai file cuoi cung
-  return e?.fileList.slice(-1);
-};
-
-const handleAvatarChange = ({ fileList }) => {
-  setFileList(fileList.slice(-1)); // Chỉ giữ lại một file duy nhất
-};
-
 const handleCreateSite = async () => {
   try {
       await form.validateFields();
@@ -168,30 +160,21 @@ const handleCreateSite = async () => {
       formData.append("siteName", values.siteName);
       formData.append("siteOwner", values.siteOwner);
 
-    console.log(values.siteName, values.siteOwner)
-      await authAxios.post(`${siteApi}/create`, {siteName: values.siteName, siteOwner: values.siteOwner});
+    // console.log(values.siteName, values.siteOwner)
+      await authAxios.post(`${siteAPI}/create`, {siteName: values.siteName, siteOwner: values.siteOwner});
       
-      messageApi.open({
-          type: 'success',
-          content: 'Create site successfully!',
-          duration: 2
-      })
+      message.success('Create site successfully!',2)
       showNotification(`📑 Site ${values.siteName} has been created 👋`)
       setCreateSiteModalVisisble(false);
       fetchSites();
       fetchUserEmails();
 
       form.resetFields();
-      setFileList([]);
       setSelectedEmail("");
       
   } catch (error) {
     console.log(error)
-      messageApi.open({
-          type: 'error',
-          content: String(error.response?.data?.error?.message),
-          duration: 2
-      })
+      message.error(String(error.response?.data?.error?.message),2)
   }
 };
 
@@ -206,33 +189,65 @@ const handleCreateSite = async () => {
   // filter by search
   const filteredSites = sites.filter((site) => {
     // filter by search
-    const matchesSearch = site.name.toLowerCase().includes(searchTerm.toLowerCase());    
+    const matchesSearch = site?.name.toLowerCase().includes(searchTerm?.toLowerCase());    
     return matchesSearch;
   });
 
 
+  const handleFileChange = (file) => {
+    setSelectedFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
-  const handleEditSite = () => {
-    messageApi.open({
-      type: "success",
-      content: `Edit site clicked`,
-      duration: 2
-   })
+  async function handleEditSite(values){
+    setLoading(true);
+    try {
+      await authAxios.put(`${siteAPI}/${values?.siteId}/adminEdit`, {siteOwnerId: values?.siteOwner})
+      
+      fetchSites();
+      message.success("Site updated successfully!");
+      showNotification("Site Updated", `Site ${values?.siteName} has been updated!`);
+      editForm.resetFields()
+      setEditSiteModalVisible(false);
+    } catch (error) {
+      console.error("Error updating site:", error);
+      message.error("Failed to update site.");
+    } finally {
+      setLoading(false);
+    }
   }
 
+  // handle deactivate site
+  async function handleDeactivateSite(siteId, siteData){
+    try {
+      await authAxios.put(`${siteAPI}/${siteId}/adminDeactivate`);
+      setSites(sites => 
+        sites.map(site => 
+          site.siteId === siteId ? {...site, siteStatus: "deactivated"} : site
+        ));
+    } catch (error) {
+      console.error("Error deactivating site:", error);
+      message.error("Failed to deactivate site.");
+    } finally {
+      message.success(`Site "${siteData?.siteName}" has been deactivated.`, 2)
+      showNotification("Site Deactivated", `📑 Site ${siteData?.siteName} has been deactivated`)
+    }
+  };
 
-
-  // handle remove site
-  const handleDeactivateSite = (key, name) => {
-    // call api
-    
-    // update fe state
-    messageApi.open({
-      type: "success",
-      content: `Site ${name} deactivated successfully`,
-      duration: 2
-   })
-   showNotification(`📑 Site ${name} has been deactivated`)
+  async function handleActiveSite(siteId, siteData){
+    try {
+      await authAxios.put(`${siteAPI}/${siteId}/active`);
+      setSites(sites => 
+        sites.map(site => 
+          site.siteId === siteId ? {...site, siteStatus: "active"} : site
+        ));
+    } catch (error) {
+      console.error("Error deactivating site:", error);
+      message.error("Failed to deactivate site.");
+    } finally {
+      message.success(`Site "${siteData?.siteName}" has been activated.`, 2)
+      showNotification("Site Deactivated", `📑 Site ${siteData?.siteName} has been activated`)
+    }
   };
 
 
@@ -293,19 +308,44 @@ const handleCreateSite = async () => {
         <Dropdown
           overlay={
             <Menu mode="vertical">
+              {record.siteStatus !== "deactivated" ?
               <Menu.Item key="deactivateSite">
                 <Popconfirm
                   title="Are you sure to deactive this site?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleDeactivateSite(record.key, record.name)}
+                  onConfirm={() => handleDeactivateSite(record.siteId, {siteName: record.name})}
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button danger type="text">Deactivate</Button>
+                 <span style={{color: red[6], fontSize: "1.0rem"}}><CloseCircleOutlined /> Deactivate</span>
+                </Popconfirm>
+              </Menu.Item> :
+                <Menu.Item key="activeSite">
+                <Popconfirm
+                  title="Are you sure to active this site?"
+                  icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
+                  onConfirm={() => handleActiveSite(record.siteId, {siteName: record.name})}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                <span style={{color: green[6], fontSize: "1.0rem"}}><CheckCircleOutlined /> Active</span>
                 </Popconfirm>
               </Menu.Item>
-              <Menu.Item key="editSite">
-                <Button type="text" onClick={() => handleEditSite()}>Edit site</Button>
+              }
+              
+              <Menu.Item key="editSite" onClick={() => {
+                  editForm.setFieldsValue({...record, siteName: record.name})
+                  const siteMemberList = sites.find(site => site.siteId === record.siteId).siteMember.map(member => {
+                    return {
+                      label: member._id.email,
+                      value: member._id._id,
+                      avatar: member._id.userAvatar
+                    }
+                  })
+                  setSiteMemberOption(siteMemberList)
+                  setEditSiteModalVisible(true);
+                }}>
+                <span style={{color: blue[6], fontSize: "1.0rem"}}><EditOutlined /> Edit site</span>
               </Menu.Item>
             </Menu>
           }
@@ -322,9 +362,6 @@ const handleCreateSite = async () => {
   // render fe
   return (
     <div style={{ padding: "30px", textAlign: "left", backgroundColor: 'white', height: "100%"}}>
-      {/* hien thi message api */}
-      {contexHolder}
-
       {/* Breadcrumb */}
       <Breadcrumb style={{ marginBottom: "20px" }} items={breadCrumbItems} />
 
@@ -421,6 +458,82 @@ const handleCreateSite = async () => {
         </Form>
           </Modal>
 
+
+          {/* modal edit site */}
+          <Modal
+          title="Edit site"
+          visible={editSiteModalVisible}
+          onCancel={() => {
+            setEditSiteModalVisible(false)
+            editForm.resetFields()
+          }}
+          footer={false}
+          >
+        <Form layout="vertical" onFinish={handleEditSite} form={editForm}>
+
+          <Form.Item label="siteId" name="siteId" hidden>
+            <Input />
+          </Form.Item>
+          <div style={{textAlign: "center"}}>
+            {/* Avatar Hiển Thị Ảnh */}
+            <Form.Item>
+              <Avatar size={100} src={editForm.getFieldValue("siteAvatar") || imagePreview || "https://via.placeholder.com/100"} />
+            </Form.Item>
+            {/* Upload ảnh */}
+            <Form.Item name="siteAvatar">
+              <Upload disabled
+                showUploadList={false}
+                beforeUpload={handleFileChange}
+              >
+                <Button icon={<UploadOutlined />} disabled>Upload Image</Button>
+              </Upload>
+            </Form.Item>
+          </div>
+
+          {/* site owner input */}
+          <Form.Item label="Site Owner" name="siteOwner"
+            rules={[
+              { required: true, message: "Site Owner is required" },
+          ]}
+            hasFeedback
+          >
+            <Select
+              showSearch // Hiển thị ô tìm kiếm
+              style={{ width: "100%" }}
+              placeholder="Select user email"
+              options={siteMemberOption}
+              optionRender={(option) => (
+                <Space>
+                  <Avatar src={option.data.avatar} />
+                  {option.label}
+                </Space>
+              )}
+            />
+          </Form.Item>
+
+          <Form.Item label="Site Name" name="siteName" rules={[
+              { required: true, min: 3, message: "Site name must be at least 3 character" },
+          ]}>
+            <Input disabled/>
+          </Form.Item>
+
+          <Form.Item label="Site Description" name="siteDescription">
+            <Input.TextArea  disabled/>
+          </Form.Item>
+
+          <Form.Item label="Site Slug" name="siteSlug" rules={[
+              { required: true, message: "Site slug is required" },
+          ]}>
+            <Input disabled/>
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} style={{ width: "100%" }}>
+              Save Changes
+            </Button>
+          </Form.Item>
+        </Form>
+          </Modal>
     </div>
   );
 };

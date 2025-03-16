@@ -1,7 +1,7 @@
 
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import './App.css';
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
 import { Layout } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
@@ -56,8 +56,7 @@ import Stage from './pages/Stage/Stage';
 
 
 function App() {
-
-
+  const navigate = useNavigate();
   const { accessToken, site, user, showMessage, project, messageHolder } = useContext(AppContext)
   const checkSiteAccess = () => {
     if(site?.siteStatus === "deactivated"){
@@ -70,14 +69,10 @@ function App() {
       return true;
     }
   }
-  const isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
-  const isAdmin = user?.roles?.some(role => role.roleName === "admin");
+  let isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
+  let isAdmin = user?.roles?.some(role => role.roleName === "admin");
+  let isProjectManager = project?.projectMember?.find(member => member._id._id === user._id)?.roles.includes("projectManager");
 
-  let isProjectManager = false;
-  if (project) {
-      // console.log(project?.projectMember?.find(member => member._id._id === user._id).roles.includes("projectManager"))
-      isProjectManager = project?.projectMember?.find(member => member._id._id === user._id).roles.includes("projectManager");
-  }
 
 
   return (
@@ -149,7 +144,7 @@ function App() {
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>
 
-                      {isProjectManager && <>
+                      {(isSiteOwner || isProjectManager) && <>
                       <Route path='manage' element={<ManageProjectLayout />}>
                         <Route path='members' element={<ManageProjectMember />} />
                       </Route>
@@ -179,7 +174,13 @@ function App() {
               <Route path="stage" element={<Stage />} />
 
 
-              {isAdmin && <Route path='/manage-sites' element={<ManageSites />} />}
+              {isAdmin && 
+                <Route path='/admin'>
+                  <Route path='manage-sites' element={<ManageSites />} />
+                  <Route path="dashboard" element={<h1>Admin Dashboard is in development</h1>} />
+                </Route>
+              }
+              
             
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>

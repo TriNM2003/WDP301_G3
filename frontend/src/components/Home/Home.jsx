@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Button, Card, Carousel, Col, Collapse, Row, Space } from 'antd'
 import Title from 'antd/es/typography/Title'
-import { ArrowRightOutlined, GoogleCircleFilled, GoogleOutlined, GooglePlusCircleFilled, GooglePlusOutlined, MailOutlined } from '@ant-design/icons'
+import { ArrowRightOutlined, EditOutlined, GoogleCircleFilled, GoogleOutlined, GooglePlusCircleFilled, GooglePlusOutlined, LineChartOutlined, MailOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 function Home() {
@@ -42,8 +42,11 @@ function Home() {
           : (siteAccess === "admin" ? 
 
             <>
-            <Title level={1} style={{ color: "white", textAlign: 'center', margin:"5% 5% 0 5%" }}>Admin cannot access site</Title>
-            <Title level={2} style={{ color: "white", textAlign: 'center', margin:"5% 5% 0 5%" }}>Click on profile in top right to start managing sites</Title>
+            <div style={{display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "3%"}}>
+              <Title level={1} style={{ color: "white", textAlign: 'center', margin:"10% 5% 2% 5%" , width: "100%"}}>Welcome back, Administrator</Title>
+              <Button onClick={()=>{navigate("/admin/manage-sites")}} icon={<EditOutlined />} iconPosition='start' color='cyan' variant='solid'>Manage sites</Button>
+              <Button onClick={()=>{navigate("/admin/dashboard")}} icon={<LineChartOutlined />} iconPosition='start' color='cyan' variant='solid'>Dashboard</Button>
+            </div>
             </>
             :
             <Title level={1} style={{ color: "white", textAlign: 'center', margin:"5% 5% 0 5%" }}>Site is deactivated</Title>

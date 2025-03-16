@@ -352,6 +352,66 @@ const cancelInvitationById = async (siteId, invitationId) => {
     return updateInvitations;
 };
 
+async function activeSite(siteId){
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site not found");
+    }
+    if(site.siteStatus === "active"){
+        throw new Error("Site is already active");
+    }
+
+    const updatedSite = await Site.findByIdAndUpdate(siteId,
+        {$set: {siteStatus: "active"}},
+        {new: true}
+    );
+    // const populatedSite = updatedSite.populate("siteMember._id");
+
+    return updatedSite;
+}
+
+async function adminEditSite(siteId, siteOwnerId){
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site not found");
+    }
+    const siteOwner = await User.findById(siteOwnerId);
+    if(!siteOwner){
+        throw new Error("New site owner account does not exist");
+    }
+    if(siteOwner.status !== "active"){
+        throw new Error("New site owner account are not activated");
+    }
+    // if(site.siteStatus === "deactivated"){
+    //     throw new Error("Site is deactivated! Please activate before editing");
+    // }
+
+    const isMemberOfSite = site.siteMember.find(member => member._id.toString() === siteOwnerId.toString())
+    if(isMemberOfSite){
+        const updatedMemberList = site.siteMember.map(member => {
+            if(member._id.toString() === siteOwnerId.toString()){
+                return {
+                    _id: member._id,
+                    roles: ["siteOwner", "siteMember"]
+                };
+            }else{
+                return {
+                    _id: member._id,
+                    roles: ["siteMember"]
+                };
+            }
+        })
+        const updatedSite = await Site.findByIdAndUpdate(siteId,
+            {$set: {siteMember: updatedMemberList}},
+            {new: true}
+        );
+        return updatedSite;
+    }else{
+        throw new Error("Cannot assign member of other site as this site owner!");
+    }
+
+}
+
 
 
 const siteService = {
@@ -366,6 +426,8 @@ const siteService = {
     getAllUsersInSite,
     getInvitaionsBySiteId,
     cancelInvitationById,
+    activeSite,
+    adminEditSite,
 }
 
 module.exports = siteService;

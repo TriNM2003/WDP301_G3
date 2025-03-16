@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -41,24 +41,34 @@ import {
 import { gold, gray, green } from "@ant-design/colors";
 import { useLocation, useNavigate } from "react-router-dom";
 import Sider from "antd/es/layout/Sider";
+import { AppContext } from "../../context/AppContext";
+import CreateTeam from "./CreateTeam";
 
 const { Title } = Typography;
 const { confirm } = Modal;
 const { Option } = Select;
 
 const ManageTeams = () => {
+    const {teams, setTeams} = useContext(AppContext);
     const teamAvatarTemp = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSqYmVDup6h_eN1Gv2hl8aOecLnIEsJwkuHQ&s";
     const teamLeaderAvatarTemp = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuBznWbg4zGZWlvMx68yxtX3n41Y7Q7mnFCA&s";
     const createDateTemp = "04/07/2025";
     const updateDateTemp = "06/11/2025";
     const nav = useNavigate();
   // content
-  const [members, setMembers] = useState([
-    { key: "1", teamName: "Bear", teamLeader: "John@gmail.com", teamAvatar: teamAvatarTemp, teamLeaderAvatar: teamLeaderAvatarTemp, createDate: createDateTemp, updateDate: updateDateTemp },
-    { key: "2", teamName: "Tiger", teamLeader: "Alice@gmail.com", teamAvatar: teamAvatarTemp, teamLeaderAvatar: teamLeaderAvatarTemp, createDate: createDateTemp, updateDate: updateDateTemp },
-    { key: "3", teamName: "Terminator", teamLeader: "Alice1@gmail.com", teamAvatar: teamAvatarTemp, teamLeaderAvatar: teamLeaderAvatarTemp, createDate: createDateTemp, updateDate: updateDateTemp },
-    { key: "4", teamName: "Ant Queen", teamLeader: "Alice2@gmail.com", teamAvatar: teamAvatarTemp, teamLeaderAvatar: teamLeaderAvatarTemp, createDate: createDateTemp, updateDate: updateDateTemp },
-  ]);
+
+  const tableData =  teams.map(function(team, index){
+    const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"));
+    return {
+      key: index+1,
+      teamName: team?.teamName,
+      teamLeader: teamLeader?._id.email,
+      teamAvatar: team?.teamAvatar,
+      teamLeaderAvatar: teamLeader?._id.userAvatar,
+      createDate: team?.createAt || "Not found",
+      updateDate: team?.updateAt || "Not found"
+    }
+  })
   const breadCrumbItems = [
     {
       title: <a href="/Home">Home</a>
@@ -71,6 +81,10 @@ const ManageTeams = () => {
     }
   ]
 
+  useEffect(function(){
+    console.log(tableData)
+  }, [teams])
+
   // dung de sort date string
   const parseDate = (dateStr) => {
     const [day, month, year] = dateStr.split("/").map(Number);
@@ -78,13 +92,6 @@ const ManageTeams = () => {
     return new Date(year, month - 1, day);
   };
 
-  // State lưu role đang chọn
-const [selectedRoles, setSelectedRoles] = useState(
-  members.reduce((acc, member) => {
-    acc[member.key] = member.role;
-    return acc;
-  }, {})
-);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,56 +99,11 @@ const [selectedRoles, setSelectedRoles] = useState(
   const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [messageApi, contexHolder] = message.useMessage();
+  const [createTeamModal, setCreateTeamModal] = useState(false);
 
-  const handleEmailChange = (emails) => {
-    const validEmails = emails.filter((email) => emailRegex.test(email));
-    setSelectedEmails(validEmails);
-  };
-
-  const handleAddMember = () => {
-    setAddMemberModalVisible(false);
-    messageApi.open({
-      type: "success",
-      content: "Add members successfully",
-      duration: 2
-    });
-    console.log(selectedEmails);
+  const handleCreateTeam = () => {
+    console.log("create team");
   }
-
-  // filter by name and role
-  const filteredMembers = members.filter((member) => {
-    const matchesSearch = member.teamName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === "All" || !selectedRole || member.role === selectedRole;
-    return matchesSearch && matchesRole;
-  });
-
-
- // Xử lý đổi vai trò
-const handleRoleChange = (key, newRole) => {
-  setSelectedRoles({ ...selectedRoles, [key]: newRole });
-  setMembers(members.map((member) => (member.key === key ? { ...member, role: newRole } : member)));
-};
-
-  // Xử lý xóa thành viên bằng Popconfirm
-  const handleRemoveMember = (key) => {
-    setMembers(members.filter((member) => member.key !== key));
-  };
-
-  // Hiển thị menu chọn vai trò
-const roleMenu = (record) => (
-  <Menu>
-    <Menu.ItemGroup title="Select role">
-      <Radio.Group
-        value={selectedRoles[record.key]}
-        onChange={(e) => handleRoleChange(record.key, e.target.value)}
-        style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
-      >
-        <Radio value="Project Manager" disabled>Project Manager</Radio>
-        <Radio value="Project Member">Project Member</Radio>
-      </Radio.Group>
-    </Menu.ItemGroup>
-  </Menu>
-);
 
   // columns
   const columns = [
@@ -173,12 +135,14 @@ const roleMenu = (record) => (
     { title: "Created date",
         dataIndex: "createDate",
          key: "createDate",
+         render: (text) => new Date(text).toLocaleDateString("vi-VN"),
         sorter: (a, b) => parseDate(a.createDate) - parseDate(b.createDate),
         width: "20%"
     },
     { title: "Last updated",
         dataIndex: "updateDate",
          key: "updateDate" ,
+         render: (text) => new Date(text).toLocaleDateString("vi-VN"),
         sorter: (a, b) => parseDate(a.updateDate) - parseDate(b.updateDate),
         width: "20%"
     },
@@ -194,7 +158,7 @@ const roleMenu = (record) => (
                 <Popconfirm
                   title="Are you sure to remove this team?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  onConfirm={() => handleRemoveMember(record.key)}
+                  // onConfirm={() => handleRemoveMember(record.key)}
                   okText="Yes"
                   cancelText="No"
                 >
@@ -237,7 +201,7 @@ const roleMenu = (record) => (
         </div>
 
         {/* add team button */}
-        <Button type="primary" icon={<TeamOutlined />} onClick={() => setAddMemberModalVisible(true)}>
+        <Button type="primary" icon={<TeamOutlined />} onClick={() => setCreateTeamModal(true)}>
           Add team
         </Button>
       </div>
@@ -246,7 +210,7 @@ const roleMenu = (record) => (
       {/* Bảng danh sách thành viên */}
       <Table 
       columns={columns} 
-      dataSource={filteredMembers} 
+      dataSource={tableData} 
       pagination={{ pageSize: 5 }}
       scroll={{ x: "max-content" }}
       style={{
@@ -255,19 +219,13 @@ const roleMenu = (record) => (
       }}
       />
 
+      <CreateTeam visible={createTeamModal} onCreate={handleCreateTeam} onCancel={() => setCreateTeamModal(false)} />
 
       <Modal
         title="Add team"
         visible={addMemberModalVisible}
         onCancel={() => setAddMemberModalVisible(false)}
-        footer={[
-          <Button key="add" color={green[6]} variant="solid" onClick={() => handleAddMember()}>
-            Add
-          </Button>,
-          <Button key="cancel" color="danger" variant="solid" onClick={() => setAddMemberModalVisible(false)} danger>
-            Cancel
-          </Button>,
-        ]}
+        footer={false}
       >
               <Form
                   name="basic"
@@ -293,7 +251,8 @@ const roleMenu = (record) => (
                       rules={[
                           {
                               required: true,
-                              message: 'Please input team name!',
+                              min: 3,
+                              message: 'Please input at least 3 character!',
                           },
                       ]}
                   >
@@ -301,7 +260,7 @@ const roleMenu = (record) => (
                   </Form.Item>
 
                   <Form.Item
-                      label="Team leader"
+                      label="Team members"
                       name="teamLeader"
                       rules={[
                           {
@@ -313,24 +272,14 @@ const roleMenu = (record) => (
                       <Input />
                   </Form.Item>
 
-                  <Form.Item
-                      name="teamAvatar"
-                      label="Team avatar"
-                      valuePropName="fileList"
-                      //   getValueFromEvent={normFile}
-                      extra="Select a picture to represent your team"
-                  >
-                      <Upload name="logo" action="/upload.do" listType="picture">
-                          <Button icon={<UploadOutlined />}>Click to upload</Button>
-                      </Upload>
-                  </Form.Item>
-  
-
-                  {/* <Form.Item label={null}>
-                      <Button type="primary" htmlType="submit">
-                          Submit
-                      </Button>
-                  </Form.Item> */}
+          <div style={{marginLeft: "5%"}}>
+            <Button key="add" style={{color: "white", background: green[6]}} variant="solid" >
+              Add
+            </Button>,
+            <Button style={{marginLeft: "2%"}} key="cancel" color="danger" variant="solid" onClick={() => setAddMemberModalVisible(false)} danger>
+              Cancel
+            </Button>,
+          </div>
               </Form>
 
       </Modal>
