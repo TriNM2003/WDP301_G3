@@ -113,8 +113,8 @@ const edit = async (data, activityId) => {
                     description: description !== undefined ? description : currentActivity.description,
                     parent: parent || currentActivity.parent,
                     priority: priority || currentActivity.priority,
-                    startDate: startDate || currentActivity.startDate,
-                    dueDate: dueDate || currentActivity.dueDate,
+                    startDate: startDate ,
+                    dueDate: dueDate,
                     child: child || currentActivity.child,
                 }
             },
@@ -308,6 +308,27 @@ const remove = async (activityId) => {
     }
 };
 
+const getAllComments = async (activityId) => {
+    try {
+ 
+        const activity = await db.Activity.findOne(
+            { _id: activityId, isDestroyed: { $ne: true } }
+        ).populate({
+            path: "comments.commenter",
+            select: "username userAvatar"
+        });
+        if (!activity) {
+            throw new Error("Activity not found or already deleted");
+        }
+        const comments = activity.comments?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+
+        return comments
+    } catch (error) {
+        throw error;
+
+    }
+}
 
 const createComment = async (activityId, userId, content) => {
     try {
@@ -330,6 +351,47 @@ const createComment = async (activityId, userId, content) => {
     }
 }
 
+const editComment = async (activityId, commentId, newContent) => {
+    try {
+        const updatedActivity = await db.Activity.findOneAndUpdate(
+            { _id: activityId, isDestroyed: { $ne: true }, "comments._id": commentId },
+            { $set: { "comments.$.content": newContent } },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedActivity) {
+            throw new Error("Activity not found, already deleted, or comment does not exist.");
+        }
+
+        return updatedActivity;
+    } catch (error) {
+        console.error("Error editing comment:", error.message);
+        throw error;
+    }
+};
+
+
+const deleteComment = async (activityId, commentId) => {
+    try {
+        // Tìm và cập nhật activity để xóa comment có _id tương ứng
+        const updatedActivity = await db.Activity.findOneAndUpdate(
+            { _id: activityId, isDestroyed: { $ne: true }, "comments._id": commentId }, 
+            { $pull: { comments: { _id: commentId } } }, 
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedActivity) {
+            throw new Error("Activity not found, already deleted, or comment does not exist.");
+        }
+
+        return updatedActivity;
+    } catch (error) {
+        console.error("Error deleting comment:", error.message);
+        throw error;
+    }
+};
+
+
 const activityService = {
     getActivitiesByProjectId,
     getById,
@@ -340,7 +402,10 @@ const activityService = {
     removeAssignMember,
     remove,
     //comment
-    createComment
+    getAllComments,
+    createComment,
+    editComment,
+    deleteComment
 }
 
 module.exports = activityService;

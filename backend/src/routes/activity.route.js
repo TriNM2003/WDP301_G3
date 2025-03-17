@@ -48,6 +48,18 @@ activityRouter.post("/:activityId/comments/post",
     [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
     activityController.createComment
 )
+activityRouter.get("/:activityId/comments/get-all",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    activityController.getAllComment
+)
+activityRouter.put("/:activityId/comments/:commentId/edit",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    activityController.editComment
+)
+activityRouter.delete("/:activityId/comments/:commentId/delete",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    activityController.deleteComment
+)
 
 
 module.exports = activityRouter;
