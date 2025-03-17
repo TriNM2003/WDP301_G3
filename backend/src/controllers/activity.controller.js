@@ -209,6 +209,20 @@ const removeActivity = async (req, res, next) => {
     }
 }
 
+const getAllComment = async(req, res, next) => {
+    try {
+        const {id}=req.payload;
+        const {activityId}=req.params;
+        const comments = await activityService.getAllComments(activityId)
+
+        res.status(200).json({ status: 200, message: "Get comment successfully", comments:comments  })
+        
+    } catch (error) {
+        next(error);
+        
+    }
+}
+
 const createComment = async(req, res, next) => {
     try {
         const {id}=req.payload;
@@ -229,6 +243,43 @@ const createComment = async(req, res, next) => {
     }
 }
 
+const editComment = async(req, res, next) => {
+    try {
+        const {id}=req.payload;
+        const {activityId,commentId}=req.params;
+        const {content} = req.body;
+        if(!content){
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: content ." } })
+        }
+        const updatedActivity = await activityService.editComment(activityId,commentId,content)
+        if(!content){
+            return res.status(400).json({ error: { status: 400, message: "Fail to post comment!" } })
+        }
+        res.status(200).json({ status: 200, message: "Edit comment successfully", activity:updatedActivity  })
+        
+    } catch (error) {
+        next(error);
+        
+    }
+}
+
+const deleteComment = async(req, res, next) => {
+    try {
+        const {id}=req.payload;
+        const {activityId,commentId}=req.params;
+
+        const updatedActivity = await activityService.deleteComment(activityId,commentId)
+        if(!updatedActivity){
+            return res.status(400).json({ error: { status: 400, message: "Fail to delete comment!" } })
+        }
+        res.status(204).json({ status: 204, message: "Delete comment successfully" })
+        
+    } catch (error) {
+        next(error);
+        
+    }
+}
+
 const activityController = {
     getActivityByProjectId,
     getById,
@@ -238,7 +289,11 @@ const activityController = {
     removeAssignMember,
     removeActivity,
     moveActivity,
-    createComment
+    //Comment
+    getAllComment,
+    createComment,
+    editComment,
+    deleteComment
 }
 
 module.exports = activityController;

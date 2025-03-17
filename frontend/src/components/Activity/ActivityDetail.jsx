@@ -1,4 +1,4 @@
-import { blue, cyan, gray, orange, red, yellow } from '@ant-design/colors'
+import { blue, cyan, gray, grey, orange, red, yellow } from '@ant-design/colors'
 import { BugOutlined, CalendarOutlined, CloseOutlined, CommentOutlined, DeleteOutlined, DoubleRightOutlined, DownOutlined, EditOutlined, EllipsisOutlined, FireOutlined, FormOutlined, MinusOutlined, MoreOutlined, PaperClipOutlined, PieChartOutlined, PlusOutlined, SearchOutlined, SendOutlined, UpOutlined, UserAddOutlined, UserOutlined } from '@ant-design/icons'
 import { Avatar, Button, Col, DatePicker, Dropdown, Flex, Form, Input, List, Menu, Modal, Popconfirm, Progress, Row, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
@@ -14,31 +14,22 @@ import SubMenu from 'antd/es/menu/SubMenu'
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI, stages,sprints, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
-  const [comments, setComments] = useState([
-    { id: 1, author: "John Doe", content: "Great work!", time: moment().subtract(1, "hour").fromNow() },
-    { id: 2, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 3, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 4, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 5, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 6, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 7, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 8, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 9, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 10, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-    { id: 11, author: "Jane Smith", content: "We need to fix this issue.", time: moment().subtract(10, "minutes").fromNow() },
-  ]);
+  const { accessToken, siteAPI, stages, sprints, user, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const [comments, setComments] = useState([]);
 
   const [newComment, setNewComment] = useState("");
   const [editComment, setEditComment] = useState(false);
   const [currentComment, setCurrentComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
+  const [selectedComment, setSelectedComment] = useState()
   const [isDescription, setIsDescription] = useState(false)
   const [newDescription, setNewDescription] = useState("");
   const [selectedType, setSelectedType] = useState("subtask")
   const [projectMembers, setProjectMembers] = useState([])
   const [assigneeFilter, setAssigneeFilter] = useState("");
   const [orderActivities, setOrderActivities] = useState("createdAt");
+
+
 
   // fetch site members
   useEffect(() => {
@@ -65,7 +56,32 @@ function ActivityDetail() {
       setActivity(updatedActivity);
     }
 
-  }, [activities, orderActivities])
+  }, [activities])
+
+  // fetch comment
+  useEffect(() => {
+    if (activity && activityModal) {
+      axios.get(
+        `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/get-all`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      )
+        .then((res) => {
+          const formattedComments = res?.data?.comments?.map(comment => ({
+            id: comment._id,
+            author: comment.commenter.username,
+            content: comment.content,
+            avatar: comment.commenter.userAvatar,
+            time: moment(comment.createdAt).fromNow()
+          }));
+          setComments(formattedComments);
+        })
+    }
+
+  }, [activities, site, project, activity, activityModal])
 
   // edit activity
 
@@ -188,27 +204,61 @@ function ActivityDetail() {
 
 
   //Comment
-  const addComment = () => {
+  const handlePostComment = () => {
     if (!newComment.trim()) {
       message.warning("Comment cannot be empty!");
       return;
     }
+    axios.post(
+      `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/post`,
+      { content: newComment },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    )
+      .then((res) => {
+        activityModalLoading();
+        setActivity(res?.data?.activity);
+        const updateActivities = activities.map((a) =>
+          a._id === res?.data?.activity?._id ? res?.data?.activity : a
+        );
+        setActivities(updateActivities)
+        setNewComment("");
+        message.success("Post comment successfully");
+        showNotification(`Project update`, `${user?.username} just comment activity "${res.data.activity?.activityTitle}".`);
+      })
+      .catch((err) => message.error(err?.data?.error?.message || "Post comment fail!"))
 
-    const newCommentObj = {
-      id: comments.length + 1,
-      author: "Current User", // Đây là user hiện tại, có thể thay bằng user đăng nhập
-      content: newComment,
-      time: "Just now",
-    };
 
-    setComments([newCommentObj, ...comments]); // Thêm bình luận mới lên đầu danh sách
-    setNewComment("");
-    message.success("Comment added successfully!");
+
   };
 
-  const deleteComment = (id) => {
-    setComments(comments.filter(comment => comment.id !== id));
-    message.success("Comment deleted!");
+  const deleteComment = (commentId) => {
+    axios.delete(
+      `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/${commentId}/delete`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    )
+      .then((res) => {
+        activityModalLoading();
+        // console.log({...activity,comments:(activity.comments?.filter(c=>c._id !== commentId))});
+        setActivity({ ...activity, comments: (activity.comments?.filter(c => c._id !== commentId)) });
+        const updateActivities = activities.map((a) =>
+          a._id === activity.comments?.filter(c => !commentId)?._id ? activity.comments?.filter(c => !commentId) : a
+        );
+        setActivities(updateActivities)
+        setEditedComment("");
+        setEditComment(false);
+        message.success("Delete comment successfully");
+        showNotification(`Project update`, `${user?.username} just delete a comment in activity "${activity?.activityTitle}".`);
+      })
+      .catch((err) => message.error(err?.data?.error?.message || "Delete comment fail!"))
+
   };
   const showEditComment = (comment) => {
     setCurrentComment(comment);
@@ -216,11 +266,44 @@ function ActivityDetail() {
     setEditComment(true);
   };
 
+  // console.log(editedComment);
+
   const handleEditCommentOk = () => {
-    setEditComment(false);
+    if (!selectedComment || !editedComment.trim()) {
+      message.warning("No comment selected or empty content!");
+      return;
+    }
+    axios.put(
+      `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/${selectedComment.id}/edit`,
+      { content: editedComment },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    )
+      .then((res) => {
+        activityModalLoading();
+        setActivity(res?.data?.activity);
+        const updateActivities = activities.map((a) =>
+          a._id === res?.data?.activity?._id ? res?.data?.activity : a
+        );
+        setActivities(updateActivities)
+        setEditedComment("");
+        setSelectedComment()
+        setEditComment(false);
+        message.success("Edit comment successfully");
+        showNotification(`Project update`, `${user?.username} just edit a comment in activity "${res.data.activity?.activityTitle}".`);
+      })
+      .catch((err) => message.error(err?.data?.error?.message || "Edit comment fail!"))
+
+
   };
 
   const handleEditCommentCancel = () => {
+    setEditedComment("");
+    setSelectedComment()
+
     setEditComment(false);
   };
 
@@ -705,14 +788,14 @@ function ActivityDetail() {
                       value={activity?.sprint?._id || null}
                       onChange={(value) => handleMoveActivity("sprint", activity, value)}
                       style={{ width: "100%", borderRadius: "0" }}
-                      dropdownStyle={{ borderRadius: 0 }} 
-                      disabled={activity?.sprint?.sprintStatus=="completed"}
+                      dropdownStyle={{ borderRadius: 0 }}
+                      disabled={activity?.sprint?.sprintStatus == "completed"}
                     >
                       <Option key={null} value={null}>Backlog</Option>
                       {sprints?.map((sprint) => {
                         return <Option key={sprint?._id} value={sprint?._id}
-                         disabled={sprint?.sprintStatus == "completed" || sprint?._id == activity?.sprint?._id}
-                         >{sprint?.sprintName}</Option>
+                          disabled={sprint?.sprintStatus == "completed" || sprint?._id == activity?.sprint?._id}
+                        >{sprint?.sprintName}</Option>
                       })}
                     </Select>
                   )}
@@ -724,7 +807,7 @@ function ActivityDetail() {
                       onChange={(value) => handleMoveActivity("stage", activity, value)}
                       style={{ width: "100%", borderRadius: "0" }}
                       dropdownStyle={{ borderRadius: 0 }}
-                      disabled={activity?.sprint?.sprintStatus=="completed"}
+                      disabled={activity?.sprint?.sprintStatus == "completed"}
                     >
                       {stages?.map((stage) => {
                         return <Option key={stage?._id} value={stage?._id}>{stage?.stageName}</Option>
@@ -847,15 +930,18 @@ function ActivityDetail() {
           {/* Comment*/}
 
           <Col span={8} style={{ height: "80vh", padding: "0 0 0 2%", overflow: "auto" }}>
-            <Title style={{ height: "5%" }} level={5}>Comments</Title>
+            <Title style={{ height: "5%" }} level={5}>Comments <Tag style={{ borderRadius: 0 }}><small style={{ color: grey[4] }}>{comments.length}</small></Tag></Title>
             <Flex vertical justify='start' style={{ height: "88%", padding: "0", width: "100%" }}>
               <Space.Compact
                 style={{
                   width: '100%',
                 }}
               >
-                <Input prefix={<CommentOutlined />} style={{ borderRadius: "0" }} />
-                <Button><SendOutlined /></Button>
+                <Input prefix={<CommentOutlined />} style={{ borderRadius: "0" }}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                <Button><SendOutlined onClick={handlePostComment} /></Button>
               </Space.Compact>
               <List
                 loading={activityLoading}
@@ -865,7 +951,11 @@ function ActivityDetail() {
                   <List.Item
                     actions={[
                       <Tooltip title="Edit" key="edit">
-                        <EditOutlined style={{ color: "#FFC107" }} onClick={() => showEditComment(comment)} />
+                        <EditOutlined style={{ color: "#FFC107" }} onClick={() => {
+                          setSelectedComment(comment);
+                          showEditComment(comment);
+
+                        }} />
                       </Tooltip>,
                       <Popconfirm
                         title="Are you sure you want to delete this comment?"
@@ -881,7 +971,7 @@ function ActivityDetail() {
                     ]}
                   >
                     <List.Item.Meta
-                      avatar={<Avatar src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg" />}
+                      avatar={<Avatar src={comment?.avatar} />}
                       title={<strong>{comment.author}</strong>}
                       description={<span>{comment.content} <br /> <small style={{ color: "#888" }}>{comment.time}</small></span>}
                     />
@@ -895,8 +985,8 @@ function ActivityDetail() {
             <Modal
               title="Edit Comment"
               open={editComment}
-              onOk={handleEditCommentCancel}
-              onCancel={handleEditCommentOk}
+              onOk={handleEditCommentOk}
+              onCancel={handleEditCommentCancel}
               footer={[
                 <Button key="cancel" onClick={handleEditCommentCancel}>Cancel</Button>,
                 <Button key="submit" type="primary" onClick={handleEditCommentOk}>Save</Button>

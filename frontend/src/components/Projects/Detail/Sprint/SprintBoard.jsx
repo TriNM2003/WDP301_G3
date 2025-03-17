@@ -16,7 +16,7 @@ import axios from "axios";
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities, sprints,siteAPI,site,accessToken,project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities,stages, sprints,siteAPI,site,accessToken,project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   // Activities
   const [filterActivityType, setFliterActivityType] = useState(["task"]);
@@ -112,7 +112,7 @@ const SprintBoard = () => {
                 autoFocus
                 value={activityName}
                 onChange={(e) => setActivityName(e.target.value)}
-                onPressEnter={() => { handleActivityCreate("", "to do", "task", null) }}
+                onPressEnter={() => { handleActivityCreate("", stages[0]?.stageName, "task", null) }}
                 onBlur={() => setCreateActivityModal(false)}
                 placeholder="Enter activity name"
                 prefix={<FormOutlined style={{ color: blue[6] }} />}

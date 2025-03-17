@@ -13,6 +13,7 @@ const nodemailer = require("nodemailer")
 const { slugify } = require("../utils/slugify.util");
 const { mailer } = require("../configs");
 const { default: mongoose } = require("mongoose");
+const notificationService = require("./notification.service");
 
 
 const getAllSites = async () => {
@@ -406,18 +407,146 @@ const cancelInvitationById = async (siteId, invitationId) => {
 
     // Kiểm tra nếu invitation không ở trạng thái "pending"
     if (site.invitations.find(item => item._id.toString() === invitationId).status !== "pending") {
-        throw new Error(`Only invitation with status 'pending' can be canceled.`);
+        throw new Error(`Only invitation with status 'pending' can be cancelled.`);
     }
 
+    const newInvitationList = site.invitations.map(invitation => {
+        if(invitation._id.toString() === invitationId.toString()){
+            return {
+                ...invitation, status: "cancelled"
+            }
+        }else{
+            return invitation
+        }
+    })
     // Nếu kiểm tra xong, tiến hành xóa invitation
     const updateInvitations = await Site.findOneAndUpdate(
         { _id: siteId },
-        { $pull: { invitations: { _id: invitationId, status: "pending" } } },
+        { $set: { invitations: newInvitationList } },
         { new: true }
     ).select("invitations");
 
     return updateInvitations;
 };
+
+async function activeSite(siteId){
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site not found");
+    }
+    if(site.siteStatus === "active"){
+        throw new Error("Site is already active");
+    }
+
+    const updatedSite = await Site.findByIdAndUpdate(siteId,
+        {$set: {siteStatus: "active"}},
+        {new: true}
+    );
+    // const populatedSite = updatedSite.populate("siteMember._id");
+
+    return updatedSite;
+}
+
+async function adminEditSite(siteId, siteOwnerId, adminId){
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site not found");
+    }
+    const siteOwner = await User.findById(siteOwnerId);
+    if(!siteOwner){
+        throw new Error("New site owner account does not exist");
+    }
+    if(siteOwner.status !== "active"){
+        throw new Error("New site owner account are not activated");
+    }
+    // if(site.siteStatus === "deactivated"){
+    //     throw new Error("Site is deactivated! Please activate before editing");
+    // }
+
+    const isMemberOfSite = site.siteMember.find(member => member._id.toString() === siteOwnerId.toString())
+    if(isMemberOfSite){
+        const updatedMemberList = site.siteMember.map(member => {
+            if(member._id.toString() === siteOwnerId.toString()){
+                return {
+                    _id: member._id,
+                    roles: ["siteOwner", "siteMember"]
+                };
+            }else{
+                return {
+                    _id: member._id,
+                    roles: ["siteMember"]
+                };
+            }
+        })
+        const updatedSite = await Site.findByIdAndUpdate(siteId,
+            {$set: {siteMember: updatedMemberList}},
+            {new: true}
+        );
+        const admin = await User.findById(adminId);
+        await notificationService.createNotification(adminId, 
+            updatedMemberList.map(receiver => {
+                return receiver._id
+            }),
+            `Site ${site.siteName}: site owner role has been assign to user ${siteOwner.email} by Admin ${admin.email}`,
+            "site"
+        )
+        return updatedSite;
+    }else{
+        throw new Error("Cannot assign member of other site as this site owner!");
+    }
+
+}
+
+async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArray){
+    function camelCaseArrayToString(arr) {
+        return arr.map(str => 
+            str.replace(/([a-z])([A-Z])/g, '$1 $2') // Thêm khoảng trắng trước chữ in hoa
+               .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
+        ).join(', '); // Nối các phần tử bằng dấu ", "
+    }
+
+    const member = await User.findById(siteMemberId);
+    if(!member) throw new Error("Member does not exist in system")
+    const site = await Site.findById(siteId);
+    if(!site) throw new Error("Site does not exist")
+    const memberInSite = site?.siteMember.find(member => member._id.toString() === siteMemberId.toString());
+    if(!memberInSite) throw new Error("User is not a member in site")
+    if(memberInSite.roles.includes("siteOwner")) throw new Error("Cannot change role of Site Owner")
+    if(rolesArray.includes("siteOwner")) throw new Error("Cannot assign role Site Owner to site member")
+    let isValidRole = true;
+    for(let i=0; i< rolesArray.length; i++){
+        if(!site.siteRoles.includes(rolesArray[i])){
+            isValidRole = false;
+        }
+    }
+    if(!isValidRole){
+        throw new Error("New role does not exist in site role");
+    }
+
+    const updatedSiteMember = site.siteMember.map(member => {
+        if(member._id.toString() === siteMemberId.toString()){
+            return {
+                _id: member._id,
+                roles: rolesArray
+            }
+        }else{
+            return member;
+        }
+    })
+    const updatedSite = await Site.findByIdAndUpdate(siteId,
+        {$set: {siteMember: updatedSiteMember}},
+        {new : true}
+    )
+    const siteOwner = await User.findById(siteOwnerId);
+    await notificationService.createNotification(siteOwnerId,
+        site.siteMember.map(member => {
+            return member._id
+        }),
+        `Site ${site.siteName}: Member ${member.email} role has been changed to ${camelCaseArrayToString(rolesArray)} by Site owner ${siteOwner.email}`,
+        "site"
+    );
+    return updatedSite;
+}
 
 
 
@@ -433,7 +562,11 @@ const siteService = {
     getAllUsersInSite,
     getInvitaionsBySiteId,
     cancelInvitationById,
-    sendDeactivateSiteEmail
+    sendDeactivateSiteEmail,
+    activeSite,
+    adminEditSite,
+    changeSiteMemberRoles,
+
 }
 
 module.exports = siteService;

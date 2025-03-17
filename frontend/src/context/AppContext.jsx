@@ -71,7 +71,7 @@ const AppProvider = ({ children }) => {
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
   const siteAPI = "http://localhost:9999/sites";
-  const projectAPI = `http://localhost:9999/sites/${user.site || "notFound"}/projects`;
+  const projectAPI = `http://localhost:9999/sites/${user?.site}/projects`;
   const activityTypeAPI = "http://localhost:9999/activityTypes";
 
 
@@ -82,15 +82,15 @@ const AppProvider = ({ children }) => {
 
 
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    if (location.pathname !== '/login') {
-      localStorage.setItem("lastVisitedUrl", location.pathname);
-    }
-    if (!excludedRoutes.includes(location.pathname)) {
-      checkLoginStatus();
-    }
-  }, [location.pathname])
+  //   if (location.pathname !== '/login') {
+  //     localStorage.setItem("lastVisitedUrl", location.pathname);
+  //   }
+  //   if (!excludedRoutes.includes(location.pathname)) {
+  //     checkLoginStatus();
+  //   }
+  // }, [location.pathname])
 
 
 
@@ -116,23 +116,40 @@ const AppProvider = ({ children }) => {
   // get project in site
 
   useEffect(() => {
-
-
-    if (accessToken) {
-      axios.get(`${userApi}/user-profile`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-        .then(res => {
-          setUser(res.data);
+    if (location.pathname !== '/login') {
+      localStorage.setItem("lastVisitedUrl", location.pathname);
+    }
+    if (!excludedRoutes.includes(location.pathname)) {
+      if (accessToken) {
+        authAxios.get(`${userApi}/user-profile`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
         })
-        .catch(error => {
-          console.log(error.response?.data?.message);
-        });
+          .then(res => {
+            setUser(res.data);
+            const lastVisitedUrl = localStorage.getItem("lastVisitedUrl");
+            nav(lastVisitedUrl);
+          })
+          .catch(error => {
+            console.log(error.response?.data?.message);
+            // khong co refresh token hoac loi lay refresh token
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("accessTokenExp");
+          localStorage.removeItem("userId");
+          setUser({});
+          nav('/auth/login');
+          });
+      }else{
+        localStorage.removeItem("accessToken");
+          localStorage.removeItem("accessTokenExp");
+          localStorage.removeItem("userId");
+          setUser({});
+          nav('/auth/login');
+      }
     }
 
-  }, [accessToken]);
+  }, [accessToken, location.pathname]);
 
 
 

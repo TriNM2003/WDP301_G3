@@ -169,6 +169,18 @@ const getTeamActivities = async (req, res, next) => {
     }
 };
 
+async function removeTeam(req, res, next){
+    try {
+        // id cua site owner
+        const {id} = req.payload
+        const {teamId} = req.params;
+        const result = await teamService.removeTeam(id, teamId)
+        res.status(200).json({ status: 200, result });
+    } catch (error) {
+        next(error)
+    }
+}
+
 
 const teamController = {
     getAllTeams,
@@ -177,7 +189,8 @@ const teamController = {
     kickTeamMember,
     getTeamsInSite,
     createTeam,
-    getTeamActivities
+    getTeamActivities,
+    removeTeam,
 };
 
 module.exports = teamController;

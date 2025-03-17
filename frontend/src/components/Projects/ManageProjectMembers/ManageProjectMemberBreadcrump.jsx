@@ -14,7 +14,7 @@ const ManageProjectMemberBreadcrump = ({project}) => {
       title: <a href="/site/list/projects">Projects</a>
     },
     {
-      title: <a href={"/site/list/projects/" + (project.projectSlug || "")}>{project.projectName || "Not found"}</a>
+      title: (project && <a href={"/site/list/projects/" + (project.projectSlug || "error")}>{project.projectName || "Not found"}</a>) 
     },
     {
       title: "Manage project members"

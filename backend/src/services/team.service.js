@@ -6,6 +6,7 @@ const createHttpErrors = require("http-errors");
 const nodemailer = require("nodemailer");
 const { slugify } = require('../utils/slugify.util');
 const userService = require('../services/user.service');
+const notificationService = require('./notification.service');
 
 const getAllTeams = async () => {
     const teams = await db.Team.find();
@@ -269,6 +270,33 @@ const getTeamActivities = async (teamSlug) => {
     }
 };
 
+async function removeTeam(siteOwnerId, teamId){
+    const siteOwner = await db.User.findById(siteOwnerId);
+    const team = await db.Team.findById(teamId);
+    if(!team){
+        throw new Error("Team does not exist")
+    }
+    const teamMemberList = team.teamMembers.map(member => {
+        return member._id;
+    })
+    // xoa team
+    await db.Team.findByIdAndDelete(teamId);
+    //xoa team khoi user
+    await db.User.updateMany(
+        { _id: { $in: teamMemberList } }, // Điều kiện: tìm tất cả user có trong danh sách teamMembers
+        { $pull: { teams: teamId } }  // Loại bỏ teamId khỏi mảng teams của user
+    );
+    // tao notification
+    notificationService.createNotification(siteOwner._id,
+        teamMemberList,
+        `Team ${team.teamName} has been removed by site owner ${siteOwner.email}`,
+        "team"
+    )
+    // gui mail thong bao
+
+    return `Delete team ${team.teamName} successfully`
+}
+
 
 
 const teamService = {
@@ -280,6 +308,7 @@ const teamService = {
     getTeamMembers,
     addTeamMember,
     kickTeamMember,
+    removeTeam,
 };
 
 module.exports = teamService;

@@ -12,7 +12,7 @@ const AddProjectMemberModal = ({addMemberModalVisible, setAddMemberModalVisible,
     if (input.length < 2) {
       setFilteredOptions([]); // Không hiển thị gì nếu nhập dưới 2 ký tự
     } else {
-      const filtered = userEmails.filter(user =>
+      const filtered = userEmails?.filter(user =>
         user.label.toLowerCase().includes(input.toLowerCase())
       );
       setFilteredOptions(filtered);
@@ -60,7 +60,7 @@ const AddProjectMemberModal = ({addMemberModalVisible, setAddMemberModalVisible,
           placeholder="Choose project role"
           value={selectMemberRole}
           onChange={setSelectedMemberRole}
-          options={projectRoles.filter(role => role.value !== "projectManager") || []}
+          options={projectRoles?.filter(role => role.value !== "projectManager") || []}
         />
 
       </Modal>

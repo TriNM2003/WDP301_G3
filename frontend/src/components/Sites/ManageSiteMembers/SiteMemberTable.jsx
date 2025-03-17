@@ -1,4 +1,5 @@
-import { DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
+import { red } from '@ant-design/colors';
+import { CloseCircleOutlined, DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import { Avatar, Button, Checkbox, Dropdown, Menu, Popconfirm, Radio, Space, Table } from 'antd'
 import React from 'react'
 
@@ -9,12 +10,12 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
       <Menu.ItemGroup title="Select role">
         <Checkbox.Group
           value={record.siteMemberRole}
-          onChange={(values) => handleRoleChange(record.siteMemberId, record.siteMemberRole, values)}
+          onChange={(values) => handleRoleChange(record.siteMemberId, record.siteMemberRole, values, record.siteMemberEmail)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
           {site?.siteRoles?.map((role, index) => {
             return (
-              <Checkbox key={index} value={role} disabled={role === "siteOwner"}>
+              <Checkbox key={index} value={role} disabled={role.includes("siteOwner")}>
                 {formatRole(role)}
               </Checkbox>
             );
@@ -50,16 +51,16 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
           key: "siteMemberRole",
           render: (_, record) => (
               <Dropdown overlay={roleMenu(record)} trigger={["click"]} 
-              disabled={record.siteMemberRole === "siteOwner"}
+              disabled={record.siteMemberRole.includes("siteOwner")}
               >
                 <Button style={{ width: "100%", textAlign: "left" }}>
             { 
-              formatRole(record.siteMemberRole)
+              formatRole(record.siteMemberRole[0])
             } <DownOutlined style={{ float: "right" }} />
           </Button>
               </Dropdown>
           ),
-          sorter: (a, b) => a.siteMemberRole.localeCompare(b.siteMemberRole),
+          // sorter: (a, b) => a.siteMemberRole.localeCompare(b.siteMemberRole),
           width: "15%"
       },
     {
@@ -80,14 +81,14 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button danger type="text">Revoke access</Button>
+                  <span style={{color: red[6]}}><CloseCircleOutlined /> Revoke access</span>
                 </Popconfirm>
               </Menu.Item>
             </Menu>
           }
           trigger={["click"]}
         >
-          {record.siteMemberRole === "siteMember" && <Button icon={<MoreOutlined />} type="text" />}
+          {!record.siteMemberRole.includes("siteOwner") && <Button icon={<MoreOutlined />} type="text" />}
         </Dropdown>
       )
       ,

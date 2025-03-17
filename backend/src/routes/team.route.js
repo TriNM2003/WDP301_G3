@@ -50,5 +50,11 @@ teamRouter.get("/:teamSlug",
     teamController.getTeamActivities
 );
 
+//delete team
+teamRouter.delete("/:teamId/remove-team",
+    [authMiddleware.verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner],
+    teamController.removeTeam
+)
+
 
 module.exports = teamRouter

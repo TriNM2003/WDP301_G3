@@ -25,6 +25,7 @@ const EditSite = () => {
         siteDescription: '',
         siteSlug:''
     });
+    const [isSiteMember, setIsSiteMember] = useState(true);
 
     useEffect(() => {
         if (site._id && accessToken) {
@@ -71,17 +72,19 @@ const EditSite = () => {
 
         //  Nếu user không phải admin và không phải siteOwner → Chặn truy cập
         if (!isAdmin && !isSiteOwner) {
-            message.error("Access Denied! You don't have permission to edit this site.");
-            navigate("/site");
-            return;
+            // message.error("Access Denied! You don't have permission to edit this site.");
+            // navigate("/site");
+            // return;
+        }else{
+            setIsSiteMember(false);
         }
-
+        const siteOwnerName = siteResponse.data.siteMember.find(member => member.roles.includes("siteOwner"))._id.username;
         //  Nếu là admin hoặc siteOwner, cho phép truy cập
         setHasPermission(true);
         setSiteData({
             siteName,
             siteAvatar,
-            siteOwner: isSiteOwner ? fetchedUser.username : "Unkhown",
+            siteOwner: siteOwnerName || "Unkhown",
             siteDescription,
             siteSlug
         });
@@ -217,11 +220,14 @@ const EditSite = () => {
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} style={{ borderRadius: '0' }} src={imagePreview || "https://via.placeholder.com/100"} />
                         </Row>
+                        {!isSiteMember && 
                         <Form.Item>
                             <Upload showUploadList={false} beforeUpload={handleFileChange}>
                                 <Button icon={<UploadOutlined />}>Upload Image</Button>
                             </Upload>
                         </Form.Item>
+                        }
+                        
                         <Form layout="vertical" onFinish={handleSubmit}>
                             <Form.Item label="Site Owner">
                                 <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", padding: '5px', textAlign: "left" }}>
@@ -230,22 +236,25 @@ const EditSite = () => {
                             </Form.Item>
 
                             <Form.Item label="Site Name">
-                                <Input value={siteData.siteName} onChange={(e) => setSiteData({ ...siteData, siteName: e.target.value })} />
+                                <Input disabled={isSiteMember} value={siteData.siteName} onChange={(e) => setSiteData({ ...siteData, siteName: e.target.value })} />
                             </Form.Item>
 
                             <Form.Item label="Site Description">
-                                <Input.TextArea value={siteData.siteDescription} onChange={(e) => setSiteData({ ...siteData, siteDescription: e.target.value })} />
+                                <Input.TextArea disabled={isSiteMember} value={siteData.siteDescription} onChange={(e) => setSiteData({ ...siteData, siteDescription: e.target.value })} />
                             </Form.Item>
 
                             <Form.Item label="Site Slug">
-                                <Input value={siteData.siteSlug} onChange={(e) => setSiteData({ ...siteData, siteSlug: e.target.value })} />
+                                <Input disabled={isSiteMember} value={siteData.siteSlug} onChange={(e) => setSiteData({ ...siteData, siteSlug: e.target.value })} />
                             </Form.Item>
 
+                            {!isSiteMember &&
                             <Form.Item>
                                 <Button type="primary" htmlType="submit" loading={loading} style={{ width: "100%" }}>
                                     Save Changes
                                 </Button>
                             </Form.Item>
+                            }
+                            
                         </Form>
                     </Card>
                 </Col>
