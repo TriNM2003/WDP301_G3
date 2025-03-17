@@ -14,7 +14,7 @@ import authAxios from '../../../utils/authAxios'
 import EditProjectSettingsModal from '../../Sites/ManageProjects/EditProjectSettingsModal'
 import axios from 'axios'
 function ProjectLayout() {
-    const {user, project, setProject, setProjects, messageHolder, projectAPI, showMessage, showNotification, site, accessToken} = useContext(AppContext);
+    const {user, project, setProject, setProjects, messageHolder, projectAPI, showMessage, showNotification, site, accessToken, userApi} = useContext(AppContext);
 
     const nav = useNavigate();
     const location = useLocation();
@@ -29,6 +29,14 @@ function ProjectLayout() {
         projectName: project?.projectName,
         projectAvatar: project?.projectAvatar,
       })
+
+      // add member
+    const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
+    const [selectedEmail, setSelectedEmail] = useState();
+    const [userEmails, setUserEmails] = useState([]);
+    const [selectMemberRole, setSelectedMemberRole] = useState();
+    const [projectRoles, setProjectRoles] = useState();
+    const [projectMembers, setProjectMembers] = useState([]);
 
       let isProjectManager = false;
       if (project) {
@@ -46,8 +54,94 @@ function ProjectLayout() {
             projectName: project?.projectName,
             projectAvatar: project?.projectAvatar,
           })
+        fetchMemberData();
         }
     , [project])
+
+    function formatRole(text) {
+        // Chèn khoảng trắng trước các chữ in hoa (trừ chữ đầu tiên)
+        let result = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+        // Viết hoa chữ cái đầu của mỗi từ
+        return result.replace(/\b\w/g, char => char.toUpperCase());
+      }
+
+    const formattedProjectMembers = (rawProjectMembers) => {
+        return rawProjectMembers?.map((member, index) => {
+        return { 
+          key: index+1,
+          projectMemberId: member.projectMember._id, 
+          projectMemberName: member.projectMember.username, 
+          projectMemberEmail: member.projectMember.email, 
+          projectMemberRole: member.roles[0],
+          projectMemberAvatar: member.projectMember.userAvatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+        }}) || []
+    
+      } 
+
+    async function fetchMemberData() {
+        try {
+              //get project member
+              if(!project)
+                return;
+              const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id}/get-project-members`);
+              const projectMember = formattedProjectMembers(rawProjectMembers.data || []) || [];
+              setProjectMembers(projectMember || []);
+        
+              // get user emails
+              const rawEmails = await authAxios.get(`${userApi}/all`);
+              const filteredEmails = rawEmails?.data?.reduce((acc, currUser) => {
+              const isSameSite = currUser.site === user.site;
+              const isProjectMember = projectMember.find(member => member.projectMemberId === currUser?._id.toString()) !== undefined;
+              const isActive = currUser.status === "active";
+              // loai bo user khong la thanh vien cua site , khongla thanh vien cua project
+              if(isSameSite && !isProjectMember && isActive){
+                acc.push ({
+                  value: currUser.email,
+                  label: currUser.email,
+                  avatar: currUser.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
+                  userId: currUser._id
+                })
+              }
+              return acc;
+            }, []) || []
+            setUserEmails(filteredEmails || []);
+            // set project roles for add member
+            const roleList = project.projectRoles.map(role => {
+              return {
+                value: role,
+                label: formatRole(role),
+              }
+            })
+            setProjectRoles(roleList || []);
+            } catch (error) {
+              console.log(error)
+              // nav("/home")
+            }
+    }
+
+    const handleAddMember = async () => {
+        console.clear();
+        if(selectedEmail === "" || selectedEmail === undefined){
+          showMessage("error", "Please select site member email", 2);
+          return;
+        }
+        const currentUser = userEmails.find(user => user.value === selectedEmail)
+       const newProjectMemberListRaw = await authAxios.post(`${projectAPI}/${project._id}/add-project-member`, 
+        { projectMemberId: currentUser.userId,
+          projectMemberRole: selectMemberRole
+        })
+        console.log(newProjectMemberListRaw.data);
+        setAddMemberModalVisible(false);
+        showNotification(`Project member ${currentUser.value} has been add to project ${project?.projectName}`)
+        await showMessage("success", "Add project member successfully", 2);
+        // cap nhap du lieu moi
+        const newEmailList = userEmails.filter(email => email.value !== selectedEmail);
+        setUserEmails(newEmailList);
+        setSelectedEmail();
+        const newProjectMemberList = formattedProjectMembers(newProjectMemberListRaw.data);
+        setProjectMembers(newProjectMemberList);
+        setSelectedMemberRole();
+      }
 
    
     const getActiveKey = () => {
@@ -128,13 +222,13 @@ function ProjectLayout() {
 
                 <Col span={6} align='end'>
                     <Space style={{ height: "100%" }} align='center'>
-                    {isProjectManager ?<>
-                        <Button color='primary' variant='solid' style={{ 'border-radius': "5%" }} ><UserAddOutlined />Add</Button>
+                        {isProjectManager && <Button color='primary' variant='solid' style={{ 'border-radius': "5%" }} onClick={() => setAddMemberModalVisible(true)} ><UserAddOutlined />Add</Button>}
                         <Dropdown style={{ height: "100%" }}
                             overlay={
                                 <Menu>
                                     <Menu.Item key="1" icon={<SettingOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/project-setting`)}> Project settings</Menu.Item>
-                                    <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>
+                                    {isProjectManager &&<>
+                                        <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>
                                     <Menu.Item key="3" icon={<DeleteOutlined style={{ color: red[6] }} />}>
                                         <Popconfirm
                                             title="Are you sure you want to move this project to trash?"
@@ -145,7 +239,7 @@ function ProjectLayout() {
                                             Remove to trash
                                         </Popconfirm>
                                     </Menu.Item>
-
+                                    </> }
                                 </Menu>
                             }
                         >
@@ -155,8 +249,7 @@ function ProjectLayout() {
                                 </Space>
                             </Title>
                         </Dropdown> 
-                        </>
-                        : ""  }
+
                     </Space>
                 </Col>
 
@@ -183,7 +276,18 @@ function ProjectLayout() {
         setCurrentProjectSettings={setCurrentProjectSettings}
         handleFileChange={handleFileChange}
         imagePreview={imagePreview}
-      />
+  />
+        <AddProjectMemberModal addMemberModalVisible={addMemberModalVisible} 
+        setAddMemberModalVisible={setAddMemberModalVisible} 
+        handleAddMember={handleAddMember} 
+        selectedEmail={selectedEmail} 
+        setSelectedEmail={setSelectedEmail} 
+        userEmails={userEmails}
+        selectMemberRole={selectMemberRole}
+        setSelectedMemberRole={setSelectedMemberRole}
+        projectRoles={projectRoles}
+        />
+    
         </div>
     )
 }

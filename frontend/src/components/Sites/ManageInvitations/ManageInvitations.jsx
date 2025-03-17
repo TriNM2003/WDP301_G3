@@ -33,7 +33,7 @@ const ManageInvitations = () => {
 
   const fetchInvitation = async () => {
     try {
-      const invitationsRaw = await authAxios.get(`${siteAPI}/${site._id || "notfound"}/get-invitations-by-site`);
+      const invitationsRaw = await authAxios.get(`${siteAPI}/${site?._id}/get-invitations-by-site`);
       const formattedInvitation = invitationsRaw.data.invitations.map((invitation, index) => {
         const isExpired = compareDates(invitation.createdAt, invitation.expireAt);
         return {

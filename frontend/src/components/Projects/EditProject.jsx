@@ -22,6 +22,7 @@ const EditProject = () => {
     });
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
+    const [isProjectMember, setIsProjectMember] = useState(true);
 
     useEffect(() => {
         if(site._id && accessToken){
@@ -70,11 +71,13 @@ const EditProject = () => {
     
             // 🔹 Bước 4: Kiểm tra quyền truy cập (chỉ projectManager mới có quyền)
             const manager = projectMember.find(member => member.roles.includes("projectManager"));
-    
+ 
             if (!manager || manager._id._id !== user._id) {
-                message.error("Access Denied! You don't have permission to access this project.");
-                navigate(`/sites/${site._id}`);
-                return;
+                // message.error("Access Denied! You don't have permission to access this project.");
+                // navigate(`/sites/${site._id}`);
+                // return;
+            }else{
+                setIsProjectMember(false);
             }
     
             // 🔹 Lưu dữ liệu nếu người dùng có quyền
@@ -82,7 +85,7 @@ const EditProject = () => {
                 projectId,
                 projectName,
                 projectAvatar,
-                projectManager: manager ? manager._id.username : "Unknown",
+                projectManager: manager?._id.username || "Unknown",
                 projectSlug,
                 projectStatus
             });
@@ -162,7 +165,8 @@ const EditProject = () => {
                 </Col>
                  {/* More Options Button */}
                  <Col>
-                    <Dropdown
+                 {!isProjectMember && 
+                 <Dropdown
                         overlay={
                             <Button
                                 type="primary"
@@ -185,6 +189,8 @@ const EditProject = () => {
                     >
                         <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
                     </Dropdown>
+                 }
+                    
                 </Col>
             </Row>
 
@@ -194,15 +200,18 @@ const EditProject = () => {
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} src={imagePreview || "default.jpg"} />
                         </Row>
+                        {!isProjectMember &&
                         <Form.Item >
                             <Upload showUploadList={false} beforeUpload={() => false} onChange={handleFileChange}>
                                 <Button icon={<UploadOutlined />}>Upload Image</Button>
                             </Upload>
                         </Form.Item>
+                        }
+                        
 
                         <Form layout="vertical">
                             <Form.Item label="Project Name">
-                                <Input name="projectName" value={projectData.projectName} onChange={handleChange} />
+                                <Input name="projectName" value={projectData.projectName} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
 
                             <Form.Item label="Project Manager">
@@ -213,14 +222,17 @@ const EditProject = () => {
                             </Form.Item>
 
                             <Form.Item label="Project Slug">
-                                <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} />
+                                <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} disabled={isProjectMember}/>
                             </Form.Item>
 
+                            {!isProjectMember &&
                             <Form.Item>
                                 <Button type="primary" onClick={handleSave} loading={loading} style={{ width: "100%" }}>
                                     Save Changes
                                 </Button>
                             </Form.Item>
+                            }
+                            
                         </Form>
                     </Card>
                 </Col>

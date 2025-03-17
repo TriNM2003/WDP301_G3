@@ -3,6 +3,7 @@ import {
   Select,
   Typography,
   Modal,
+  message,
 } from "antd";
 import {useNavigate, useParams } from "react-router-dom";
 import {AppContext} from "../../../context/AppContext"
@@ -55,7 +56,7 @@ const ManageProjectMember = () => {
       projectMemberId: member.projectMember._id, 
       projectMemberName: member.projectMember.username, 
       projectMemberEmail: member.projectMember.email, 
-      projectMemberRole: member.roles[0],
+      projectMemberRole: member.roles,
       projectMemberAvatar: member.projectMember.userAvatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
     }}) || []
 
@@ -103,16 +104,11 @@ const ManageProjectMember = () => {
         
   }
 
-  const formatRole = (memberRole) => {
-    let role;
-        if(memberRole === "projectManager" || memberRole === "Manager"){
-          role = "Project Manager"
-        }else if(memberRole === "projectMember" || memberRole === "Member"){
-          role = "Project Member"
-        }else{
-          role = "Undefined?"
-        }
-    return role;
+  function formatRole(text) {
+    // Chèn khoảng trắng trước các chữ in hoa (trừ chữ đầu tiên)
+    let result = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+    // Viết hoa chữ cái đầu của mỗi từ
+    return result.replace(/\b\w/g, char => char.toUpperCase());
   }
 
   const handleAddMember = async () => {
@@ -140,24 +136,38 @@ const ManageProjectMember = () => {
   }
 
  // Xử lý đổi vai trò
-const handleRoleChange = async (key, updatedRoleList, projectMemberId, projectMemberName) => {
-  console.log("role changed: ", updatedRoleList, projectMemberId)
-  if(updatedRoleList.length === 0){
-    showMessage("warning", "User must have at least 1 role", 2);
-    return
-  }
-  await authAxios.put(`${projectAPI}/${project._id}/edit-project-member`, 
-    { updatedRoleList: updatedRoleList,
-      projectMemberId: projectMemberId
+const handleRoleChange = async (oldRoles, updatedRoleList, projectMemberId, projectMemberName) => {
+  try {
+    console.log("role changed: ", updatedRoleList, projectMemberId, projectMemberName)
+    if (oldRoles.includes("projectManager")) {
+      message.warning("Cannot change project manager role", 2);
+      return;
     }
-  )
+    if (updatedRoleList.includes("projectManager")) {
+      message.warning("Cannot change role to project manager");
+      return;
+    }
+    if (updatedRoleList.length === 0) {
+      message.warning("Member must have at least 1 role", 2);
+      return;
+    }
+    await authAxios.put(`${projectAPI}/${project._id}/edit-project-member`, 
+      { updatedRoleList: updatedRoleList,
+        projectMemberId: projectMemberId
+      }
+    )
+  
+    showNotification(`Project member ${projectMemberName} role has been changed to ${updatedRoleList?.map(role => formatRole(role)) || "?"}`)
+    showMessage("success", "Change project member role successfully", 2);
 
-  showNotification(`Project member ${projectMemberName} role has been changed to ${updatedRoleList?.map(role => formatRole(role)) || "?"}`)
-  await showMessage("success", "Change project member role successfully", 2);
-
-  const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id || "notFound"}/get-project-members`);
-  const projectMember = formattedProjectMembers(rawProjectMembers.data || []) || [];
-  setProjectMembers(projectMember || []);
+    await fetchData();
+  
+    // const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id || "notFound"}/get-project-members`);
+    // const projectMember = formattedProjectMembers(rawProjectMembers.data || []) || [];
+    // setProjectMembers(projectMember || []);
+  } catch (error) {
+    console.log(error)
+  }
 };
 
 

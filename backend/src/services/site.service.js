@@ -340,13 +340,22 @@ const cancelInvitationById = async (siteId, invitationId) => {
 
     // Kiểm tra nếu invitation không ở trạng thái "pending"
     if (site.invitations.find(item => item._id.toString() === invitationId).status !== "pending") {
-        throw new Error(`Only invitation with status 'pending' can be canceled.`);
+        throw new Error(`Only invitation with status 'pending' can be cancelled.`);
     }
 
+    const newInvitationList = site.invitations.map(invitation => {
+        if(invitation._id.toString() === invitationId.toString()){
+            return {
+                ...invitation, status: "cancelled"
+            }
+        }else{
+            return invitation
+        }
+    })
     // Nếu kiểm tra xong, tiến hành xóa invitation
     const updateInvitations = await Site.findOneAndUpdate(
         { _id: siteId },
-        { $pull: { invitations: { _id: invitationId, status: "pending" } } },
+        { $set: { invitations: newInvitationList } },
         { new: true }
     ).select("invitations");
 
@@ -421,6 +430,57 @@ async function adminEditSite(siteId, siteOwnerId, adminId){
 
 }
 
+async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArray){
+    function camelCaseArrayToString(arr) {
+        return arr.map(str => 
+            str.replace(/([a-z])([A-Z])/g, '$1 $2') // Thêm khoảng trắng trước chữ in hoa
+               .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
+        ).join(', '); // Nối các phần tử bằng dấu ", "
+    }
+
+    const member = await User.findById(siteMemberId);
+    if(!member) throw new Error("Member does not exist in system")
+    const site = await Site.findById(siteId);
+    if(!site) throw new Error("Site does not exist")
+    const memberInSite = site?.siteMember.find(member => member._id.toString() === siteMemberId.toString());
+    if(!memberInSite) throw new Error("User is not a member in site")
+    if(memberInSite.roles.includes("siteOwner")) throw new Error("Cannot change role of Site Owner")
+    if(rolesArray.includes("siteOwner")) throw new Error("Cannot assign role Site Owner to site member")
+    let isValidRole = true;
+    for(let i=0; i< rolesArray.length; i++){
+        if(!site.siteRoles.includes(rolesArray[i])){
+            isValidRole = false;
+        }
+    }
+    if(!isValidRole){
+        throw new Error("New role does not exist in site role");
+    }
+
+    const updatedSiteMember = site.siteMember.map(member => {
+        if(member._id.toString() === siteMemberId.toString()){
+            return {
+                _id: member._id,
+                roles: rolesArray
+            }
+        }else{
+            return member;
+        }
+    })
+    const updatedSite = await Site.findByIdAndUpdate(siteId,
+        {$set: {siteMember: updatedSiteMember}},
+        {new : true}
+    )
+    const siteOwner = await User.findById(siteOwnerId);
+    await notificationService.createNotification(siteOwnerId,
+        site.siteMember.map(member => {
+            return member._id
+        }),
+        `Site ${site.siteName}: Member ${member.email} role has been changed to ${camelCaseArrayToString(rolesArray)} by Site owner ${siteOwner.email}`,
+        "site"
+    );
+    return updatedSite;
+}
+
 
 
 const siteService = {
@@ -437,6 +497,7 @@ const siteService = {
     cancelInvitationById,
     activeSite,
     adminEditSite,
+    changeSiteMemberRoles,
 }
 
 module.exports = siteService;

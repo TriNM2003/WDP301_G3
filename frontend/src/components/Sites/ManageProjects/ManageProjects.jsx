@@ -136,9 +136,9 @@ const ManageProjects = () => {
   // filter by search
   const filteredProjects = projects?.filter((project) => {
     // filter by search
-    const matchesSearch = project?.projectName?.toLowerCase().includes(searchTerm?.toLowerCase()) || [];    
+    const matchesSearch = project?.projectName.toLowerCase().includes(searchTerm?.toLowerCase());    
     return matchesSearch;
-  }) || [];
+  });
 
   const handleFileChange = ({ file }) => {
     const fileReader = new FileReader();

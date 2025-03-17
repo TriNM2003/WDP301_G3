@@ -11,7 +11,7 @@ const ProjectMemberTable = ({project, formatRole, handleRoleChange, handleRemove
             <Checkbox.Group
               value={record.projectMemberRole} // Giả sử đây là một mảng
               onChange={(selectedRoles) => handleRoleChange(
-                record.key, 
+                record.projectMemberRole,
                 selectedRoles, 
                 record.projectMemberId, 
                 record.projectMemberName
@@ -55,13 +55,13 @@ const columns = [
       dataIndex: "projectMemberRole",
       key: "projectMemberRole",
       render: (_, record) => (
-        <Dropdown overlay={roleMenu(record)} trigger={["click"]} disabled={record.projectMemberRole === "projectManager"}>
+        <Dropdown overlay={roleMenu(record)} trigger={["click"]} disabled={record.projectMemberRole.includes("projectManager")}>
           <Button style={{ width: "100%", textAlign: "left" }}>
-            {formatRole(record.projectMemberRole)} <DownOutlined style={{ float: "right" }} />
+            {formatRole(record.projectMemberRole[0])} <DownOutlined style={{ float: "right" }} />
           </Button>
         </Dropdown>
       ),
-      sorter: (a, b) => a.projectMemberRole.localeCompare(b.projectMemberRole),
+      // sorter: (a, b) => a.projectMemberRole.localeCompare(b.projectMemberRole),
       width: "15%",
     },
     {
@@ -87,7 +87,7 @@ const columns = [
           }
           trigger={["click"]}
         >
-          <Button icon={<MoreOutlined />} type="text"  disabled={record.projectMemberRole === "projectManager"}/>
+          <Button icon={<MoreOutlined />} type="text"  disabled={record.projectMemberRole.includes("projectManager")}/>
         </Dropdown>
       )
       ,

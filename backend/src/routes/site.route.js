@@ -49,4 +49,6 @@ siteRouter.get("/:siteId/members", verifyAccessToken, siteController.getAllUsers
 siteRouter.put("/:siteId/active", [verifyAccessToken, adminMiddleware.isAdmin], siteController.activeSite);
 siteRouter.put("/:siteId/adminEdit", [verifyAccessToken, adminMiddleware.isAdmin], siteController.adminEditSite);
 
+siteRouter.put("/:siteId/change-site-member-roles", [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.changeSiteMemberRoles)
+
 module.exports = siteRouter;

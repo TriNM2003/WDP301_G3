@@ -212,6 +212,18 @@ async function adminEditSite(req, res, next) {
     }
 }
 
+async function changeSiteMemberRoles(req, res, next){
+    try {
+        const {id} = req.payload;
+        const {siteId} = req.params;
+        const {siteMemberId, roles} = req.body;
+        const result = await siteService.changeSiteMemberRoles(id, siteId, siteMemberId, roles);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error)
+    }
+}
+
 const siteController = {
     getSiteById,
     createSite,
@@ -225,11 +237,9 @@ const siteController = {
     deactivateSite,
     getInvitaionsBySiteId,
     cancelInvitationById,
-
-    getInvitaionsBySiteId,
-    cancelInvitationById,
     activeSite,
     adminEditSite,
+    changeSiteMemberRoles,
 }
 
 module.exports = siteController;

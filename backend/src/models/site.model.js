@@ -43,7 +43,7 @@ const siteSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ['pending', 'accepted', 'declined', "expired"],
+            enum: ['pending', 'accepted', 'declined', "expired", "cancelled"],
             default: 'pending'
         },
         expireAt: {

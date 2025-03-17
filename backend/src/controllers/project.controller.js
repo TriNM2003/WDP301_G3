@@ -178,9 +178,10 @@ const addProjectMember = async (req, res, next) => {
 
 const editProjectMemberRole = async (req, res, next) => {
     try {
+        const {id} = req.payload;
         const {projectMemberId, updatedRoleList} = req.body;
         const {projectId} = req.params;
-        const projectMember = await projectService.editProjectMemberRole(projectId, projectMemberId, updatedRoleList);
+        const projectMember = await projectService.editProjectMemberRole(id, projectId, projectMemberId, updatedRoleList);
         res.status(200).json(projectMember);
     } catch (error) {
         console.error("Error editing project member:", error);

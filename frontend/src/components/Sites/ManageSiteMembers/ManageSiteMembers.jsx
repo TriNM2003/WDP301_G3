@@ -6,18 +6,14 @@ import SiteMemberTable from "./SiteMemberTable";
 import ManageSiteMemberFilter from "./ManageSiteMemberFilter";
 import InviteMemberModal from "./InviteMemberModal";
 import SearchInviteOption from "./SearchInviteOption";
+import { message } from "antd";
 
 
-const formatRole = (memberRole) => {
-  let role;
-      if(memberRole === "siteOwner" || memberRole === "Owner"){
-        role = "Site Owner"
-      }else if(memberRole === "siteMember" || memberRole === "Member"){
-        role = "Site Member"
-      }else{
-        role = "Undefined?"
-      }
-  return role;
+function formatRole(text) {
+  // Chèn khoảng trắng trước các chữ in hoa (trừ chữ đầu tiên)
+  let result = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+  // Viết hoa chữ cái đầu của mỗi từ
+  return result.replace(/\b\w/g, char => char.toUpperCase());
 }
 
 const ManageSiteMembers = () => {
@@ -149,13 +145,25 @@ const fetchData = async () => {
 
 
   // Xử lý đổi vai trò
-  const handleRoleChange = (siteMemberId, oldRole, newRole) => {
+  const handleRoleChange = async (siteMemberId, oldRole, newRole, siteMemberEmail) => {
     try {
       console.log("role changed", siteMemberId, oldRole, newRole)
-    if(newRole.length === 0){
-      showMessage("warning", "Member must have at least 1 role", 2);
-    }
-    // setSiteMembers(siteMembers.map((member) => (member.key === key ? { ...member, siteMemberRole: formatRole(newRole) } : member)));
+      if (oldRole.includes("siteOwner")) {
+        message.warning("Cannot change site owner role", 2);
+        return;
+      }
+      if (newRole.includes("siteOwner")) {
+        message.warning("Cannot change role to site owner");
+        return;
+      }
+      if (newRole.length === 0) {
+        message.warning("Member must have at least 1 role", 2);
+        return;
+      }
+      await authAxios.put(`${siteAPI}/${site._id}/change-site-member-roles`, {siteMemberId: siteMemberId, roles: newRole});
+      message.success("Change site member role successfully");
+      showNotification("Site",`Site member ${siteMemberEmail} role has been changed`);
+      await fetchData();
     } catch (error) {
       console.log(error)
     }

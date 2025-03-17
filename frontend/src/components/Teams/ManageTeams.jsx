@@ -38,58 +38,80 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import { gold, gray, green } from "@ant-design/colors";
+import { blue, gold, gray, green, red } from "@ant-design/colors";
 import { useLocation, useNavigate } from "react-router-dom";
 import Sider from "antd/es/layout/Sider";
 import { AppContext } from "../../context/AppContext";
 import CreateTeam from "./CreateTeam";
+import authAxios from "../../utils/authAxios";
 
-const { Title } = Typography;
-const { confirm } = Modal;
-const { Option } = Select;
+  
+const breadCrumbItems = [
+  {
+    title: <a href="/Home">Home</a>
+  },
+  {
+    title: <a href="/site">Site</a>
+  },
+  {
+    title: "Manage teams"
+  }
+]
+
 
 const ManageTeams = () => {
-    const {teams, setTeams} = useContext(AppContext);
-    const teamAvatarTemp = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSqYmVDup6h_eN1Gv2hl8aOecLnIEsJwkuHQ&s";
-    const teamLeaderAvatarTemp = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuBznWbg4zGZWlvMx68yxtX3n41Y7Q7mnFCA&s";
-    const createDateTemp = "04/07/2025";
-    const updateDateTemp = "06/11/2025";
+    const {teams, setTeams, site, siteAPI, showNotification, user} = useContext(AppContext);
+    const [tableData, setTableData] = useState([]);
     const nav = useNavigate();
-  // content
-
-  const tableData =  teams.map(function(team, index){
-    const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"));
-    return {
-      key: index+1,
-      teamName: team?.teamName,
-      teamLeader: teamLeader?._id.email,
-      teamAvatar: team?.teamAvatar,
-      teamLeaderAvatar: teamLeader?._id.userAvatar,
-      createDate: team?.createAt || "Not found",
-      updateDate: team?.updateAt || "Not found"
-    }
-  })
-  const breadCrumbItems = [
-    {
-      title: <a href="/Home">Home</a>
-    },
-    {
-      title: <a href="/site">Site</a>
-    },
-    {
-      title: "Manage teams"
-    }
-  ]
+    const teamApi = `http://localhost:9999/sites/${site?._id}/teams`;
 
   useEffect(function(){
-    console.log(tableData)
-  }, [teams])
+    setTeamData();
+  }, [teams, site])
+
+  async function fetchTeams(){
+    try {
+      const res = await authAxios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`)
+      setTeams(res.data);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async function setTeamData(){
+    try {
+      const data =  teams?.map(function(team, index){
+        const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"));
+        return {
+          key: index+1,
+          teamId: team?._id,
+          teamName: team?.teamName,
+          teamLeader: teamLeader?._id.email,
+          teamAvatar: team?.teamAvatar,
+          teamLeaderAvatar: teamLeader?._id.userAvatar,
+          createDate: team?.createdAt,
+          updateDate: team?.updatedAt
+        }
+      })
+      setTableData(data)
+      // console.log(data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   // dung de sort date string
   const parseDate = (dateStr) => {
     const [day, month, year] = dateStr.split("/").map(Number);
     console.log(new Date(year, month - 1, day))
     return new Date(year, month - 1, day);
+  };
+
+  const formatDate = (mongoDate) => {
+    if (!mongoDate) return "";
+  
+    const date = new Date(mongoDate);
+    return date.toLocaleDateString("vi-VN"); // "dd/mm/yyyy"
   };
 
 
@@ -103,6 +125,19 @@ const ManageTeams = () => {
 
   const handleCreateTeam = () => {
     console.log("create team");
+  }
+
+  async function handleRemoveTeam(teamId, teamName){
+    try {
+      const response =  await authAxios.delete(`${teamApi}/${teamId}/remove-team`);
+      await fetchTeams();
+      message.success(response.data.result, 2);
+      showNotification("Team", `Team ${teamName} has been removed by site owner ${user?.email}`);
+    } catch (error) {
+       console.log(error)
+       setTeams([]);
+       setTeamData([])
+    }
   }
 
   // columns
@@ -135,14 +170,14 @@ const ManageTeams = () => {
     { title: "Created date",
         dataIndex: "createDate",
          key: "createDate",
-         render: (text) => new Date(text).toLocaleDateString("vi-VN"),
+         render: (text) => formatDate(text),
         sorter: (a, b) => parseDate(a.createDate) - parseDate(b.createDate),
         width: "20%"
     },
     { title: "Last updated",
         dataIndex: "updateDate",
          key: "updateDate" ,
-         render: (text) => new Date(text).toLocaleDateString("vi-VN"),
+         render: (text) => formatDate(text),
         sorter: (a, b) => parseDate(a.updateDate) - parseDate(b.updateDate),
         width: "20%"
     },
@@ -158,16 +193,17 @@ const ManageTeams = () => {
                 <Popconfirm
                   title="Are you sure to remove this team?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
-                  // onConfirm={() => handleRemoveMember(record.key)}
+                  onConfirm={() => handleRemoveTeam(record.teamId, record.teamName)}
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button icon={<DeleteOutlined />} danger type="text">Remove team</Button>
+                  <span style={{color: red[6]}}><DeleteOutlined /> Remove team</span>
                 </Popconfirm>
               </Menu.Item>
-              <Menu.Item key="kick">
-                <Button icon={<EditOutlined />}  type="text" onClick={() => nav("/site/team/manage-member")}>Manage team members</Button>
-              </Menu.Item>
+
+              {/* <Menu.Item key="manageTeamMember" onClick={() => nav("/site/team/manage-member")}>
+                <span style={{color: blue[6]}}><EditOutlined /> Manage team members</span>
+              </Menu.Item> */}
             </Menu>
           }
           trigger={["click"]}

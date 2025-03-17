@@ -71,7 +71,7 @@ const AppProvider = ({ children }) => {
   const authAPI = "http://localhost:9999/auth";
   const userApi = "http://localhost:9999/users";
   const siteAPI = "http://localhost:9999/sites";
-  const projectAPI = `http://localhost:9999/sites/${user.site || "notFound"}/projects`;
+  const projectAPI = `http://localhost:9999/sites/${user?.site}/projects`;
   const activityTypeAPI = "http://localhost:9999/activityTypes";
 
 

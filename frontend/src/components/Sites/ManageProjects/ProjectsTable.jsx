@@ -1,3 +1,4 @@
+import { blue, red } from '@ant-design/colors';
 import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import { Avatar, Button, Dropdown, Image, Menu, Popconfirm, Space, Table } from 'antd';
 import React from 'react'
@@ -70,14 +71,14 @@ const ProjectsTable = ({parseDate, handleMoveToTrash, filteredProjects, setEditP
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button danger icon={<DeleteOutlined />} type="text" >Move to trash</Button>
+                  <span style={{color: red[6]}}><DeleteOutlined /> Move to trash</span>
                 </Popconfirm>
               </Menu.Item>
-              <Menu.Item key="editProject">
-                <Button type="text" icon={<EditOutlined />} onClick={() => {
+              <Menu.Item key="editProject" onClick={() => {
                     setEditProjectModalVisible(true);
                     setCurrentProjectSettings({projectId: record.projectId, projectName: record.projectName, projectAvatar: record.projectAvatar, projectDescription: record.projectDescription})
-                }}>Edit project</Button>
+                }}>
+              <span style={{color: blue[6]}}><EditOutlined /> Edit project</span>
               </Menu.Item>
             </Menu>
           }

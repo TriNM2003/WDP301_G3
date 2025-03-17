@@ -10,7 +10,7 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
       <Menu.ItemGroup title="Select role">
         <Checkbox.Group
           value={record.siteMemberRole}
-          onChange={(values) => handleRoleChange(record.siteMemberId, record.siteMemberRole, values)}
+          onChange={(values) => handleRoleChange(record.siteMemberId, record.siteMemberRole, values, record.siteMemberEmail)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
         >
           {site?.siteRoles?.map((role, index) => {
@@ -60,7 +60,7 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
           </Button>
               </Dropdown>
           ),
-          sorter: (a, b) => a.siteMemberRole.localeCompare(b.siteMemberRole),
+          // sorter: (a, b) => a.siteMemberRole.localeCompare(b.siteMemberRole),
           width: "15%"
       },
     {
