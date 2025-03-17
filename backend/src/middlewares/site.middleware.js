@@ -26,7 +26,7 @@ const isSiteOwner = async (req, res ,next) => {
         const member = site.siteMember.find(member => member._id.toString() === id);
         const isOwner = member ? member.roles.includes("siteOwner") : false;
         if(!isOwner){
-            return res.status(400).json({ error: { status: 400, message: "User is the site owner." } })
+            return res.status(400).json({ error: { status: 400, message: "User is not the site owner." } })
 
         }
         next();

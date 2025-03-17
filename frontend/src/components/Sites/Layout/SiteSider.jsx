@@ -2,16 +2,23 @@ import { AccountBookFilled, AccountBookOutlined, GroupOutlined, MailOutlined, Pr
 import { Divider, Menu, Dropdown, Button ,Tooltip} from 'antd'
 
 import Title from 'antd/es/typography/Title'
-import React, { useContext } from 'react'
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../../context/AppContext';
 import SubMenu from 'antd/es/menu/SubMenu';
 import { blue, cyan, grey, magenta } from '@ant-design/colors';
 
 function SiteSider() {
-
   const { defaultSelectedKeys, setDefaultSelectedKeys, site, projects, user, teams } = useContext(AppContext)
   const navigate = useNavigate();
+
+  let isSiteOwner = false;
+
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember._id === user._id).roles.includes("siteOwner"); 
+
+  
+  
+
   // Tìm 4 project có thời gian cập nhật gần nhất của tài khoản hiện tại
   const recentProjects = Array.isArray(projects)
     ? projects
@@ -81,7 +88,7 @@ function SiteSider() {
                   trigger={['click']}
                   overlay={
                     <Menu onClick={(e) => e.domEvent.stopPropagation()}>
-                      <Menu.Item key="add">Add people</Menu.Item>
+                      {/* <Menu.Item key="add">Add people</Menu.Item> */}
                       <Menu.Item key="settings" onClick={() => navigate(`/site/list/projects/${project.projectSlug}/project-setting`)}>
                         Project settings
                       </Menu.Item>
@@ -161,15 +168,22 @@ function SiteSider() {
 
 
         {/* Settings */}
+
         <SubMenu key="setting" icon={<SettingTwoTone />} title="Settings">
           <Menu.ItemGroup style={{ "text-align": "start" }} key="s" >
             <Menu.Item icon={<SettingOutlined style={{ color: grey[6] }} />} key="s1" onClick={() => { navigate("site-setting") }}>Setting</Menu.Item>
-            <Menu.Item icon={<UserOutlined style={{ color: blue[3] }} />} key="s2" onClick={() => { navigate("manage/members") }}>Manage Access</Menu.Item>
-            <Menu.Item icon={<ProjectOutlined style={{ color: blue[3] }} />} key="s3" onClick={() => { navigate("manage/projects") }}>Manage Projects</Menu.Item>
-            <Menu.Item icon={<TeamOutlined style={{ color: blue[3] }} />} key="s4" onClick={() => { navigate("manage/teams") }}>Manage Teams</Menu.Item>
-            <Menu.Item icon={<MailOutlined style={{ color: blue[3] }} />} key="s5" onClick={() => { navigate("manage/invitations") }}>Manage Invitations</Menu.Item>
-          </Menu.ItemGroup>
+            {isSiteOwner &&
+            <>
+              <Menu.Item icon={<UserOutlined style={{ color: blue[3] }} />} key="s2" onClick={() => { navigate("manage/members") }}>Manage Access</Menu.Item>
+              <Menu.Item icon={<ProjectOutlined style={{ color: blue[3] }} />} key="s3" onClick={() => { navigate("manage/projects") }}>Manage Projects</Menu.Item>
+              <Menu.Item icon={<TeamOutlined style={{ color: blue[3] }} />} key="s4" onClick={() => { navigate("manage/teams") }}>Manage Teams</Menu.Item>
+              <Menu.Item icon={<MailOutlined style={{ color: blue[3] }} />} key="s5" onClick={() => { navigate("manage/invitations") }}>Manage Invitations</Menu.Item>
+            </>
+            }
+            </Menu.ItemGroup>
         </SubMenu>
+        
+        
       </Menu>
     </>
   )

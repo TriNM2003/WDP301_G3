@@ -1,7 +1,7 @@
 
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import './App.css';
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
 import { Layout } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
@@ -56,9 +56,32 @@ import Stage from './pages/Stage/Stage';
 
 
 function App() {
+  const location = useLocation();
+  const { accessToken, site, user, project } = useContext(AppContext)
+  
+  let siteAccess = true, isSiteOwner = true, isAdmin = true, isProjectManager = true
 
+  useEffect(() => {
+    checkRole();
+  },[location.pathname, user, site])
 
-  const { accessToken, site, user } = useContext(AppContext)
+  function checkRole(){
+    siteAccess = async function(){
+    if(site?.siteStatus === "deactivated"){
+      // showMessage("warning","Site is deactivated", 2);
+      return false;
+    }else if(user?.roles?.some(role => role.roleName === "admin")){
+      // showMessage("warning","Admin cannot access site", 2);
+      return false;
+    }else{
+      return true;
+    }
+  }
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
+  isAdmin = user?.roles?.some(role => role.roleName === "admin");
+  isProjectManager = project?.projectMember?.find(member => member._id._id === user._id)?.roles.includes("projectManager");
+  }
+  
 
 
   return (
@@ -96,11 +119,14 @@ function App() {
                 <Route path="edit-profile" element={<EditProfile />} />
               </Route>
               <Route path="/profile/confirm-delete" element={<ConfirmDelete />} />
-              {site?.siteStatus != "deactivated" &&
-              <Route path="site" element={<S_id />} >
+              {siteAccess &&
+            <Route path="site" element={<S_id />} >
                 <Route index element={<SitePage />} />
 
+
                 <Route path='recycle' element={<RestoreProject />} />
+                {isSiteOwner &&
+                <>
                 <Route path="site-setting" element={<EditSite />} />
                 <Route path='manage' >
                   <Route index element={<ManageProjects />} />
@@ -109,8 +135,10 @@ function App() {
                   <Route path='members' element={<ManageSiteMembers />} />
                   <Route path='teams' element={<ManageTeams />} />
                 </Route>
-
-
+                </>
+                }
+                
+              
 
                 <Route path='list'>
                   <Route index element={<ProjectList />} />
@@ -123,10 +151,15 @@ function App() {
                         <Route path='sprint' element={<SprintBoard />} />
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>
+
+                      {(isSiteOwner || isProjectManager) && <>
                       <Route path='manage' element={<ManageProjectLayout />}>
                         <Route path='members' element={<ManageProjectMember />} />
                       </Route>
                       <Route path="project-setting" element={<EditProject />} />
+
+                      </>}
+                      
                     </Route>
                   </Route>
 
@@ -143,12 +176,20 @@ function App() {
                   </Route>
                 </Route>
 
-              </Route>}
+              </Route>
+            
+              } 
               <Route path="stage" element={<Stage />} />
 
 
-              <Route path='/manage-sites' element={<ManageSites />} />
-
+              {isAdmin && 
+                <Route path='/admin'>
+                  <Route path='manage-sites' element={<ManageSites />} />
+                  <Route path="dashboard" element={<h1>Admin Dashboard is in development</h1>} />
+                </Route>
+              }
+              
+            
               <Route path='*' element={<Navigate to="/home" />} />
             </Route>
 

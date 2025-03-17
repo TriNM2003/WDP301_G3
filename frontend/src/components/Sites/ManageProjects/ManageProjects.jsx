@@ -39,20 +39,24 @@ const ManageProjects = () => {
 
   const tableData = (rawProjects, userList) => {
     try {
-      return rawProjects?.map((project, index) => {
-        const projectManagerId = project.projectMember.find(member => member.roles.includes("projectManager"))._id;
-        const projectManager = userList.find(user => user._id === projectManagerId);
-        return  { key: index+1, 
-          projectId: project._id,
-          projectName: project.projectName,
-          projectAvatar: project.projectAvatar, 
-          projectManager: projectManager.email, 
-          projectManagerAvatar: projectManager.userAvatar,
-          projectStatus: project.projectStatus,
-          createDate: formatDate(project.createdAt), 
-          updateDate: formatDate(project.updatedAt)
-        } || {}
-      }) || []
+      return rawProjects?.reduce((acc, project, index) => {
+        const projectManagerId = project?.projectMember.find(member => member.roles.includes("projectManager"))._id;
+        const projectManager = userList?.find(user => user._id === projectManagerId);
+        if(project.projectStatus === "active"){
+          acc.push({
+            key: index + 1,
+            projectId: project._id,
+            projectName: project.projectName,
+            projectAvatar: project.projectAvatar,
+            projectManager: projectManager.email,
+            projectManagerAvatar: projectManager.userAvatar,
+            projectStatus: project.projectStatus,
+            createDate: formatDate(project.createdAt),
+            updateDate: formatDate(project.updatedAt)
+        })
+        }
+        return acc;
+      }, [])
     } catch (error) {
       console.log(error)
     }
@@ -132,9 +136,9 @@ const ManageProjects = () => {
   // filter by search
   const filteredProjects = projects?.filter((project) => {
     // filter by search
-    const matchesSearch = project?.projectName?.toLowerCase().includes(searchTerm?.toLowerCase()) || [];    
+    const matchesSearch = project?.projectName.toLowerCase().includes(searchTerm?.toLowerCase());    
     return matchesSearch;
-  }) || [];
+  });
 
   const handleFileChange = ({ file }) => {
     const fileReader = new FileReader();
@@ -146,7 +150,7 @@ const ManageProjects = () => {
   // handle go to project setting
   const handleEditProject = async () => {
     try {
-      console.log("Project setting:", currentProjectSettings, selectedFile);
+      // console.log("Project setting:", currentProjectSettings, selectedFile);
       const formData = new FormData();
       formData.append("projectName", currentProjectSettings.projectName);
       if (selectedFile) {
@@ -158,7 +162,7 @@ const ManageProjects = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log(response.data)
+      // console.log(response.data)
 
 
       const result = await authAxios.get(`${projectAPI}/get-all`);

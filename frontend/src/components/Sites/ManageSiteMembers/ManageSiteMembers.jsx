@@ -6,18 +6,14 @@ import SiteMemberTable from "./SiteMemberTable";
 import ManageSiteMemberFilter from "./ManageSiteMemberFilter";
 import InviteMemberModal from "./InviteMemberModal";
 import SearchInviteOption from "./SearchInviteOption";
+import { message } from "antd";
 
 
-const formatRole = (memberRole) => {
-  let role;
-      if(memberRole === "siteOwner" || memberRole === "Owner"){
-        role = "Site Owner"
-      }else if(memberRole === "siteMember" || memberRole === "Member"){
-        role = "Site Member"
-      }else{
-        role = "Undefined?"
-      }
-  return role;
+function formatRole(text) {
+  // Chèn khoảng trắng trước các chữ in hoa (trừ chữ đầu tiên)
+  let result = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+  // Viết hoa chữ cái đầu của mỗi từ
+  return result.replace(/\b\w/g, char => char.toUpperCase());
 }
 
 const ManageSiteMembers = () => {
@@ -41,7 +37,12 @@ const fetchData = async () => {
   try {
   const siteMemberData = await authAxios.get(`${siteAPI}/${site?._id}/get-site-members`);
   const memberData = siteMemberData.data.map((member, index) => {
-    return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
+    return { key: index+1,
+       siteMemberId: member._id._id,
+        siteMemberName: member._id.username,
+         siteMemberEmail: member._id.email,
+          siteMemberRole: member.roles,
+           siteMemberAvatar: member._id.userAvatar }
   })
   setTableData(memberData)
 
@@ -71,7 +72,7 @@ const fetchData = async () => {
     try {
       setInviteLoading(true)
       const invitedUserId = invitaionEmails.find(item => item.value === selectedEmail).userId;
-    console.log(selectedEmail)
+    // console.log(selectedEmail)
     await authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiverId: invitedUserId})
     showMessage("success", `Send invitation to ${selectedEmail.toString()} successfully !`, 2)
     showNotification(`👋 Invitation have been sent to ${selectedEmail.toString()} ✉`);
@@ -92,7 +93,7 @@ const fetchData = async () => {
     filteredMembers = tableData.filter(
         (member) =>
           member.siteMemberName?.toLowerCase().includes(searchTerm?.toLowerCase()) &&
-          (!selectedFilterRole || member.siteMemberRole === selectedFilterRole)
+          (!selectedFilterRole || member.siteMemberRole.includes(selectedFilterRole))
       );
   }else{
     filteredMembers = tableData.filter(
@@ -115,7 +116,7 @@ const fetchData = async () => {
       }
       // console.log(result.data)
       const memberData = result?.data?.siteMember?.siteMember?.map((member, index) => {
-        return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles[0], siteMemberAvatar: member._id.userAvatar }
+        return { key: index+1, siteMemberId: member._id._id, siteMemberName: member._id.username, siteMemberEmail: member._id.email, siteMemberRole: member.roles, siteMemberAvatar: member._id.userAvatar }
       }) || []
       setTableData(memberData);
       // get user emails
@@ -144,13 +145,25 @@ const fetchData = async () => {
 
 
   // Xử lý đổi vai trò
-  const handleRoleChange = (siteMemberId, oldRole, newRole) => {
+  const handleRoleChange = async (siteMemberId, oldRole, newRole, siteMemberEmail) => {
     try {
       console.log("role changed", siteMemberId, oldRole, newRole)
-    if(newRole.length === 0){
-      showMessage("warning", "Member must have at least 1 role", 2);
-    }
-    // setSiteMembers(siteMembers.map((member) => (member.key === key ? { ...member, siteMemberRole: formatRole(newRole) } : member)));
+      if (oldRole.includes("siteOwner")) {
+        message.warning("Cannot change site owner role", 2);
+        return;
+      }
+      if (newRole.includes("siteOwner")) {
+        message.warning("Cannot change role to site owner");
+        return;
+      }
+      if (newRole.length === 0) {
+        message.warning("Member must have at least 1 role", 2);
+        return;
+      }
+      await authAxios.put(`${siteAPI}/${site._id}/change-site-member-roles`, {siteMemberId: siteMemberId, roles: newRole});
+      message.success("Change site member role successfully");
+      showNotification("Site",`Site member ${siteMemberEmail} role has been changed`);
+      await fetchData();
     } catch (error) {
       console.log(error)
     }

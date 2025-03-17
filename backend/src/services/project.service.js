@@ -7,6 +7,7 @@ const createHttpErrors = require("http-errors");
 const { slugify } = require('../utils/slugify.util');
 const { cloudinary } = require('../configs/cloudinary');
 const fs = require('fs');
+const notificationService = require('./notification.service');
 
 
 
@@ -140,6 +141,17 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
         projectRoles: ["projectManager", "projectMember"],
         projectAvatar: "https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg",
     })
+
+    // Tạo 3 stage mặc định
+    const stages = [
+        { stageName: "To Do", project: newProject._id, stageStatus: "todo" },
+        { stageName: "Doing", project: newProject._id, stageStatus: "doing" },
+        { stageName: "Done", project: newProject._id, stageStatus: "done" }
+    ];
+
+    const createdStages = await db.Stage.insertMany(stages);
+    newProject.stages = createdStages.map(stage => stage._id);
+    await newProject.save()
 
     //theo project vao user
     await db.User.findOneAndUpdate(
@@ -301,8 +313,15 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
     }
 }
 
-const editProjectMemberRole = async (projectId, projectMemberId, updatedRoleList) => {
+const editProjectMemberRole = async (projectManagerId, projectId, projectMemberId, updatedRoleList) => {
     try {
+        // console.log(projectManagerId, projectId, projectMemberId, updatedRoleList); return;
+        function camelCaseArrayToString(arr) {
+            return arr.map(str => 
+                str.replace(/([a-z])([A-Z])/g, '$1 $2') // Thêm khoảng trắng trước chữ in hoa
+                   .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
+            ).join(', '); // Nối các phần tử bằng dấu ", "
+        }
         // console.log(projectId, projectMemberId, newRole); return "ok"
         const project = await db.Project.findById(projectId);
         if (!project) {
@@ -318,6 +337,17 @@ const editProjectMemberRole = async (projectId, projectMemberId, updatedRoleList
         if (!isInProject) {
             throw new Error("User is not in project");
         }
+        if(isInProject.roles.includes("projectManager")) throw new Error("Cannot change role of Project manager")
+        if(updatedRoleList.includes("projectManager")) throw new Error("Cannot assign role Project manager to project member")
+        let isValidRole = true;
+        for (let i = 0; i < updatedRoleList.length; i++) {
+            if (!project.projectRoles.includes(updatedRoleList[i])) {
+                isValidRole = false;
+            }
+        }
+        if (!isValidRole) {
+            throw new Error("New role does not exist in current project");
+        }
 
 
         //edit project member from project
@@ -326,6 +356,16 @@ const editProjectMemberRole = async (projectId, projectMemberId, updatedRoleList
             { $set: { "projectMember.$.roles": updatedRoleList } },
             { new: true }
         ).select("projectMember")
+
+        const projectManager = await db.User.findById(projectManagerId);
+        // tao notification
+        await notificationService.createNotification(projectManager._id,
+                project.projectMember.map(member => {
+                    return member._id
+                }),
+                `Project ${project.projectName}: Member ${projectMember.email} role has been changed to ${camelCaseArrayToString(updatedRoleList)} by Project manager ${projectManager.email}`,
+                "project"
+        );
 
         return projectMemberList;
     } catch (error) {

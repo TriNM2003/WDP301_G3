@@ -30,6 +30,7 @@ const InvitationSearchFilter = ({searchEmail, setSearchEmail, setFilterStatus}) 
         <Option value="accepted">Accepted</Option>
         <Option value="declined">Declined</Option>
         <Option value="expired">Expired</Option>
+        <Option value="cancelled">Cancelled</Option>
       </Select>
       
     </div>

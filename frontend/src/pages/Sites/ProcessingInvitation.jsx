@@ -115,7 +115,7 @@ const ProcessingInvitation = () => {
             {status === "failed" && (
                 <Result
                     status="error"
-                    title="Invitation processing failed"
+                    title="Invitation invalid"
                     subTitle={errorMessage}
                     extra={[
                         <Button type="default" key="home" onClick={() => navigate("/home")}>
