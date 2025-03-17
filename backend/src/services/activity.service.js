@@ -150,7 +150,7 @@ const edit = async (data, activityId) => {
 const moveActivity = async (data, activityId) => {
     try {
         // Kiểm tra nếu người dùng gửi cả sprint và stage
-        if (data.sprint && data.stage) {
+        if (data.sprint !== undefined && data.stage !== undefined) {
             throw new Error("You can only update either sprint or stage at a time.");
         }
 
@@ -158,21 +158,26 @@ const moveActivity = async (data, activityId) => {
         const currentActivity = await db.Activity.findOne({
             _id: activityId,
             isDestroyed: { $ne: true }
-        }).populate("child");
+        }).populate({
+            path: "child",
+            strictPopulate: false
+        });
 
         if (!currentActivity) {
-            throw new Error("Activity not found or already deleted");
+            throw new Error("Activity not found or already deleted.");
         }
 
         let updatedActivity = null;
+        let previousSprint = currentActivity.sprint; // Lưu Sprint cũ để cập nhật danh sách activities
+        let previousStage = currentActivity.stage; // Lưu Stage cũ để cập nhật danh sách activities
 
         // Nếu cập nhật `stage`
-        if (data.stage) {
+        if (data.stage !== undefined) {
             const newStage = data.stage;
             const newStageData = await db.Stage.findOne({ _id: newStage });
 
             if (!newStageData) {
-                throw new Error("Stage not found");
+                throw new Error("Stage not found.");
             }
 
             // Nếu stage mới có `stageStatus` là "done", kiểm tra subactivities
@@ -183,7 +188,7 @@ const moveActivity = async (data, activityId) => {
                 }).populate("stage");
 
                 // Kiểm tra nếu có subactivity nào chưa có stage "done"
-                const hasUnfinishedSubActivities = unfinishedSubActivities.some(sub => sub.stage.stageStatus !== "done");
+                const hasUnfinishedSubActivities = unfinishedSubActivities.some(sub => sub.stage?.stageStatus !== "done");
 
                 if (hasUnfinishedSubActivities) {
                     throw new Error(`Cannot move activity to ${newStageData?.stageName}. Please complete all subactivities first.`);
@@ -201,14 +206,23 @@ const moveActivity = async (data, activityId) => {
                 throw new Error("Failed to update activity stage.");
             }
 
+            // Cập nhật danh sách activities trong stage cũ và mới
+            await db.Stage.updateOne(
+                { _id: previousStage },
+                { $pull: { activities: activityId } }
+            );
+            await db.Stage.updateOne(
+                { _id: newStage },
+                { $addToSet: { activities: activityId } }
+            );
         }
         // Nếu cập nhật `sprint`
         else {
-            const newSprint = data.sprint; // Sprint có thể null (Backlog)
+            const newSprint = data.sprint || null; // Sprint có thể null (Backlog)
 
             // Cập nhật activity gốc
             updatedActivity = await db.Activity.findOneAndUpdate(
-                { _id: activityId, isDestroyed: { $ne: true } },
+                { _id: activityId },
                 { $set: { sprint: newSprint } },
                 { new: true, runValidators: true }
             );
@@ -220,8 +234,7 @@ const moveActivity = async (data, activityId) => {
             // Hàm đệ quy để cập nhật tất cả subactivities
             const updateSubActivities = async (parentId, newSprint) => {
                 const subActivities = await db.Activity.find({
-                    parent: parentId,
-                    isDestroyed: { $ne: true }
+                    parent: parentId
                 });
 
                 for (const sub of subActivities) {
@@ -230,7 +243,16 @@ const moveActivity = async (data, activityId) => {
                         { $set: { sprint: newSprint } },
                         { new: true }
                     );
-
+                    await db.Sprint.updateOne(
+                        { _id: previousSprint },
+                        { $pull: { activities: sub._id } }
+                    );
+                    if (newSprint) {
+                        await db.Sprint.updateOne(
+                            { _id: newSprint },
+                            { $addToSet: { activities: sub._id } }
+                        );
+                    }
                     // Đệ quy cập nhật tiếp subactivity con
                     await updateSubActivities(sub._id, newSprint);
                 }
@@ -238,6 +260,18 @@ const moveActivity = async (data, activityId) => {
 
             // Nếu activity có Sprint mới, cập nhật cho tất cả subactivities
             await updateSubActivities(activityId, newSprint);
+
+            // Cập nhật danh sách activities trong sprint cũ và mới
+            await db.Sprint.updateOne(
+                { _id: previousSprint },
+                { $pull: { activities: activityId } }
+            );
+            if (newSprint) {
+                await db.Sprint.updateOne(
+                    { _id: newSprint },
+                    { $addToSet: { activities: activityId } }
+                );
+            }
         }
 
         return updatedActivity;
@@ -246,6 +280,7 @@ const moveActivity = async (data, activityId) => {
         throw error;
     }
 };
+
 
 
 const assignMember = async (data, activityId) => {
