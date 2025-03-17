@@ -11,7 +11,7 @@ const ViewProfile = () => {
   const [projects, setProjects] = useState([]);
   const navigate = useNavigate();
   useEffect(() => {
-    axios.get('http://localhost:9999/users/user-profile', {
+    axios.get('http://localhost:9999/users/user-information', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
     })
       .then(res => {

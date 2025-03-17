@@ -10,6 +10,14 @@ const getAllUsers = async () => {
     return await db.User.find({});
 };
 
+const getUserByIdInfomation = async (userId) => {
+    try {
+        return await db.User.findById(userId).populate("roles").populate("projects").populate("activities").populate("teams").populate("site");
+    } catch (error) {
+        throw error;
+    }
+};
+
 const getUserById = async (userId) => {
     try {
         return await db.User.findById(userId).populate("roles");
@@ -188,7 +196,8 @@ const userService = {
     sendDeleteAccountEmail,
     confirmDeleteAccount,
     getActivitiesByUserId,
-    getUserInfoByUserIdFromParams
+    getUserInfoByUserIdFromParams,
+    getUserByIdInfomation
 }
 
 

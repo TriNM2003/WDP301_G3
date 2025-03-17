@@ -21,6 +21,11 @@ userRouter.get("/user-profile",
     UserController.getUserById,
 );
 
+userRouter.get("/user-information",
+    authMiddleware.verifyAccessToken,
+    UserController.getUserByIdInfomation
+);
+
 userRouter.put("/edit-profile", 
     authMiddleware.verifyAccessToken,
     cloudinary.upload.single("userAvatar"),  // Middleware upload file

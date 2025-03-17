@@ -72,7 +72,7 @@ const EditProfile = () => {
         .then(response => {
             message.success("Profile updated successfully");
             setImagePreview(response.data.userAvatar);
-            setTimeout(window.location.reload(), 3000);
+            setTimeout(() => navigate('/profile/edit-profile'), 2000);
         })
         .catch(error => {
             message.error(error.response?.data?.message );
