@@ -51,7 +51,7 @@ import CreateSite from './pages/Sites/CreateSite';
 import ProcessingInvitation from './pages/Sites/ProcessingInvitation';
 import TeamListLayout from './components/Teams/Layout/TeamListLayout';
 import Stage from './pages/Stage/Stage';
-
+import ConfirmDeactivateSite from './components/Sites/ConfirmDeactivateSite';
 
 
 
@@ -175,10 +175,10 @@ function App() {
                     <Route path="member-performance/:userId" element={<TeamMemberPerformance />} />
                   </Route>
                 </Route>
-
-              </Route>
-            
-              } 
+                
+              </Route>}
+              <Route path='/site/deactivate-site' element={<ConfirmDeactivateSite />} />
+              
               <Route path="stage" element={<Stage />} />
 
 

@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const projectService = require('../services/project.service');
+const notificationService = require('../services/notification.service');
 
 const { cloudinary } = require('../configs/cloudinary');
 const path = require('path');
@@ -98,15 +99,25 @@ const getProjectById = async (req, res, next) => {
 
 const editProject = async (req, res, next) => {
     try {
+        console.log("Req file:", req.file);
         const projectId = req.params.projectId;
-        const {projectSlug} = req.body;
-        const { projectName } = req.body;
-        const updatedProject = await projectService.editProject(projectId, projectName, projectSlug, req.file);
+        const projectData = req.body;
+        const hasFile = req.file;
+        const updatedProject = await projectService.editProject(projectId, projectData, hasFile);
+
+        const project = await db.Project.findById(projectId).populate("projectMember._id");
+        const receivers = project.projectMember.map(member => member._id._id);
+        await notificationService.createNotification(
+            req.payload.id,
+            receivers,
+            `Project ${project.projectName} has been updated by the project manager.`,
+            "project"
+        );
         res.status(200).json(updatedProject);
     } catch (error) {
-        console.error("Cloudinary Upload Error:", error);
-        fs.unlink(req.file.path, () => { });
-        return res.status(500).json({ message: "Cant't update profile! Try again." });
+        res.status(403).json({
+            message: error.message
+        });
     }
 };
 
@@ -114,6 +125,15 @@ const removeToTrash = async (req, res, next) => {
     try {
         const projectId = req.params.projectId;
         await projectService.removeToTrash(projectId);
+
+        const project = await db.Project.findById(projectId).populate("projectMember._id");
+        const receivers = project.projectMember.map(member => member._id._id);
+        await notificationService.createNotification(
+            req.payload.id,
+            receivers,
+            `Project ${project.projectName} has been moved to trash by the project manager.`,
+            "project"
+        );
         res.status(200).json({ message: "Project moved to trash successfully!" });
     } catch (error) {
         next(error);
@@ -124,6 +144,15 @@ const restoreProject = async (req, res, next) => {
     try {
         const projectId = req.params.projectId;
         await projectService.restoreProject(projectId);
+
+        const project = await db.Project.findById(projectId).populate("projectMember._id");
+        const receivers = project.projectMember.map(member => member._id._id);
+        await notificationService.createNotification(
+            req.payload.id,
+            receivers,
+            `Project ${project.projectName} has been restored by the project manager.`,
+            "project"
+        );
         res.status(200).json({ message: "Project restored successfully!" });
     } catch (error) {
         next(error);
@@ -144,7 +173,17 @@ const getProjectTrash = async (req, res, next) => {
 const destroyProject = async (req, res, next) => {
     try {
         const projectId = req.params.projectId;
+        const project = await db.Project.findById(projectId).populate("projectMember._id");
+        const receivers = project.projectMember.map(member => member._id._id);
+        
         await projectService.deleteProject(projectId);
+        
+        await notificationService.createNotification(
+            req.payload.id,
+            receivers,
+            `Project ${project.projectName} has been permanently deleted by the project manager.`,
+            "project"
+        );
         res.status(200).json({ message: "Project deleted successfully!" });
     } catch (error) {
         next(error);

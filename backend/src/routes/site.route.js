@@ -27,6 +27,12 @@ siteRouter.put("/:siteId/edit",
     cloudinary.upload.single("siteAvatar"),
     siteController.editSite
 );
+
+siteRouter.post("/:siteId/send-deactivate-email",
+    [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner],
+    siteController.sendDeactivateSiteEmail
+)
+
 siteRouter.put("/:siteId/deactivate",
     [verifyAccessToken, siteMiddleware.isInSite],
     siteController.deactivateSite

@@ -13,6 +13,7 @@ const getAllUsers = async () => {
 const getUserById = async (userId) => {
     try {
         return await db.User.findById(userId).populate("roles");
+
     } catch (error) {
         throw error;
     }
@@ -35,30 +36,46 @@ const changePassword = async (userId, oldPassword, newPassword, confirmPassword)
     }
 };
 
-const editProfile = async (userId, fullName, address, dob, phoneNumber, file) => {
+const editProfile = async (userId, profileData, file) => {
     try {
         const user = await db.User.findById(userId);
         if (!user) throw new Error("User not found");
 
         let newAvatarUrl = user.userAvatar;
         if (file) {
-            const result = await cloudinary.uploader.upload(file.path);
-            if (result && result.secure_url) {
-                newAvatarUrl = result.secure_url;
-                fs.unlink(file.path, (err) => { if (err) console.error("Error deleting local file:", err); });
-            } else {
-                throw new Error("Failed to upload image");
+            try {
+                const result = await cloudinary.uploader.upload(file.path);
+                if (result && result.secure_url) {
+                    newAvatarUrl = result.secure_url;
+                    fs.unlink(file.path, (err) => { if (err) console.error("Error deleting local file:", err); });
+                } else {
+                    throw new Error("Failed to upload image");
+                }
+            } catch (error) {
+                console.error("Cloudinary Upload Error:", error);
+                fs.unlink(file.path, () => { });
+                throw new Error("Failed to edit project! Try again.");
             }
         }
 
-        user.fullName = fullName;
-        user.phoneNumber = phoneNumber;
-        user.dob = dob;
-        user.address = address;
-        user.userAvatar = newAvatarUrl;
+        const newProfile = {
+            fullName: profileData.fullName || user.fullName,
+            address: profileData.address || user.address,
+            dob: profileData.dob || user.dob,
+            phoneNumber: profileData.phoneNumber || user.phoneNumber,
+            userAvatar: newAvatarUrl
+        };
 
-        await user.save();
-        return user;
+        const updatedUser = await db.User.findByIdAndUpdate(userId, {
+            $set:{
+                fullName: newProfile.fullName,
+                address: newProfile.address,
+                dob: newProfile.dob,
+                phoneNumber: newProfile.phoneNumber,
+                userAvatar: newProfile.userAvatar
+            }
+        }, { new: true });
+        return updatedUser;
     } catch (error) {
         throw error;
     }
@@ -120,30 +137,30 @@ const getActivitiesByUserId = async (userId) => {
 };
 
 // get user info by userId from params
-const getUserInfoByUserIdFromParams = async (userId) =>{
+const getUserInfoByUserIdFromParams = async (userId) => {
     try {
         const user = await db.User.findById(userId)
-        .select("username email userAvatar fullName address phoneNumber dob")
-        .populate({
-            path: "activities",
-            populate: [
-                { path: "createBy", select: "fullName email" },
-                { path: "assignee", select: "_id" },
-                { path: "type", select: "name" },
-                { path: "sprint", select: "title" },
-                { path: "stage", select: "stageStatus stageName" },
-                { path: "project", select:"projectName"}
-            ]
-        })
-        .populate({
-            path: "projects",
-            select: "projectName projectAvatar",
-            
-        });
+            .select("username email userAvatar fullName address phoneNumber dob")
+            .populate({
+                path: "activities",
+                populate: [
+                    { path: "createBy", select: "fullName email" },
+                    { path: "assignee", select: "_id" },
+                    { path: "type", select: "name" },
+                    { path: "sprint", select: "title" },
+                    { path: "stage", select: "stageStatus stageName" },
+                    { path: "project", select: "projectName" }
+                ]
+            })
+            .populate({
+                path: "projects",
+                select: "projectName projectAvatar",
 
-       
+            });
+
+
         return user
-    } catch(error){
+    } catch (error) {
         throw error;
     }
 }
@@ -155,9 +172,9 @@ const confirmDeleteAccount = async (token) => {
         const user = await db.User.findById(decoded.id);
         if (!user) throw new Error("User not found!");
 
-        user.status = "deactived";
-        await user.save();
-        return { message: "Account deactivated successfully" };
+        // chuyển trạng thái của user thành "deactived"
+        const deactivedUser = await db.User.findByIdAndUpdate(user._id, { status: "deactived" }, { new: true });
+        return { message: "Account deactivated successfully",deactivedUser };
     } catch (error) {
         throw new Error("Invalid or expired token!");
     }

@@ -162,41 +162,63 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
     return newProject;
 }
 
-const editProject = async (projectId, projectName, file) => {
+const editProject = async (projectId, projectData, file) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
     let newProjectAvatar = project.projectAvatar;
     if (file) {
-        const result = await cloudinary.uploader.upload(file.path);
-        if (result && result.secure_url) {
-            newProjectAvatar = result.secure_url;
-            fs.unlink(file.path, (err) => { if (err) console.error("Error deleting local file:", err); });
-        } else {
-            throw new Error("Failed to upload image");
+        try {
+            const result = await cloudinary.uploader.upload(file.path);
+            if (result && result.secure_url) {
+                newProjectAvatar = result.secure_url;
+                fs.unlink(file.path, (err) => { if (err) console.error("Error deleting local file:", err); });
+            } else {
+                throw new Error("Failed to upload image");
+            }
+        } catch (error) {
+            console.error("Cloudinary Upload Error:", error);
+            fs.unlink(file.path, () => { });
+            throw new Error("Failed to edit project! Try again.");
         }
     }
 
-    project.projectName = projectName;
-    project.projectAvatar = newProjectAvatar;
-    project.projectSlug = slugify(projectName);
-    return await project.save();
+    const newProject = {
+        projectName: projectData.projectName || project.projectName,
+        projectAvatar: newProjectAvatar,
+        projectSlug: slugify(projectData.projectSlug || project.projectSlug),
+
+    }
+
+
+    const updatedProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: {
+            projectName: newProject.projectName,
+            projectAvatar: newProject.projectAvatar,
+            projectSlug: newProject.projectSlug,
+        }
+    }, { new: true });
+    return updatedProject;
 };
 
 const removeToTrash = async (projectId) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
-    project.projectStatus = "archived";
-    return await project.save();
+    const removedProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: { projectStatus: "archived" }
+    }, { new: true });
+    return removedProject;
 };
 
 const restoreProject = async (projectId) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
-    project.projectStatus = "active";
-    return await project.save();
+    const restoredProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: { projectStatus: "active" }
+    }, { new: true });
+    return restoredProject;
 };
 
 const getProjectTrash = async (siteId, userId) => {
@@ -241,8 +263,11 @@ const deleteProject = async (projectId) => {
     if (!project) throw new Error("Project not found");
 
     // chuyen project sang trang thai destroyed
-    project.projectStatus = "destroyed";
-    await project.save();
+    const deletedProject = await db.Project.findByIdAndUpdate(projectId, {
+        $set: { projectStatus: "destroyed" }
+    }, { new: true });
+
+    return deletedProject;
 };
 
 

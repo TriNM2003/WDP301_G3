@@ -9,7 +9,7 @@ const { Title, Text } = Typography;
 const EditProject = () => {
     const { projectSlug } = useParams();
     const navigate = useNavigate();
-    const {showNotification,siteAPI,site, accessToken, setProjects, user} = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, setProjects, user } = useContext(AppContext);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [confirmProjectName, setConfirmProjectName] = useState("");
@@ -25,11 +25,11 @@ const EditProject = () => {
     const [isProjectMember, setIsProjectMember] = useState(true);
 
     useEffect(() => {
-        if(site._id && accessToken){
+        if (site._id && accessToken) {
             fetchProjectData();
         }
-        
-    }, [site, accessToken]);
+
+    }, [site, accessToken, projectSlug]);
 
     const fetchProjectData = async () => {
         try {
@@ -37,14 +37,14 @@ const EditProject = () => {
             const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/get-all`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
             });
-    
+
             const projects = Array.isArray(response.data) ? response.data : response.data.projects;
             if (!projects || projects.length == 0) {
                 message.error("No projects found!");
                 navigate(`/sites/${site._id}`);
                 return;
             }
-    
+
             // 🔹 Bước 2: Tìm project theo slug để lấy ID
             const project = projects.find(p => p.projectSlug == projectSlug);
             if (!project) {
@@ -52,26 +52,26 @@ const EditProject = () => {
                 navigate(`/sites/${site._id}`);
                 return;
             }
-    
+
             const projectId = project._id;
-    
+
             // 🔹 Bước 3: Fetch chi tiết project từ ID
             const projectResponse = await axios.get(`http://localhost:9999/sites/${site._id}/projects/${projectId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
             });
-    
+
             const { projectName, projectAvatar, projectMember, projectStatus } = projectResponse.data;
-    
+
             // 🔹 Nếu project bị archived, chặn truy cập
             if (projectStatus === "archived") {
                 message.error("This project has been moved to trash!");
                 navigate(`/sites/${site._id}`);
                 return;
             }
-    
+
             // 🔹 Bước 4: Kiểm tra quyền truy cập (chỉ projectManager mới có quyền)
             const manager = projectMember.find(member => member.roles.includes("projectManager"));
- 
+
             if (!manager || manager._id._id !== user._id) {
                 // message.error("Access Denied! You don't have permission to access this project.");
                 // navigate(`/sites/${site._id}`);
@@ -79,7 +79,7 @@ const EditProject = () => {
             }else{
                 setIsProjectMember(false);
             }
-    
+
             // 🔹 Lưu dữ liệu nếu người dùng có quyền
             setProjectData({
                 projectId,
@@ -89,9 +89,9 @@ const EditProject = () => {
                 projectSlug,
                 projectStatus
             });
-    
+
             setImagePreview(projectAvatar);
-    
+
         } catch (error) {
             console.error("Error fetching project data:", error);
             message.error("Failed to load project data.");
@@ -116,7 +116,7 @@ const EditProject = () => {
         if (selectedFile) {
             formData.append("projectAvatar", selectedFile);
         }
-
+        setLoading(true);
         try {
             const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
                 headers: {
@@ -126,7 +126,11 @@ const EditProject = () => {
             });
             message.success("Project updated successfully!");
             setImagePreview(response.data.projectAvatar);
-            navigate("/site/list/projects")
+            const newProjectSlug = response.data.projectSlug;
+            console.log(newProjectSlug, projectSlug);
+            if (newProjectSlug !== projectSlug) {
+                navigate(`/site/list/projects/${newProjectSlug}/project-setting`, { replace: true });
+            }
         } catch (error) {
             console.error("Error updating project:", error);
             message.error("Failed to update project.");
@@ -163,10 +167,12 @@ const EditProject = () => {
                     <Link to={`/site/list/projects`}>Projects</Link> / <Link to={`/site/${site._id}/project/${projectData.projectId}/settings`}>Project Setting</Link>
                     <Title level={3}>Project Setting</Title>
                 </Col>
+
                  {/* More Options Button */}
                  <Col>
                  {!isProjectMember && 
                  <Dropdown
+
                         overlay={
                             <Button
                                 type="primary"
@@ -215,10 +221,10 @@ const EditProject = () => {
                             </Form.Item>
 
                             <Form.Item label="Project Manager">
-                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign:'left' }}>
-                                <Text>{projectData.projectManager}</Text>
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign: 'left' }}>
+                                    <Text>{projectData.projectManager}</Text>
                                 </div>
-                                
+
                             </Form.Item>
 
                             <Form.Item label="Project Slug">
@@ -256,7 +262,7 @@ const EditProject = () => {
             >
                 <p>Are you sure you want to move this project to trash?</p>
                 <p>To confirm, type the project name: <strong>{projectData.projectName}</strong></p>
-                <Input 
+                <Input
                     placeholder="Enter project name"
                     value={confirmProjectName}
                     onChange={(e) => setConfirmProjectName(e.target.value)}
