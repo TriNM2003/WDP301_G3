@@ -11,7 +11,7 @@ const EditProfile = () => {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [form, setForm] = useState({  
+    const [form, setForm] = useState({
         fullName: '',
         address: '',
         dob: '',
@@ -43,8 +43,8 @@ const EditProfile = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-     // Xử lý chọn ảnh và hiển thị ngay lập tức
-     const handleFileChange = ({ file }) => {
+    // Xử lý chọn ảnh và hiển thị ngay lập tức
+    const handleFileChange = ({ file }) => {
         const fileReader = new FileReader();
         fileReader.onload = () => setImagePreview(fileReader.result);
         fileReader.readAsDataURL(file);
@@ -53,6 +53,33 @@ const EditProfile = () => {
 
     // Xử lý lưu thông tin user
     const handleSave = async () => {
+        let validationErrors = {};
+
+        // Kiểm tra fullName
+        if (form.fullName && !/^[a-zA-ZÀ-Ỹà-ỹ\s]+$/.test(form.fullName)) {
+            validationErrors.fullName = "Full name is invalid. Only letters and spaces are allowed.";
+        }
+
+        // Kiểm tra số điện thoại
+        if (form.phoneNumber && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(form.phoneNumber)) {
+            validationErrors.phoneNumber = "Invalid phone number format.";
+        }
+
+        // Kiểm tra ngày sinh khôgn được là tương lai và hôm nay
+        if (form.dob) {
+            const dobDate = new Date(form.dob);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Đặt về 00:00:00 để tránh lỗi so sánh
+
+            if (dobDate >= today) {
+                validationErrors.dob = "Date of birth must be in the past.";
+            }
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
         const formData = new FormData();
         formData.append("fullName", form.fullName);
         formData.append("address", form.address);
@@ -64,28 +91,29 @@ const EditProfile = () => {
         }
         setLoading(true)
         axios.put('http://localhost:9999/users/edit-profile', formData, {
-            headers: { 
+            headers: {
                 Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
                 'Content-Type': 'multipart/form-data'
             }
         })
-        .then(response => {
-            message.success("Profile updated successfully");
-            setImagePreview(response.data.userAvatar);
-            setTimeout(() => navigate('/profile/edit-profile'), 2000);
-        })
-        .catch(error => {
-            message.error(error.response?.data?.message );
-        })
-        .finally(() => setLoading(false));
+            .then(response => {
+                message.success("Profile updated successfully");
+                setImagePreview(response.data.userAvatar);
+                setTimeout(() => navigate('/profile/edit-profile'), 2000);
+            })
+            .catch(error => {
+                message.error(error.response?.data?.message);
+            })
+            .finally(() => setLoading(false));
     };
 
     const handleDiscard = () => {
-        setForm({ 
+        setForm({
             fullName: '',
             address: '',
             dob: '',
-            phoneNumber: '', });
+            phoneNumber: '',
+        });
         setErrors({});
     };
 
@@ -126,15 +154,15 @@ const EditProfile = () => {
 
     return (
         <div style={{ minHeight: '100%', width: '100%', padding: '20px' }}>
-        {contextHolder}
-        <Row gutter={[16, 16]} justify="center">
-        <Col xs={24} sm={8} md={6} lg={4}>
+            {contextHolder}
+            <Row gutter={[16, 16]} justify="center">
+                <Col xs={24} sm={8} md={6} lg={4}>
                     <Breadcrumb style={{ marginBottom: '16px' }}>
                         <Breadcrumb.Item><Link to="/profile/profile-info">Profile</Link></Breadcrumb.Item>
                         <Breadcrumb.Item><Link to="/profile/edit-profile">Edit Profile</Link></Breadcrumb.Item>
                     </Breadcrumb>
 
-                    <Menu mode="vertical" selectedKeys={[selectedKey]}  onClick={handleMenuClick}
+                    <Menu mode="vertical" selectedKeys={[selectedKey]} onClick={handleMenuClick}
                         style={{ width: '100%', borderRadius: '8px', border: 'none', backgroundColor: '#fafafa', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
                         <Menu.Item key="1" icon={<UserOutlined />} style={{ borderRadius: '8px', borderRight: '3px solid #1890ff' }}>
                             <Link to="/profile/edit-profile">Profile settings</Link>
@@ -150,33 +178,33 @@ const EditProfile = () => {
                         </Menu.Item>
                     </Menu>
                 </Col>
-            <Col xs={24} sm={16} md={12} lg={10}>
-            <Card style={{ width: '100%', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                <Col xs={24} sm={16} md={12} lg={10}>
+                    <Card style={{ width: '100%', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
                         <h2 style={{ textAlign: 'center' }}>Edit Profile</h2>
-                        
+
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} src={imagePreview || "https://www.w3schools.com/howto/img_avatar.png"} />
                         </Row>
 
                         <Form layout="vertical">
                             <Form.Item label="Avatar">
-                            <Upload 
-                            showUploadList={false}
-                            beforeUpload={() => false}  // Ngăn tải lên tự động
-                            onChange={handleFileChange}
-                        >
-                            <Button icon={<UploadOutlined />}>Upload Image</Button>
-                        </Upload>
+                                <Upload
+                                    showUploadList={false}
+                                    beforeUpload={() => false}  // Ngăn tải lên tự động
+                                    onChange={handleFileChange}
+                                >
+                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                </Upload>
                             </Form.Item>
 
                             <Form.Item label="Username">
-                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px' , textAlign:'left' }}>
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign: 'left' }}>
                                     {form.username}
                                 </div>
                             </Form.Item>
 
                             <Form.Item label="Email">
-                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign:'left' }}>
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign: 'left' }}>
                                     {form.email}
                                 </div>
                             </Form.Item>
@@ -203,9 +231,9 @@ const EditProfile = () => {
                             </Form.Item>
                         </Form>
                     </Card>
-            </Col>
-        </Row >
-        <Modal
+                </Col>
+            </Row >
+            <Modal
                 title="Confirm Account Deletion"
                 open={isDeleteModalVisible}
                 onCancel={() => setIsDeleteModalVisible(false)}
@@ -219,7 +247,7 @@ const EditProfile = () => {
                 {emailError && <p style={{ color: "red", marginTop: "5px" }}>{emailError}</p>}
             </Modal>
         </div>
-        
+
 
     )
 };

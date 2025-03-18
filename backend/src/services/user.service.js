@@ -66,6 +66,23 @@ const editProfile = async (userId, profileData, file) => {
             }
         }
 
+        // Validate dữ liệu đầu vào
+        if (profileData.fullName && !/^[a-zA-ZÀ-Ỹà-ỹ\s]+$/.test(profileData.fullName)) {
+            throw new Error("Full name is invalid. It should only contain letters and spaces.");
+        }
+        if (profileData.phoneNumber && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(profileData.phoneNumber)) {
+            throw new Error("Phone number is invalid. It should follow the format of Vietnamese phone numbers.");
+        }
+        if (profileData.dob) {
+            const dobDate = new Date(profileData.dob);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Đặt về 00:00:00 để tránh lỗi so sánh
+
+            if (dobDate >= today) {
+                throw new Error("Date of birth must be in the past.");
+            }
+        }
+
         const newProfile = {
             fullName: profileData.fullName || user.fullName,
             address: profileData.address || user.address,
@@ -75,7 +92,7 @@ const editProfile = async (userId, profileData, file) => {
         };
 
         const updatedUser = await db.User.findByIdAndUpdate(userId, {
-            $set:{
+            $set: {
                 fullName: newProfile.fullName,
                 address: newProfile.address,
                 dob: newProfile.dob,
@@ -182,7 +199,7 @@ const confirmDeleteAccount = async (token) => {
 
         // chuyển trạng thái của user thành "deactived"
         const deactivedUser = await db.User.findByIdAndUpdate(user._id, { status: "deactived" }, { new: true });
-        return { message: "Account deactivated successfully",deactivedUser };
+        return { message: "Account deactivated successfully", deactivedUser };
     } catch (error) {
         throw new Error("Invalid or expired token!");
     }
