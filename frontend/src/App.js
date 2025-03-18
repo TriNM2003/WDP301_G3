@@ -1,9 +1,9 @@
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import './App.css';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
-import { Layout } from 'antd';
+import { Layout, message } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
 import AppHeader from './components/Common/AppHeader'
 import Home from './components/Home/Home'
@@ -57,31 +57,38 @@ import ConfirmDeactivateSite from './components/Sites/ConfirmDeactivateSite';
 
 function App() {
   const location = useLocation();
-  const { accessToken, site, user, project } = useContext(AppContext)
-  
-  let siteAccess = true, isSiteOwner = true, isAdmin = true, isProjectManager = true
+const { accessToken, site, user, project } = useContext(AppContext);
 
-  useEffect(() => {
-    checkRole();
-  },[location.pathname, user, site])
+const [siteAccess, setSiteAccess] = useState(true);
+const [isSiteOwner, setIsSiteOwner] = useState(true);
+const [isAdmin, setIsAdmin] = useState(true);
+const [isProjectManager, setIsProjectManager] = useState(true);
 
-  function checkRole(){
-    siteAccess = async function(){
-    if(site?.siteStatus === "deactivated"){
-      // showMessage("warning","Site is deactivated", 2);
-      return false;
-    }else if(user?.roles?.some(role => role.roleName === "admin")){
-      // showMessage("warning","Admin cannot access site", 2);
-      return false;
-    }else{
-      return true;
-    }
-  }
-  isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
-  isAdmin = user?.roles?.some(role => role.roleName === "admin");
-  isProjectManager = project?.projectMember?.find(member => member._id._id === user._id)?.roles.includes("projectManager");
-  }
-  
+useEffect(() => {
+  checkRole();
+}, [location.pathname, user, site]);
+
+function checkRole() {
+  setSiteAccess(
+    site?.siteStatus === "deactivated"
+      ? false
+      : !user?.roles?.some(role => role.roleName === "admin")
+  );
+
+  setIsSiteOwner(
+    site?.siteMember?.some(siteMember => siteMember?._id === user?._id && siteMember.roles?.includes("siteOwner"))
+  );
+
+  setIsAdmin(user?.roles?.some(role => role.roleName === "admin"));
+
+  setIsProjectManager(
+    project?.projectMember?.some(member => member._id._id === user._id && member.roles?.includes("projectManager")) === undefined && false
+  );
+}
+
+// useEffect(() => {
+//   console.log(siteAccess, isSiteOwner, isAdmin, isProjectManager);
+// }, [siteAccess, isSiteOwner, isAdmin, isProjectManager]);
 
 
   return (
@@ -152,13 +159,16 @@ function App() {
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>
 
-                      {(isSiteOwner || isProjectManager) && <>
+                      {(isSiteOwner || isProjectManager) ? <>
                       <Route path='manage' element={<ManageProjectLayout />}>
                         <Route path='members' element={<ManageProjectMember />} />
                       </Route>
                       <Route path="project-setting" element={<EditProject />} />
-
-                      </>}
+                      </> : (<Route path='*' element={
+                        <Navigate to="/home" replace />
+                      } />)
+                      
+                    }
                       
                     </Route>
                   </Route>

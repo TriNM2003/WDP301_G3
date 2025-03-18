@@ -216,6 +216,7 @@ const loginByGoogleCallback = async (req, res, next) => {
     // user de gui len frontend
     let accessToken;
     if (!isUserExist) {
+        const systemRoles = await db.SystemRole.find({roleName: "user"});
         // user chua ton tai -> tao account moi trong database
         const newUser = new db.User({
             username: user.username,
@@ -225,7 +226,7 @@ const loginByGoogleCallback = async (req, res, next) => {
             phoneNumber: null,
             dob: null,
             address: null,
-            roles: [],
+            roles: [systemRoles?.find(role => role.roleName === "user")._id],
             userAvatar: user.userAvatar,
             notifications: [],
             activities: [],
