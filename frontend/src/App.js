@@ -63,7 +63,7 @@ function App() {
 
   useEffect(() => {
     checkRole();
-  },[location.pathname, user, site])
+  },[location.pathname, user, site, project])
 
   function checkRole(){
     siteAccess = async function(){
@@ -77,9 +77,9 @@ function App() {
       return true;
     }
   }
-  isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id === user?._id)?.roles?.includes("siteOwner");
-  isAdmin = user?.roles?.some(role => role.roleName === "admin");
-  isProjectManager = project?.projectMember?.find(member => member._id._id === user._id)?.roles.includes("projectManager");
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id == user?._id)?.roles?.includes("siteOwner");
+  isAdmin = user?.roles?.some(role => role.roleName == "admin");
+  isProjectManager = project?.projectMember?.find(member => member._id._id == user._id)?.roles.includes("projectManager");
   }
   
 

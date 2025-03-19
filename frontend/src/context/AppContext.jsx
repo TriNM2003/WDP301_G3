@@ -156,7 +156,6 @@ const AppProvider = ({ children }) => {
   // get project in site
 
   useEffect(() => {
-
     if (accessToken) {
       axios.get(`${siteAPI}/get-by-user-id`, {
         headers: {
