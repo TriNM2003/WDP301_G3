@@ -33,7 +33,7 @@ const createSprint = async (req, res, next) => {
 
 const editSprint = async (req, res, next) => {
     try {
-        const { sprintId } = req.params;
+        const { sprintId, projectId } = req.params;
         const { sprintName, sprintGoal, startDate, dueDate, sprintStatus } = req.body;
 
         const sprint = await db.Sprint.findOne({ _id: sprintId });
@@ -51,7 +51,7 @@ const editSprint = async (req, res, next) => {
             }
         }
 
-        const updatedSprint = await sprintService.edit(req.body, sprintId)
+        const updatedSprint = await sprintService.edit(req.body,projectId, sprintId)
         return res.status(200).json({ status: 200, message: "Sprint updated successfully", sprint: updatedSprint })
 
     } catch (error) {
