@@ -6,6 +6,7 @@ const cloudinary = require("../configs/cloudinary");
 const db = require("../models/index");
 const { siteController } = require("../controllers");
 const authMiddleware = require("../middlewares/auth.middleware");
+const accountMiddleware = require("../middlewares/account.middleware");
 const adminMiddleware = require("../middlewares/admin.middleware");
 const siteMiddleware = require("../middlewares/site.middleware");
 const { siteService } = require("../services");
@@ -15,38 +16,38 @@ siteRouter.use(bodyParser.json());
 
 
 
-siteRouter.get("/get-all", [verifyAccessToken, adminMiddleware.isAdmin], siteController.getAllSites)  //hung
+siteRouter.get("/get-all", [verifyAccessToken, adminMiddleware.isAdmin, accountMiddleware.isActive], siteController.getAllSites)  //hung
 siteRouter.get("/:siteId/get-by-id",verifyAccessToken, SiteController.getSiteById) //hung
-siteRouter.get("/:siteId/get-site-members", [verifyAccessToken, siteMiddleware.isInSite], siteController.getSiteMembersById) //hung
-siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin], SiteController.createSite)  //hung
-siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite], siteController.inviteMemberByEmail) //hung
+siteRouter.get("/:siteId/get-site-members", [verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite], siteController.getSiteMembersById) //hung
+siteRouter.post("/create", [verifyAccessToken, adminMiddleware.isAdmin, accountMiddleware.isActive,], SiteController.createSite)  //hung
+siteRouter.post("/:siteId/invite-member", [verifyAccessToken, siteMiddleware.isInSite,accountMiddleware.isActive,], siteController.inviteMemberByEmail) //hung
 siteRouter.post("/processing-invitation", siteController.processingInvitation) //hung
-siteRouter.delete("/:siteId/revoke-site-member-access/:siteMemberId", [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.revokeSiteMemberAccess) //hung
+siteRouter.delete("/:siteId/revoke-site-member-access/:siteMemberId", [verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.revokeSiteMemberAccess) //hung
 siteRouter.put("/:siteId/edit",
-    [verifyAccessToken, siteMiddleware.isInSite],
+    [verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite],
     cloudinary.upload.single("siteAvatar"),
     siteController.editSite
 );
 
 siteRouter.post("/:siteId/send-deactivate-email",
-    [verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner],
+    [verifyAccessToken, siteMiddleware.isInSite,accountMiddleware.isActive, siteMiddleware.isSiteOwner],
     siteController.sendDeactivateSiteEmail
 )
 
 siteRouter.put("/:siteId/deactivate",
-    [verifyAccessToken, siteMiddleware.isInSite],
+    [verifyAccessToken,accountMiddleware.isActive, siteMiddleware.isInSite],
     siteController.deactivateSite
 );
 // for admin
 siteRouter.put("/:siteId/adminDeactivate",
-    [verifyAccessToken, adminMiddleware.isAdmin],
+    [verifyAccessToken, accountMiddleware.isActive, adminMiddleware.isAdmin],
     siteController.deactivateSite,
 );
-siteRouter.get("/:siteId/get-invitations-by-site",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.getInvitaionsBySiteId); //hung
-siteRouter.delete("/:siteId/cancel-Invitation",[verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.cancelInvitationById);
+siteRouter.get("/:siteId/get-invitations-by-site",[verifyAccessToken,accountMiddleware.isActive,  siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.getInvitaionsBySiteId); //hung
+siteRouter.delete("/:siteId/cancel-Invitation",[verifyAccessToken,accountMiddleware.isActive, siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.cancelInvitationById);
 
 siteRouter.get("/get-by-user-id",
-    [authMiddleware.verifyAccessToken],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive,],
     siteController.getSiteByUserId
 )
 

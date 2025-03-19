@@ -233,7 +233,7 @@ const EditSite = () => {
 
                         <Form layout="vertical" onFinish={handleSubmit}>
                             <Form.Item label="Site Owner">
-                                <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", padding: '5px', textAlign: "left" }}>
+                                <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", backgroundColor:"#f3f3f3",color:"rgba(0, 0, 0, 0.25)" , padding: '5px', textAlign: "left" }}>
                                     {siteData.siteOwner}
                                 </p>
                             </Form.Item>

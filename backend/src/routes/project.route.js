@@ -5,7 +5,7 @@ const { projectController } = require("../controllers");
 
 const cloudinary = require("../configs/cloudinary");
 const authMiddleware = require("../middlewares/auth.middleware");
-
+const accountMiddleware = require("../middlewares/account.middleware");
 const { projectMiddleware, siteMiddleware, } = require("../middlewares");
 const { isSiteOwner } = require("../middlewares/site.middleware");
 
@@ -16,6 +16,7 @@ projectRouter.use(bodyParser.json());
 
 projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,
+    accountMiddleware.isActive,
     projectController.getProjectTrash
 );
 
@@ -54,6 +55,7 @@ projectRouter.delete("/:projectId/remove-project-member",
 projectRouter.put("/:projectId/project-setting",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    accountMiddleware.isActive,
     projectMiddleware.isProjectManager,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
@@ -62,12 +64,14 @@ projectRouter.put("/:projectId/project-setting",
 projectRouter.put("/:projectId/project-setting-v2",
     authMiddleware.verifyAccessToken,
     siteMiddleware.isSiteOwner,
+    accountMiddleware.isActive,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
 projectRouter.put("/:projectId/remove-to-trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
+    accountMiddleware.isActive,
     projectMiddleware.isProjectManager,
     projectController.removeToTrash
 );
@@ -82,6 +86,7 @@ projectRouter.get("/trash",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
+    accountMiddleware.isActive,
     projectController.getProjectTrash
 );
 
@@ -89,6 +94,7 @@ projectRouter.put("/:projectId/restore",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
+    accountMiddleware.isActive,
     projectController.restoreProject
 );
 
@@ -96,6 +102,7 @@ projectRouter.delete("/:projectId/destroy",
     authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
+    accountMiddleware.isActive,
     projectController.destroyProject
 );
 

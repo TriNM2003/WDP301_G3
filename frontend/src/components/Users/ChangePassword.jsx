@@ -17,6 +17,7 @@ const ChangePassword = () => {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
 
     const handleChange = (e) => {
@@ -55,6 +56,7 @@ const ChangePassword = () => {
     const handleSave = async () => {
         if (!validateForm()) return;
         setLoading(true);
+        setTimeout(async () => {
         await axios.put('http://localhost:9999/users/change-password',
             {
                 oldPassword: form.oldPassword,
@@ -71,11 +73,26 @@ const ChangePassword = () => {
             })
             .catch(error => setErrors({ oldPassword: error.response?.data?.message }))
             .finally(() => setLoading(false));
+        }, 1000);
     };
 
     const handleDiscard = () => {
         setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setErrors({});
+    };
+
+    // Xử lý mở Modal xóa tài khoản
+    const openDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(true);
+    };
+
+    // Xử lý đóng Modal xóa tài khoản
+    const closeDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(false);
     };
 
     const handleDeleteRequest = async () => {
@@ -84,7 +101,7 @@ const ChangePassword = () => {
             return;
         }
 
-        setLoading(true);
+        setDeleteLoading(true);
         axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
@@ -97,12 +114,12 @@ const ChangePassword = () => {
             .catch(error => {
                 setEmailError(error.response?.data?.message);
             })
-            .finally(() => setLoading(false));
+            .finally(() => setDeleteLoading(false));
     };
 
     const handleMenuClick = (e) => {
         if (e.key === '4') {
-            setIsDeleteModalVisible(true);
+            openDeleteModal();
         } else {
             setSelectedKey(e.key);
         }
@@ -168,10 +185,10 @@ const ChangePassword = () => {
             <Modal
                 title="Confirm Account Deletion"
                 open={isDeleteModalVisible}
-                onCancel={() => setIsDeleteModalVisible(false)}
+                onCancel={closeDeleteModal}
                 footer={[
-                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
+                    <Button key="cancel" onClick={closeDeleteModal}>Cancel</Button>,
+                    <Button key="delete" type="primary" danger loading={deleteLoading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
                 <p>Please enter your email to proceed with account deletion.</p>

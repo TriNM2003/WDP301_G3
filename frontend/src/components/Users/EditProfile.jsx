@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal, Avatar, Form } from 'antd';
 import { UploadOutlined, ExclamationCircleOutlined, UserOutlined, LockOutlined, LogoutOutlined, DeleteOutlined, } from '@ant-design/icons';
 import { green, red, gray } from "@ant-design/colors";
 import { Link, useNavigate } from 'react-router-dom';
+import { AppContext } from '../../context/AppContext'
 import axios from 'axios';
 const EditProfile = () => {
+    const { accessToken, user, setUser } = useContext(AppContext);
     const [selectedKey, setSelectedKey] = useState('1');
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [form, setForm] = useState({
         fullName: '',
         address: '',
@@ -90,21 +93,26 @@ const EditProfile = () => {
             formData.append("userAvatar", selectedFile);  // Gửi file ảnh
         }
         setLoading(true)
-        axios.put('http://localhost:9999/users/edit-profile', formData, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-            .then(response => {
-                message.success("Profile updated successfully");
-                setImagePreview(response.data.userAvatar);
-                setTimeout(() => navigate('/profile/edit-profile'), 2000);
+        setTimeout(async () => {
+            axios.put('http://localhost:9999/users/edit-profile', formData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             })
-            .catch(error => {
-                message.error(error.response?.data?.message);
-            })
-            .finally(() => setLoading(false));
+                .then(response => {
+                    message.success("Profile updated successfully");
+                    setImagePreview(response.data.userAvatar);
+                    setUser(prevUser => ({
+                        ...prevUser,
+                        ...response.data
+                    }));
+                })
+                .catch(error => {
+                    message.error(error.response?.data?.message);
+                })
+                .finally(() => setLoading(false));
+        }, 1000);
     };
 
     const handleDiscard = () => {
@@ -122,13 +130,27 @@ const EditProfile = () => {
         window.location.href = '/auth/login';
     };
 
+    // Xử lý mở Modal xóa tài khoản
+    const openDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(true);
+    };
+
+    // Xử lý đóng Modal xóa tài khoản
+    const closeDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(false);
+    };
+
     const handleDeleteRequest = async () => {
         if (!email) {
             setEmailError("Please enter your email address");
             return;
         }
 
-        setLoading(true);
+        setDeleteLoading(true);
         axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
@@ -141,11 +163,11 @@ const EditProfile = () => {
             .catch(error => {
                 setEmailError(error.response?.data?.message || "Incorrect password");
             })
-            .finally(() => setLoading(false));
+            .finally(() => setDeleteLoading(false));
     };
     const handleMenuClick = (e) => {
         if (e.key === '4') {
-            setIsDeleteModalVisible(true);
+            openDeleteModal();
         } else {
             setSelectedKey(e.key);
         }
@@ -236,10 +258,10 @@ const EditProfile = () => {
             <Modal
                 title="Confirm Account Deletion"
                 open={isDeleteModalVisible}
-                onCancel={() => setIsDeleteModalVisible(false)}
+                onCancel={closeDeleteModal}
                 footer={[
-                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
+                    <Button key="cancel" onClick={closeDeleteModal}>Cancel</Button>,
+                    <Button key="delete" type="primary" danger loading={deleteLoading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
                 <p>Please enter your email to proceed with account deletion.</p>

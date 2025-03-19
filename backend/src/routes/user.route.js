@@ -3,6 +3,7 @@ const userRouter = express.Router();
 const bodyParser = require("body-parser");
 const db = require("../models/index");
 const authMiddleware = require("../middlewares/auth.middleware");
+const accountMiddleware = require("../middlewares/account.middleware");
 const multer = require("multer");
 const path = require("path");
 const { UserController } = require("../controllers");
@@ -13,22 +14,26 @@ userRouter.use(bodyParser.json());
 
 userRouter.get("/all",
     authMiddleware.verifyAccessToken,
+    accountMiddleware.isActive,
     UserController.getAllUsers
 )
 
 userRouter.get("/user-profile", 
     authMiddleware.verifyAccessToken, 
+    accountMiddleware.isActive,
     UserController.getUserById,
 );
 
 userRouter.get("/user-information",
     authMiddleware.verifyAccessToken,
+    accountMiddleware.isActive,
     UserController.getUserByIdInfomation
 );
 
 userRouter.put("/edit-profile", 
     authMiddleware.verifyAccessToken,
-    cloudinary.upload.single("userAvatar"),  // Middleware upload file
+    accountMiddleware.isActive,
+    cloudinary.upload.single("userAvatar"),
     UserController.editProfile
 );
 
