@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
+const {User, SystemRole} = require("../models/");
 const passport = require("../configs/passport.config");
 const { stringify } = require("qs");
 const redisClient = require("../configs/redisClient");
@@ -25,6 +25,7 @@ const register = async (req) => {
         };
     }
     const hashedPassword = await bcryptUtils.encryptPassword(password, 10);
+    const userRole = await SystemRole.findOne({roleName: "user"});
     const newUser = new User({
         username,
         email,
@@ -33,8 +34,7 @@ const register = async (req) => {
         phoneNumber: null,
         dob: null,
         address: null,
-
-        roles: [],
+        roles: [userRole._id],
         userAvatar: "https://i.pinimg.com/736x/2e/9b/34/2e9b3443e8afa8d383c132c7b3745d47.jpg",
         notifications: [],
         activities: [],

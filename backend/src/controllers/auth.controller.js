@@ -27,7 +27,7 @@ async function forgotPassword(req, res) {
         const link = `http://localhost:3000/reset-password`;
 
 
-        await mailer.sendEmail("reset", email, link);
+        await mailer.sendEmail("reset", email, {link: link});
 
         res.json({ status: "Email sent, check your inbox!", token });
     } catch (error) {
@@ -103,7 +103,7 @@ const sendActivationEmail = async (req, res) => {
         // Tạo link kích hoạt
         const activationLink = `http://localhost:3000/active-account?token=${token}`;
 
-        await mailer.sendEmail("activate", user.email, activationLink);
+        await mailer.sendEmail("activate", user.email, {link: activationLink});
 
         res.json({ message: "Activation email sent successfully!" });
 
@@ -216,7 +216,7 @@ const loginByGoogleCallback = async (req, res, next) => {
     // user de gui len frontend
     let accessToken;
     if (!isUserExist) {
-        const systemRoles = await db.SystemRole.find({roleName: "user"});
+        const userRole = await db.SystemRole.findOne({roleName: "user"});
         // user chua ton tai -> tao account moi trong database
         const newUser = new db.User({
             username: user.username,
@@ -226,7 +226,7 @@ const loginByGoogleCallback = async (req, res, next) => {
             phoneNumber: null,
             dob: null,
             address: null,
-            roles: [systemRoles?.find(role => role.roleName === "user")._id],
+            roles: [userRole._id],
             userAvatar: user.userAvatar,
             notifications: [],
             activities: [],
