@@ -163,7 +163,7 @@ const deactivateSite = async (siteId) => {
         catch (error) {
             console.error("Error sending email notification:", error);
             throw new Error("Failed to send email notification");
-        } 
+        }
     } catch (error) {
         throw error;
     }
@@ -356,11 +356,11 @@ const cancelInvitationById = async (siteId, invitationId) => {
     }
 
     const newInvitationList = site.invitations.map(invitation => {
-        if(invitation._id.toString() === invitationId.toString()){
+        if (invitation._id.toString() === invitationId.toString()) {
             return {
                 ...invitation, status: "cancelled"
             }
-        }else{
+        } else {
             return invitation
         }
     })
@@ -374,34 +374,34 @@ const cancelInvitationById = async (siteId, invitationId) => {
     return updateInvitations;
 };
 
-async function activeSite(siteId){
+async function activeSite(siteId) {
     const site = await Site.findById(siteId);
     if (!site) {
         throw new Error("Site not found");
     }
-    if(site.siteStatus === "active"){
+    if (site.siteStatus === "active") {
         throw new Error("Site is already active");
     }
 
     const updatedSite = await Site.findByIdAndUpdate(siteId,
-        {$set: {siteStatus: "active"}},
-        {new: true}
+        { $set: { siteStatus: "active" } },
+        { new: true }
     );
     // const populatedSite = updatedSite.populate("siteMember._id");
 
     return updatedSite;
 }
 
-async function adminEditSite(siteId, siteOwnerId, adminId){
+async function adminEditSite(siteId, siteOwnerId, adminId) {
     const site = await Site.findById(siteId);
     if (!site) {
         throw new Error("Site not found");
     }
     const siteOwner = await User.findById(siteOwnerId);
-    if(!siteOwner){
+    if (!siteOwner) {
         throw new Error("New site owner account does not exist");
     }
-    if(siteOwner.status !== "active"){
+    if (siteOwner.status !== "active") {
         throw new Error("New site owner account are not activated");
     }
     // if(site.siteStatus === "deactivated"){
@@ -409,14 +409,14 @@ async function adminEditSite(siteId, siteOwnerId, adminId){
     // }
 
     const isMemberOfSite = site.siteMember.find(member => member._id.toString() === siteOwnerId.toString())
-    if(isMemberOfSite){
+    if (isMemberOfSite) {
         const updatedMemberList = site.siteMember.map(member => {
-            if(member._id.toString() === siteOwnerId.toString()){
+            if (member._id.toString() === siteOwnerId.toString()) {
                 return {
                     _id: member._id,
                     roles: ["siteOwner", "siteMember"]
                 };
-            }else{
+            } else {
                 return {
                     _id: member._id,
                     roles: ["siteMember"]
@@ -424,11 +424,11 @@ async function adminEditSite(siteId, siteOwnerId, adminId){
             }
         })
         const updatedSite = await Site.findByIdAndUpdate(siteId,
-            {$set: {siteMember: updatedMemberList}},
-            {new: true}
+            { $set: { siteMember: updatedMemberList } },
+            { new: true }
         );
         const admin = await User.findById(adminId);
-        await notificationService.createNotification(adminId, 
+        await notificationService.createNotification(adminId,
             updatedMemberList.map(receiver => {
                 return receiver._id
             }),
@@ -436,45 +436,45 @@ async function adminEditSite(siteId, siteOwnerId, adminId){
             "site"
         )
         return updatedSite;
-    }else{
+    } else {
         throw new Error("Cannot assign member of other site as this site owner!");
     }
 
 }
 
-async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArray){
+async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArray) {
     function camelCaseArrayToString(arr) {
-        return arr.map(str => 
+        return arr.map(str =>
             str.replace(/([a-z])([A-Z])/g, '$1 $2') // Thêm khoảng trắng trước chữ in hoa
-               .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
+                .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
         ).join(', '); // Nối các phần tử bằng dấu ", "
     }
 
     const member = await User.findById(siteMemberId);
-    if(!member) throw new Error("Member does not exist in system")
+    if (!member) throw new Error("Member does not exist in system")
     const site = await Site.findById(siteId);
-    if(!site) throw new Error("Site does not exist")
+    if (!site) throw new Error("Site does not exist")
     const memberInSite = site?.siteMember.find(member => member._id.toString() === siteMemberId.toString());
-    if(!memberInSite) throw new Error("User is not a member in site")
-    if(memberInSite.roles.includes("siteOwner")) throw new Error("Cannot change role of Site Owner")
-    if(rolesArray.includes("siteOwner")) throw new Error("Cannot assign role Site Owner to site member")
+    if (!memberInSite) throw new Error("User is not a member in site")
+    if (memberInSite.roles.includes("siteOwner")) throw new Error("Cannot change role of Site Owner")
+    if (rolesArray.includes("siteOwner")) throw new Error("Cannot assign role Site Owner to site member")
     let isValidRole = true;
-    for(let i=0; i< rolesArray.length; i++){
-        if(!site.siteRoles.includes(rolesArray[i])){
+    for (let i = 0; i < rolesArray.length; i++) {
+        if (!site.siteRoles.includes(rolesArray[i])) {
             isValidRole = false;
         }
     }
-    if(!isValidRole){
+    if (!isValidRole) {
         throw new Error("New role does not exist in site role");
     }
 
     const updatedSiteMember = site.siteMember.map(member => {
-        if(member._id.toString() === siteMemberId.toString()){
+        if (member._id.toString() === siteMemberId.toString()) {
             return {
                 _id: member._id,
                 roles: rolesArray
             }
-        }else{
+        } else {
             return member;
         }
     })

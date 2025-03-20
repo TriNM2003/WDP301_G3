@@ -64,31 +64,27 @@ const [isSiteOwner, setIsSiteOwner] = useState(true);
 const [isAdmin, setIsAdmin] = useState(true);
 const [isProjectManager, setIsProjectManager] = useState(true);
 
-useEffect(() => {
-  checkRole();
-}, [location.pathname, user, site]);
+  useEffect(() => {
+    checkRole();
+  },[location.pathname, user, site, project])
 
-function checkRole() {
-  setSiteAccess(
-    site?.siteStatus === "deactivated"
-      ? false
-      : !user?.roles?.some(role => role.roleName === "admin")
-  );
-
-  setIsSiteOwner(
-    site?.siteMember?.some(siteMember => siteMember?._id === user?._id && siteMember.roles?.includes("siteOwner"))
-  );
-
-  setIsAdmin(user?.roles?.some(role => role.roleName === "admin"));
-
-  setIsProjectManager(
-    project?.projectMember?.some(member => member._id._id === user._id && member.roles?.includes("projectManager")) === undefined && false
-  );
-}
-
-// useEffect(() => {
-//   console.log(siteAccess, isSiteOwner, isAdmin, isProjectManager);
-// }, [siteAccess, isSiteOwner, isAdmin, isProjectManager]);
+  function checkRole(){
+    siteAccess = async function(){
+    if(site?.siteStatus === "deactivated"){
+      // showMessage("warning","Site is deactivated", 2);
+      return false;
+    }else if(user?.roles?.some(role => role.roleName === "admin")){
+      // showMessage("warning","Admin cannot access site", 2);
+      return false;
+    }else{
+      return true;
+    }
+  }
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember?._id == user?._id)?.roles?.includes("siteOwner");
+  isAdmin = user?.roles?.some(role => role.roleName == "admin");
+  isProjectManager = project?.projectMember?.find(member => member._id._id == user._id)?.roles.includes("projectManager");
+  }
+  
 
 
   return (

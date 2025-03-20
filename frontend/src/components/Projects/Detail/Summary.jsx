@@ -9,7 +9,7 @@ import { AppContext } from '../../../context/AppContext'
 
 
 function Summary() {
-  const { activities } = useContext(AppContext);
+  const { activities,stages } = useContext(AppContext);
   const now = new Date();
   const newCreated = activities?.filter(activity => {
     const activityDate = new Date(activity?.createdAt);
@@ -27,7 +27,7 @@ function Summary() {
     return activity?.stage?.stageStatus == "done";
 
   });
-  const upcomingTasks = activities?.filter(activities => { 
+  const upcomingTasks = activities?.filter(activities => {
     const dueDate = new Date(activities?.dueDate);
     const diffTime = dueDate.getTime() - now.getTime();
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
@@ -45,7 +45,7 @@ function Summary() {
   });
 
   const uniqueAssignees = Array.from(uniqueAssigneesMap.values());
-  
+
 
   const capacityOverview = uniqueAssignees.map(assignee => {
     const count = activities?.filter(activity =>
@@ -59,22 +59,42 @@ function Summary() {
   });
   // console.log(uniqueAssignees);
 
-  //Capacity
-  
+  //Priority
+  const priorityLevels = ["highest", "high", "medium", "low", "lowest"];
 
- 
+  const priorityData = priorityLevels.map((level) => {
+    return {
+      name: level.charAt(0).toUpperCase() + level.slice(1),
+      value: activities.filter(activity => activity?.priority == level)?.length || 0,
+      icon: <ExclamationCircleOutlined />
+    }
+  })
+
+
+  const priority = [
+    { name: "Highest", value: 48, icon: <ExclamationCircleOutlined /> },
+    { name: "High", value: 0, icon: <ExclamationCircleOutlined /> },
+    { name: "Mediumn", value: 16, icon: <ExclamationCircleOutlined /> },
+    { name: "Low", value: 113, icon: <ExclamationCircleOutlined /> },
+    { name: "Lowest", value: 113, icon: <ExclamationCircleOutlined /> },
+  ];
+  //Overview
   const data = [
     { name: "To Do", value: 48, color: "#d86fc5" },
     { name: "In Reviewing", value: 0, color: "#2a61dd" },
     { name: "In Progress", value: 16, color: "#db6b0a" },
     { name: "Done", value: 113, color: "#5b9215" },
   ];
-  const priority = [
-    { name: "To Do", value: 48, icon: <ExclamationCircleOutlined /> },
-    { name: "In Reviewing", value: 0, icon: <ExclamationCircleOutlined /> },
-    { name: "In Progress", value: 16, icon: <ExclamationCircleOutlined /> },
-    { name: "Done", value: 113, icon: <ExclamationCircleOutlined /> },
-  ];
+
+  const stageData = stages?.map((stage) => {
+    return {
+      name: stage?.stageName?.charAt(0).toUpperCase() + stage?.stageName?.slice(1),
+      value: activities.filter(activity => activity?.stage?._id == stage?._id)?.length || 0,
+      color:  `#${Math.floor(Math.random()*16777215).toString(16)}`
+    }
+  })
+ 
+
   return (
     <div style={{ padding: "2% 5%", overflow: "auto", maxHeight: "100%" }}>
 
@@ -135,7 +155,7 @@ function Summary() {
             <ResponsiveContainer width="80%" height={300}>
               <PieChart>
                 <Pie
-                  data={data}
+                  data={stageData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -145,7 +165,7 @@ function Summary() {
                   fill="#8884d8"
                   label
                 >
-                  {data.map((entry, index) => (
+                  {stageData?.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
 
@@ -157,7 +177,7 @@ function Summary() {
                   verticalAlign="middle"
                 />
                 <text x="38%" y="45%" textAnchor="middle" dominantBaseline="middle" fontSize={24} fontWeight="bold">
-                  122
+                  {activities?.length}
                 </text>
                 <text x="38%" y="55%" textAnchor="middle" dominantBaseline="middle" fontSize={14} >
                   Total Issues
@@ -222,14 +242,14 @@ function Summary() {
             <small style={{ color: grey[4] }}><em>Gain insight into how activitys are being ranked in importance.</em></small>
 
             <ResponsiveContainer width="100%" height={250} style={{ marginTop: "2%" }}>
-              <BarChart data={data} >
+              <BarChart data={priorityData} >
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
 
                 {/* Chỉ dùng 1 <Bar> với dataKey="value" */}
                 <Bar dataKey="value" name="Priority Level" fill={grey[0]}>
-                  {data.map((entry, index) => (
+                  {priorityData?.map((entry, index) => (
                     <Bar key={index} dataKey="value" />
                   ))}
                 </Bar>

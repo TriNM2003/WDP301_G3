@@ -31,7 +31,7 @@ const create = async (data, project) => {
     }
 }
 
-const edit = async (data, sprintId) => {
+const edit = async (data, projectId, sprintId) => {
     try {
         const { sprintName, sprintGoal, sprintStatus, startDate, dueDate } = data;
 
@@ -44,7 +44,7 @@ const edit = async (data, sprintId) => {
   
         if (sprintStatus === "active") {
             // Kiểm tra xem có sprint nào khác đang ở trạng thái "active" không
-            const activeSprint = await db.Sprint.findOne({ sprintStatus: "active", _id: { $ne: sprintId } });
+            const activeSprint = await db.Sprint.findOne({ sprintStatus: "active",project:projectId, _id: { $ne: sprintId } });
 
             if (activeSprint) {
                 throw new Error("Only one sprint can be active at a time. Please complete the current active sprint first.");
