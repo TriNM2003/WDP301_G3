@@ -76,10 +76,6 @@ const edit = async (data, projectId, sprintId) => {
 const deleteSprint = async (sprintId) => {
     try {
         // Kiểm tra sprint có tồn tại không
-        const sprint = await db.Sprint.findOne({ _id: sprintId });
-        if (!sprint) {
-            throw new Error("Sprint does not exist");
-        }
 
 
         const activities = await db.Activity.find({ sprint: sprintId });

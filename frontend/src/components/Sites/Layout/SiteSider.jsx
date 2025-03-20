@@ -14,7 +14,7 @@ function SiteSider() {
 
   let isSiteOwner = false;
 
-  isSiteOwner = site?.siteMember?.find(siteMember => siteMember._id === user._id).roles.includes("siteOwner"); 
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember._id === user._id).roles?.includes("siteOwner"); 
 
   
   

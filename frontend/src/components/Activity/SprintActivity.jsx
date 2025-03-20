@@ -39,9 +39,9 @@ function SprintActivity({ activity }) {
             style={Object.assign({}, dndSprintActivity, { background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" })}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            
         >
-            <Space onClick={() => showActivity(activity)}>
+            <Space onMouseUp={handleMouseUp}>
                 {activity.type.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "bug" && <BugOutlined style={{ color: yellow[6] }} />}

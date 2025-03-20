@@ -39,7 +39,7 @@ const AppProvider = ({ children }) => {
   // Activity
   const [activityTypes, setActivityTypes] = useState([]);
   const [deleteActivity, setDeleteActivity] = useState(false);
-  const [searchActivity,setSearchActivity]= useState("");
+  const [searchActivity, setSearchActivity] = useState("");
   const [activityToDelete, setActivityToDelete] = useState("");
   const [confirmActivity, setConfirmActivity] = useState("");
   const [activityModal, setActivityModal] = useState(false);
@@ -134,18 +134,18 @@ const AppProvider = ({ children }) => {
           .catch(error => {
             console.log(error.response?.data?.message);
             // khong co refresh token hoac loi lay refresh token
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("accessTokenExp");
-          localStorage.removeItem("userId");
-          setUser({});
-          nav('/auth/login');
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("accessTokenExp");
+            localStorage.removeItem("userId");
+            setUser({});
+            nav('/auth/login');
           });
-      }else{
+      } else {
         localStorage.removeItem("accessToken");
-          localStorage.removeItem("accessTokenExp");
-          localStorage.removeItem("userId");
-          setUser({});
-          nav('/auth/login');
+        localStorage.removeItem("accessTokenExp");
+        localStorage.removeItem("userId");
+        setUser({});
+        nav('/auth/login');
       }
     }
 
@@ -302,7 +302,7 @@ const AppProvider = ({ children }) => {
         setCreateActivityModal(false);
       })
       .catch((err) => {
-        message.error(err?.response?.data?.error?.message||"Activity created failed!");
+        message.error(err?.response?.data?.error?.message || "Activity created failed!");
         setActivityName("");
 
         setCreateActivityModal(false);
@@ -374,7 +374,7 @@ const AppProvider = ({ children }) => {
 
 
   const handleDeleteActivity = async () => {
-    if (confirmActivity === activityToDelete?.activityTitle) {
+    if (confirmActivity == activityToDelete?.activityTitle) {
       try {
         axios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
           {
@@ -390,7 +390,10 @@ const AppProvider = ({ children }) => {
         message.success(`Activity "${activityToDelete?.activityTitle}" has been deleted successfully!`);
         showNotification(`Project update`, `User1 just deleted activity ${activityToDelete?.activityTitle}.`);
         handleCloseDeleteActivityModal();
-        closeActivity();
+        if (activityToDelete?.type?.typeName == "task") {
+          closeActivity();
+
+        }
       } catch (error) {
 
       }
@@ -462,7 +465,7 @@ const AppProvider = ({ children }) => {
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
-      handleMoveActivity,searchActivity,setSearchActivity
+      handleMoveActivity, searchActivity, setSearchActivity, activityTypes
 
 
     }}>
@@ -470,6 +473,6 @@ const AppProvider = ({ children }) => {
     </AppContext.Provider>
   );
 };
-  
+
 
 export default AppProvider;

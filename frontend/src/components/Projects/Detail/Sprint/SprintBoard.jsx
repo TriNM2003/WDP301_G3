@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal, message } from "antd";
+import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal, message, Select } from "antd";
 import { CheckOutlined, DoubleRightOutlined, DownOutlined, DownloadOutlined, EllipsisOutlined, FieldTimeOutlined, FormOutlined, MinusOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { blue, cyan, gray, grey, orange, red } from "@ant-design/colors";
 import Title from "antd/es/typography/Title";
@@ -16,11 +16,14 @@ import axios from "axios";
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   // Activities
   const [filterActivityType, setFliterActivityType] = useState(["task"]);
   const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
+  const [isDeleteSprint, setIsDeleteSprint] = useState(false);
+  const [selectedSprint, setSelectedSprint] = useState(null);
+  const [deleteSprint, setDeleteSprint] = useState(null);
 
   //DND
   const handleDragEnd = (e) => {
@@ -57,8 +60,11 @@ const SprintBoard = () => {
         message.success("Create new sprint successfully");
         showNotification(`Project update`, `${user?.username} just create a new sprint in project "${project?.projectName}".`);
       })
-      .catch ((error)=> {
-      message.error(error?.response?.data?. message || "Failed to create sprint!");})
+      .catch((error) => {
+        // message.error(error?.response?.data?. message || "Failed to create sprint!");})
+        message.error(error?.response?.data?.error?.message || "Failed to create sprint!");
+      })
+
 
   }
 
@@ -96,6 +102,45 @@ const SprintBoard = () => {
         })
     }
   }
+
+  // Delete sprint 
+  const handleDeleteClick = () => {
+    if (deleteSprint) {
+      const hasActivities = activities.filter(activity => activity.sprint?._id == deleteSprint?._id);
+
+      if (hasActivities?.length > 0) {
+        setIsDeleteSprint(true);
+        console.log("delte");
+
+      } else {
+        handleDeleteSprint();
+        console.log("delte");
+      }
+    }
+  };  
+  const handleDeleteSprint = () => {
+    axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${deleteSprint?._id}/delete`,
+      { newSprint: selectedSprint},
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    )
+      .then((res) => {
+        setSprints(sprints.filter((sprint) => sprint?._id != deleteSprint?._id));
+        activityModalLoading();
+        setSelectedSprint();
+        setDeleteSprint();
+        setIsDeleteSprint(false);
+        message.success("Delete sprint successfully");
+        showNotification(`Project update`, `${user?.username} just delete sprint  "${deleteSprint?.sprintName}".`);
+
+      })
+      .catch((err) => {
+        message.error(err?.response?.data?.error?.message || "Delete sprint fail!")
+      })
+  };
   return (
     <DndContext
 
@@ -136,7 +181,7 @@ const SprintBoard = () => {
               items={filteredActivitites?.filter(a => a && !a.sprint).map(a => a._id)}
               strategy={verticalListSortingStrategy} >
               {/* Activity */}
-              <div style={{ minHeight: "100px" }} >
+              <div style={{ minHeight: "50px" }} >
                 {filteredActivitites?.filter(a => a && !a.sprint).map((activity) => {
                   return <SprintActivity activity={activity} />
                 })}
@@ -204,7 +249,10 @@ const SprintBoard = () => {
                       overlay={
                         <Menu onClick={(e) => e.domEvent.stopPropagation()}>
                           <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false}>Edit sprint</Menu.Item>
-                          <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false} danger>Delete sprint</Menu.Item>
+                          <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false} danger onClick={() => {
+                             setDeleteSprint(sprint); // Cập nhật deleteSprint trước
+                             setTimeout(() => handleDeleteClick(), 100);  
+                          }} >Delete sprint</Menu.Item>
                         </Menu>
                       }
                       trigger={["click"]}
@@ -224,11 +272,11 @@ const SprintBoard = () => {
                 </Flex>
               } key={sprint?._id}>
               <SortableContext
-                items={filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id)
+                items={filteredActivitites?.filter(activity => activity?.sprint?._id == sprint?._id)
                   .map(activity => activity._id)}
                 strategy={verticalListSortingStrategy} >
                 <div style={{
-                  minHeight: "150px",
+
                   border: filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0 ? "" : "2px dashed lightgray",
                 }} >
                   {!filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0
@@ -237,7 +285,7 @@ const SprintBoard = () => {
                   }
                   {filteredActivitites?.filter((activity) => activity?.sprint?._id == sprint?._id)
                     .map((activity) => (
-                      <SprintActivity key={activity._id} activity={activity} />
+                      <SprintActivity key={activity?._id} activity={activity} />
                     ))}
                 </div>
 
@@ -258,7 +306,32 @@ const SprintBoard = () => {
 
         <ActivityDetail />
 
-
+        {/* Delete sprint modal */}
+        <Modal
+          title="Move activities before deleting"
+          open={isDeleteSprint}
+          onOk={handleDeleteSprint}
+          onCancel={() => setIsDeleteSprint(false)}
+          okText="Move & Delete"
+          cancelText="Cancel"
+        >
+          <p>This sprint has activities. Please select where to move them:</p>
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Select sprint or backlog"
+            defaultValue={""}
+            onChange={(value) => setSelectedSprint(value)}
+          >
+            <Select.Option value="">Backlog</Select.Option>
+            {sprints
+              .filter(s => s?._id !== deleteSprint?._id) // Không hiển thị chính sprint cần xóa
+              .map(s => (
+                <Select.Option key={s?._id} value={s?._id}>
+                  {s.sprintName}
+                </Select.Option>
+              ))}
+          </Select>
+        </Modal>
 
       </div >
     </DndContext >

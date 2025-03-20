@@ -27,7 +27,7 @@ sprintRouter.put("/:sprintId/complete",
 [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject,projectMiddleware.isProjectManager],
     sprintController.completeSprint
 )
-sprintRouter.delete("/:sprintId/delete",
+sprintRouter.put("/:sprintId/delete",
 [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject,projectMiddleware.isProjectManager],
     sprintController.deleteSprint
 )

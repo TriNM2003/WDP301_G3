@@ -36,7 +36,7 @@ projectRouter.get("/:projectId",
     projectController.getProjectById
 )
 projectRouter.get("/:projectId/get-project-members",
-    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject],
     projectController.getProjectMembersById
 )
 projectRouter.post("/:projectId/add-project-member",
