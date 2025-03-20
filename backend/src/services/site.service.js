@@ -75,6 +75,24 @@ const editSite = async (siteId, updateData, imageFile) => {
         const site = await Site.findById(siteId);
         if (!site) throw new Error("Site not found");
 
+        if (!updateData.siteName || updateData.siteName.trim().length === 0) {
+            throw new Error("Site name is required");
+        }
+
+        if (updateData.siteName.length < 3) {
+            throw new Error("Site name must be at least 3 characters long");
+        }
+
+        if (!updateData.siteSlug || updateData.siteSlug.trim().length === 0) {
+            throw new Error("Site slug is required");
+        }
+
+        const existingSite = await Site.findOne({ siteName: updateData.siteName, _id: { $ne: siteId } });
+        if (existingSite) {
+            throw new Error("Site name already taken, please choose another name");
+        }
+
+
         let newAvatarUrl = site.siteAvatar;
 
         // 🔹 Nếu có ảnh mới, upload lên Cloudinary và xóa ảnh cũ

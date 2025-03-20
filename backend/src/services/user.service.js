@@ -12,7 +12,7 @@ const getAllUsers = async () => {
 
 const getUserByIdInfomation = async (userId) => {
     try {
-        return await db.User.findById(userId).populate("roles").populate("projects").populate("activities").populate("teams").populate("site");
+        return await db.User.findById(userId).populate("roles").populate("projects").populate("activities").populate("teams").populate("site").populate("notifications");
     } catch (error) {
         throw error;
     }
@@ -34,10 +34,19 @@ const changePassword = async (userId, oldPassword, newPassword, confirmPassword)
 
         const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isPasswordMatch) throw new Error("Old password is incorrect");
+
         if (newPassword !== confirmPassword) throw new Error("New password and confirmation do not match");
+
+        if (newPassword.length < 8) throw new Error("New password must be at least 8 characters long");
+
+        if (/\s/.test(newPassword)) throw new Error("New password must not contain spaces");
+
+        const isNewPasswordSameAsOld = await bcrypt.compare(newPassword, user.password);
+        if (isNewPasswordSameAsOld) throw new Error("New password must not be the same as the old password");
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await db.User.findByIdAndUpdate(userId, { password: hashedPassword });
+
         return { message: 'Password changed successfully' };
     } catch (error) {
         throw error;
@@ -68,10 +77,10 @@ const editProfile = async (userId, profileData, file) => {
 
         // Validate dữ liệu đầu vào
         if (profileData.fullName && !/^[a-zA-ZÀ-Ỹà-ỹ\s]+$/.test(profileData.fullName)) {
-            throw new Error("Full name is invalid. It should only contain letters and spaces.");
+            throw new Error("Full name is invalid. Only letters and spaces are allowed");
         }
         if (profileData.phoneNumber && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(profileData.phoneNumber)) {
-            throw new Error("Phone number is invalid. It should follow the format of Vietnamese phone numbers.");
+            throw new Error("Phone number is invalid. Please enter a valid phone number");
         }
         if (profileData.dob) {
             const dobDate = new Date(profileData.dob);

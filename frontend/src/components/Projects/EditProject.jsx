@@ -24,6 +24,7 @@ const EditProject = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [isProjectMember, setIsProjectMember] = useState(true);
+    const [errors, setErrors] = useState({})
 
     useEffect(() => {
         if (site._id && accessToken) {
@@ -101,6 +102,26 @@ const EditProject = () => {
 
     const handleChange = (e) => {
         setProjectData({ ...projectData, [e.target.name]: e.target.value });
+        setErrors({ ...errors, [e.target.name]: "" }); // Xóa lỗi khi user nhập lại
+    };
+    
+    const validateForm = () => {
+        let newErrors = {};
+        
+        if (!projectData.projectName || projectData.projectName.trim().length === 0) {
+            newErrors.projectName = "Project name is required";
+        } else if (projectData.projectName.length < 3) {
+            newErrors.projectName = "Project name must be at least 3 characters long";
+        }
+    
+        if (!projectData.projectSlug || projectData.projectSlug.trim().length === 0) {
+            newErrors.projectSlug = "Project slug is required";
+        } else if (projectData.projectSlug.length < 3) {
+            newErrors.projectSlug = "Project slug must be at least 3 characters long";
+        }
+    
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleFileChange = ({ file }) => {
@@ -111,6 +132,8 @@ const EditProject = () => {
     };
 
     const handleSave = async () => {
+        if (!validateForm()) return;
+
         const formData = new FormData();
         formData.append("projectName", projectData.projectName);
         formData.append("projectSlug", projectData.projectSlug);
@@ -227,7 +250,7 @@ const EditProject = () => {
 
 
                         <Form layout="vertical">
-                            <Form.Item label="Project Name">
+                            <Form.Item label="Project Name" validateStatus={errors.projectName ? "error" : ""} help={errors.projectName}>
                                 <Input name="projectName" value={projectData.projectName} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
 
@@ -238,7 +261,7 @@ const EditProject = () => {
 
                             </Form.Item>
 
-                            <Form.Item label="Project Slug">
+                            <Form.Item label="Project Slug" validateStatus={errors.projectSlug ? "error" : ""} help={errors.projectSlug}>
                                 <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
 

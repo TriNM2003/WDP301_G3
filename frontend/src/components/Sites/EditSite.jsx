@@ -26,7 +26,7 @@ const EditSite = () => {
         siteSlug: ''
     });
     const [isSiteMember, setIsSiteMember] = useState(true);
-
+    const [errors, setErrors] = useState({});
     useEffect(() => {
         if (site._id && accessToken) {
             fetchSiteData();
@@ -78,7 +78,7 @@ const EditSite = () => {
             } else {
                 setIsSiteMember(false);
             }
-            const siteOwnerName = siteResponse.data.siteMember.find(member => member.roles.includes("siteOwner"))._id.username;
+            const siteOwnerName = siteResponse?.data?.siteMember.find(member => member?.roles?.includes("siteOwner"))._id.username;
             //  Nếu là admin hoặc siteOwner, cho phép truy cập
             setHasPermission(true);
             setSiteData({
@@ -104,7 +104,25 @@ const EditSite = () => {
         setImagePreview(URL.createObjectURL(file));
     };
 
+    const validateForm = () => {
+        let newErrors = {};
+    
+        if (!siteData?.siteName || siteData?.siteName.trim().length === 0) {
+            newErrors.siteName = "Site name is required";
+        } else if (siteData?.siteName.length < 3) {
+            newErrors.siteName = "Site name must be at least 3 characters long";
+        }
+    
+        if (!siteData?.siteSlug || siteData?.siteSlug.trim().length === 0) {
+            newErrors.siteSlug = "Site slug is required";
+        }
+    
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async () => {
+        if (!validateForm()) return;
         setLoading(true);
         setTimeout(async () => {
             try {
@@ -126,8 +144,11 @@ const EditSite = () => {
                 setSite(response.data);
                 fetchSiteData();
             } catch (error) {
-                console.error("Error updating site:", error);
-                message.error("Failed to update site.");
+                if (error.response?.data?.message) {
+                    setErrors({ siteName: error.response.data.message });
+                } else {
+                    message.error("Failed to update site.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -233,12 +254,12 @@ const EditSite = () => {
 
                         <Form layout="vertical" onFinish={handleSubmit}>
                             <Form.Item label="Site Owner">
-                                <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", backgroundColor:"#f3f3f3",color:"rgba(0, 0, 0, 0.25)" , padding: '5px', textAlign: "left" }}>
+                                <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", backgroundColor: "#f3f3f3", color: "rgba(0, 0, 0, 0.25)", padding: '5px', textAlign: "left" }}>
                                     {siteData.siteOwner}
                                 </p>
                             </Form.Item>
 
-                            <Form.Item label="Site Name">
+                            <Form.Item label="Site Name" validateStatus={errors.siteName ? "error" : ""} help={errors.siteName}>
                                 <Input disabled={isSiteMember} value={siteData.siteName} onChange={(e) => setSiteData({ ...siteData, siteName: e.target.value })} />
                             </Form.Item>
 
@@ -246,7 +267,7 @@ const EditSite = () => {
                                 <Input.TextArea disabled={isSiteMember} value={siteData.siteDescription} onChange={(e) => setSiteData({ ...siteData, siteDescription: e.target.value })} />
                             </Form.Item>
 
-                            <Form.Item label="Site Slug">
+                            <Form.Item label="Site Slug" validateStatus={errors.siteSlug ? "error" : ""} help={errors.siteSlug}>
                                 <Input disabled={isSiteMember} value={siteData.siteSlug} onChange={(e) => setSiteData({ ...siteData, siteSlug: e.target.value })} />
                             </Form.Item>
 

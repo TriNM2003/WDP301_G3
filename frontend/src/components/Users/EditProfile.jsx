@@ -41,9 +41,39 @@ const EditProfile = () => {
             });
     }, []);
 
+    // Xử lý hiển thị lỗi ngay khi nhập dữ liệu
+    const validateInput = (name, value) => {
+        let error = '';
+
+        if (name === "fullName" && value && !/^[a-zA-ZÀ-Ỹà-ỹ\s]+$/.test(value)) {
+            error = "Full name is invalid. Only letters and spaces are allowed.";
+        }
+
+        if (name === "phoneNumber" && value && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(value)) {
+            error = "Phone number is invalid. Please enter a valid phone number.";
+        }
+
+        if (name === "dob" && value) {
+            const dobDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (dobDate >= today) {
+                error = "Date of birth must be in the past.";
+            }
+        }
+
+        setErrors(prevErrors => ({
+            ...prevErrors,
+            [name]: error
+        }));
+    };
+
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+        validateInput(name, value);
     };
 
     // Xử lý chọn ảnh và hiển thị ngay lập tức
@@ -58,26 +88,10 @@ const EditProfile = () => {
     const handleSave = async () => {
         let validationErrors = {};
 
-        // Kiểm tra fullName
-        if (form.fullName && !/^[a-zA-ZÀ-Ỹà-ỹ\s]+$/.test(form.fullName)) {
-            validationErrors.fullName = "Full name is invalid. Only letters and spaces are allowed.";
-        }
-
-        // Kiểm tra số điện thoại
-        if (form.phoneNumber && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(form.phoneNumber)) {
-            validationErrors.phoneNumber = "Invalid phone number format.";
-        }
-
-        // Kiểm tra ngày sinh khôgn được là tương lai và hôm nay
-        if (form.dob) {
-            const dobDate = new Date(form.dob);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Đặt về 00:00:00 để tránh lỗi so sánh
-
-            if (dobDate >= today) {
-                validationErrors.dob = "Date of birth must be in the past.";
-            }
-        }
+        Object.keys(form).forEach(key => {
+            validateInput(key, form[key]);
+            if (errors[key]) validationErrors[key] = errors[key];
+        });
 
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
