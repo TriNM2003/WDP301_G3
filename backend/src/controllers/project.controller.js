@@ -231,9 +231,10 @@ const editProjectMemberRole = async (req, res, next) => {
 const removeProjectMember = async (req, res, next) => {
     try {
         // const projectMemberId = "67c1bd8279dc063bae8ce244";
+        const {id} = req.payload;
         const {projectMemberId} = req.body;
         const projectId = req.params.projectId;
-        const projectMember = await projectService.removeProjectMember(projectId, projectMemberId);
+        const projectMember = await projectService.removeProjectMember(id, projectId, projectMemberId);
         res.status(200).json(projectMember);
     } catch (error) {
         console.error("Error removing project member:", error);
