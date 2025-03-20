@@ -133,7 +133,20 @@ const sendDeactivateSiteEmail = async (siteId) => {
 
 
         try {
-            await mailer.sendEmail("deactivate", siteOwner._id.email, {link: deactivatedLink});
+            const deactivatedLink = "";
+            const to = siteOwner._id.email;
+            const subject = "Confirm deactivate site";
+            const body = `
+                    <h2>Are you sure you want to deactivate site ${site.siteName}?</h2>
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <p>Click the link below to confirm deactivation:</p>
+            <a href="${deactivatedLink}" style="display: inline-block; padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
+                Confirm deactivate
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+                `;
+            await mailer.sendEmail(to, subject, body);
             return { message: "Deactivate site email sent successfully!" };
         }
         catch (error) {
@@ -157,7 +170,8 @@ const deactivateSite = async (siteId) => {
         const siteMemberEmails = site.siteMember.map(member => member._id.email).join(", ");
 
         try {
-            await mailer.sendEmail("notification", siteMemberEmails, {message: `<h2>Your site ${site.siteName} has been deactivated!</h2>`});
+
+            await mailer.sendEmail(siteMemberEmails, "Site deactivation update", `<h2>Your site ${site.siteName} has been deactivated!</h2>`);
             return {DeactivateSite, message: "Site deactivated successfully!"};
         }
         catch (error) {
@@ -237,7 +251,25 @@ const inviteMemberByEmail = async (senderId, receiverId, siteId) => {
         {new: true}
     )
     const invitationId = updatedSite.invitations[updatedSite.invitations.length - 1]._id
-    await mailer.sendEmail("invitation", receiver.email, {siteName: site.siteName, invitationId: invitationId});
+
+    const acceptUrl = `http://localhost:3000/processing-invitation?invitationId=${invitationId}&decision=accepted`;
+    const declineUrl = `http://localhost:3000/processing-invitation?invitationId=${invitationId}&decision=declined`;
+    const to = receiver.email;
+    const subject = `You have been invited to site ${site.siteName}`;
+    const body = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <p>Click the button below to become a member:</p>
+            <a href="${acceptUrl}" style="display: inline-block; padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
+                Accept
+            </a>
+            <p>Or click the button below to decline the invitation:</p>
+            <a href="${declineUrl}" style="display: inline-block; padding: 10px 20px; background:rgb(255, 24, 24); color: #fff; text-decoration: none; border-radius: 5px;">
+                Decline
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+    `;
+    await mailer.sendEmail(to, subject, body);
     return updatedSite.invitations;
 }
 
@@ -320,6 +352,13 @@ const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
         { _id: siteMemberId }, // Tìm user theo _id
         { $unset: { site: "" } } // Xóa trường site
     );
+    const siteOwnerEmail = updateSiteMember?.siteMember.find(member => member.roles.includes("siteOwner"))?._id.email;
+    const to = member.email;
+    const subject = `You have been revoked access`;
+    const body = `<h3>You have been revoked access from site ${site.siteName} by site owner ${siteOwnerEmail}</h3>
+                    <p>If this a mistake, please contact your site owner</p>
+    `;
+    await mailer.sendEmail(to, subject, body)
     return {
         message: `Revoke site member ${siteMemberId} from site ${siteId} successfully!`,
         siteMember: updateSiteMember
@@ -370,6 +409,17 @@ const cancelInvitationById = async (siteId, invitationId) => {
         { $set: { invitations: newInvitationList } },
         { new: true }
     ).select("invitations");
+
+    const currentSite = await Site.findById(siteId);
+
+    const receiverId = updateInvitations.invitations.find(item => item._id.toString() === invitationId).receiver;
+    const receiver = await User.findById(receiverId);
+    const to = receiver.email;
+    const subject = `Your invitation to site ${currentSite.siteName} has beem cancelled`;
+    const body = `
+        <p>Your invitation to site <b>${currentSite.siteName}</b> has beem cancelled by its site owner</p>
+    `;
+    await mailer.sendEmail(to, subject, body);
 
     return updateInvitations;
 };
@@ -473,7 +523,7 @@ async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArr
             return {
                 _id: member._id,
                 roles: rolesArray
-            }
+        }
         } else {
             return member;
         }
@@ -490,9 +540,10 @@ async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArr
         `Site ${site.siteName}: Member ${member.email} role has been changed to ${camelCaseArrayToString(rolesArray)} by Site owner ${siteOwner.email}`,
         "site"
     );
-    await mailer.sendEmail("notification", 
-        member.email, 
-        {message: `Your role in site <strong>${site.siteName}</strong> has been changed to <strong>${camelCaseArrayToString(rolesArray)}</strong> by Site owner <strong>${siteOwner.email}</strong>`})
+    const to = member.email;
+    const subject = `Your role has been changed`;
+    const body = `Your role in site <strong>${site.siteName}</strong> has been changed to <strong>${camelCaseArrayToString(rolesArray)}</strong> by Site owner <strong>${siteOwner.email}</strong>`
+    await mailer.sendEmail(to, subject, body);
     return updatedSite;
 }
 

@@ -8,6 +8,8 @@ const { slugify } = require('../utils/slugify.util');
 const { cloudinary } = require('../configs/cloudinary');
 const fs = require('fs');
 const notificationService = require('./notification.service');
+const { mailer } = require('../configs');
+const { format } = require('path');
 
 
 
@@ -158,6 +160,12 @@ const createProjectV2 = async (siteId, projectManagerId, projectName) => {
         { _id: projectManager._id },
         { $addToSet: { projects: newProject._id } }
     )
+    const to = projectManager.email;
+    const subject = `You have been assigned to project ${newProject.projectName}`;
+    const body = `
+        <p>You have been assigned to newly created project <bold>${newProject.projectName}</bold> as <bold>project manager</bold></p<
+    `;
+    await mailer.sendEmail(to, subject, body);
 
     return newProject;
 }
@@ -332,6 +340,15 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
                 roles: member.roles
             }
         })
+        
+        const to = projectMember.email;
+        const subject = `You have been added to project ${project.projectName}`;
+        const body = `
+            <p>You have been added to project ${project.projectName} as ${projectMemberRole?.toString()}</p>
+        `;
+        await mailer.sendEmail(to, subject, body);
+
+
         return updatedProjectMember;
     } catch (error) {
         throw error;
@@ -392,13 +409,20 @@ const editProjectMemberRole = async (projectManagerId, projectId, projectMemberI
                 "project"
         );
 
+        const to = projectMember.email;
+        const subject = `Your role in project ${project.projectName} has been changed`
+        const body = `
+            Your role in project ${project.projectName} has been changed to ${camelCaseArrayToString(updatedRoleList)} by Project manager ${projectManager.email}
+        `;
+        await mailer.sendEmail(to, subject, body);
+
         return projectMemberList;
     } catch (error) {
         throw error;
     }
 }
 
-const removeProjectMember = async (projectId, projectMemberId) => {
+const removeProjectMember = async (removerId, projectId, projectMemberId) => {
     try {
         // console.log(projectId, projectMemberId); return "ok"
         const project = await db.Project.findById(projectId);
@@ -452,7 +476,19 @@ const removeProjectMember = async (projectId, projectMemberId) => {
                 roles: member.roles
             }
         })
-        console.log(data)
+
+        await notificationService.createNotification(removerId,
+            [projectMember._id],
+            `You have been removed from project ${project.projectName}`,
+            "project"
+        )
+        
+        const to = projectMember.email;
+        const subject = `You have been removed from project ${project.projectName}`;
+        const body = `
+            <p>You have been removed from project <b>${project.projectName}</b> </p>
+        `;
+        await mailer.sendEmail(to, subject, body);
         return data;
     } catch (error) {
         console.log(error);

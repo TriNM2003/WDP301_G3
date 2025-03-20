@@ -1,6 +1,5 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const db = require("../models/index");
 const authService = require("../services/auth.service");
 const passport = require("passport");
@@ -24,10 +23,20 @@ async function forgotPassword(req, res) {
         );
 
         // Gửi email mà không hiển thị token trong URL
-        const link = `http://localhost:3000/reset-password`;
+        const link = "http://localhost:3000/reset-password"
+        const subject = "Reset Your Password";
+        const body = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <p>Click the button below to reset your password:</p>
+            <a href=${link} style="display: inline-block; padding: 10px 20px; color: #fff;background: #1890ff; text-decoration: none; border-radius: 5px;">
+                Reset password
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+    `;
 
 
-        await mailer.sendEmail("reset", email, {link: link});
+        await mailer.sendEmail(email, subject, body);
 
         res.json({ status: "Email sent, check your inbox!", token });
     } catch (error) {
@@ -102,8 +111,19 @@ const sendActivationEmail = async (req, res) => {
 
         // Tạo link kích hoạt
         const activationLink = `http://localhost:3000/active-account?token=${token}`;
+        const to = user.email;
+        const subject = "Activate Your Account";
+        const body = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <p>Click the button below to activate your account:</p>
+            <a href="${activationLink}" style="display: inline-block; padding: 10px 20px; color: #fff; background: #1890ff; text-decoration: none; border-radius: 5px;">
+               Activate Account
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+    `;
 
-        await mailer.sendEmail("activate", user.email, {link: activationLink});
+        await mailer.sendEmail(to, subject, body);
 
         res.json({ message: "Activation email sent successfully!" });
 

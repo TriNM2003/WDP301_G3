@@ -7,6 +7,7 @@ const nodemailer = require("nodemailer");
 const { slugify } = require('../utils/slugify.util');
 const userService = require('../services/user.service');
 const notificationService = require('./notification.service');
+const { mailer } = require('../configs');
 
 const getAllTeams = async () => {
     const teams = await db.Team.find();
@@ -272,12 +273,12 @@ const getTeamActivities = async (teamSlug) => {
 
 async function removeTeam(siteOwnerId, teamId){
     const siteOwner = await db.User.findById(siteOwnerId);
-    const team = await db.Team.findById(teamId);
+    const team = await db.Team.findById(teamId).populate("teamMembers._id");
     if(!team){
         throw new Error("Team does not exist")
     }
     const teamMemberList = team.teamMembers.map(member => {
-        return member._id;
+        return member._id._id;
     })
     // xoa team
     await db.Team.findByIdAndDelete(teamId);
@@ -293,6 +294,12 @@ async function removeTeam(siteOwnerId, teamId){
         "team"
     )
     // gui mail thong bao
+    const to = team.teamMembers.map(member => member._id.email).join(", ");
+    const subject = `Team ${team.teamName} has been removed`
+    const body = `
+        <p>The team <b>${team.teamName}</b> which you are member of has been removed by site owner <b>${siteOwner.email}</b></p>
+    `;
+    await mailer.sendEmail(to, subject, body);
 
     return `Delete team ${team.teamName} successfully`
 }

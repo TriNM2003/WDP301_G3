@@ -1,9 +1,9 @@
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import './App.css';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
-import { Layout, message } from 'antd';
+import { Layout } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
 import AppHeader from './components/Common/AppHeader'
 import Home from './components/Home/Home'
@@ -57,12 +57,9 @@ import ConfirmDeactivateSite from './components/Sites/ConfirmDeactivateSite';
 
 function App() {
   const location = useLocation();
-const { accessToken, site, user, project } = useContext(AppContext);
-
-const [siteAccess, setSiteAccess] = useState(true);
-const [isSiteOwner, setIsSiteOwner] = useState(true);
-const [isAdmin, setIsAdmin] = useState(true);
-const [isProjectManager, setIsProjectManager] = useState(true);
+  const { accessToken, site, user, project } = useContext(AppContext)
+  
+  let siteAccess = true, isSiteOwner = true, isAdmin = true, isProjectManager = true
 
   useEffect(() => {
     checkRole();
@@ -155,16 +152,13 @@ const [isProjectManager, setIsProjectManager] = useState(true);
                         <Route path='board' element={<KanbanBoard />} />
                       </Route>
 
-                      {(isSiteOwner || isProjectManager) ? <>
+                      {(isSiteOwner || isProjectManager) && <>
                       <Route path='manage' element={<ManageProjectLayout />}>
                         <Route path='members' element={<ManageProjectMember />} />
                       </Route>
                       <Route path="project-setting" element={<EditProject />} />
-                      </> : (<Route path='*' element={
-                        <Navigate to="/home" replace />
-                      } />)
-                      
-                    }
+
+                      </>}
                       
                     </Route>
                   </Route>
