@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal } from "antd";
+import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal, message } from "antd";
 import { CheckOutlined, DoubleRightOutlined, DownOutlined, DownloadOutlined, EllipsisOutlined, FieldTimeOutlined, FormOutlined, MinusOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { blue, cyan, gray, grey, orange, red } from "@ant-design/colors";
 import Title from "antd/es/typography/Title";
@@ -16,7 +16,7 @@ import axios from "axios";
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities,stages, sprints,siteAPI,site,accessToken,project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   // Activities
   const [filterActivityType, setFliterActivityType] = useState(["task"]);
@@ -51,6 +51,14 @@ const SprintBoard = () => {
       }
 
     )
+      .then((res) => {
+        setSprints([...sprints, res?.data?.sprint]);
+        activityModalLoading();
+        message.success("Create new sprint successfully");
+        showNotification(`Project update`, `${user?.username} just create a new sprint in project "${project?.projectName}".`);
+      })
+      .catch ((error)=> {
+      message.error(error?.response?.data?. message || "Failed to create sprint!");})
 
   }
 
@@ -59,7 +67,35 @@ const SprintBoard = () => {
     ACTIVITY: "ACTIVE_DRAG_ITEM_TYPE_ACTIVITY"
   }
 
-
+  // Edit sprint
+  const editSprint = (sprint, field, data) => {
+    if (field && data) {
+      if (field == "sprintStatus" && data == "active") {
+        const activeSprint = sprints.find(s => s.sprintStatus == "active" && s._id != sprint?._id);
+        if (activeSprint) {
+          message.error("Only one sprint can be active at a time. Please complete or deactivate the current active sprint first.");
+          return;
+        }
+      }
+      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`,
+        { [field]: data },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      )
+        .then((res) => {
+          const updatedSprints = sprints.map(s => s._id === res?.data?.sprint?._id ? res?.data?.sprint : s);
+          setSprints(updatedSprints);
+          message.success("Edit sprint successfully");
+          showNotification(`Project update`, `${user?.username} just edit sprint  "${sprint?.sprintName}".`);
+        })
+        .catch((err) => {
+          message.error(err?.data?.error?.message || "Edit sprint fail!")
+        })
+    }
+  }
   return (
     <DndContext
 
@@ -89,9 +125,9 @@ const SprintBoard = () => {
               <Space>
                 <Button size="small" variant="outlined" color="default" style={{ borderRadius: "0%" }}
                   onClick={(e) => {
-                    e.stopPropagation(); 
-                    handleCreateSprint(); 
-                }}
+                    e.stopPropagation();
+                    handleCreateSprint();
+                  }}
                 > Create sprint</Button>
               </Space>
             </Flex>
@@ -157,6 +193,7 @@ const SprintBoard = () => {
                       disabled={sprints?.some(s => s?.sprintStatus == "active" && s._id != sprint?._id)}
                       onClick={(e) => {
                         e.stopPropagation();
+                        editSprint(sprint, "sprintStatus", "active")
                         // showCompletedSprint();
                       }}
                     >
