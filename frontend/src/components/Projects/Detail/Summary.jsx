@@ -108,7 +108,7 @@ function Summary() {
     return {
       name: stage?.stageName?.charAt(0).toUpperCase() + stage?.stageName?.slice(1),
       value: activities.filter(activity => activity?.stage?._id == stage?._id)?.length || 0,
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`
+      color: stage?.stageColor ||  `#${Math.floor(Math.random() * 16777215).toString(16)}`
     }
   })
 

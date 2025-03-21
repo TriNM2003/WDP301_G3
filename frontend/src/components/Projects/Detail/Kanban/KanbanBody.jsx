@@ -25,6 +25,7 @@ import {
     Divider,
     Dropdown,
     Flex,
+    Image,
     Input,
     Menu,
     Modal,
@@ -46,14 +47,14 @@ import ActivityDetail from "../../../Activity/ActivityDetail";
 import DeleteActivityModal from "../DeleteActivityModal";
 
 function KanbanBody({ sprint, stage }) {
-    const { activity, setActivity, activities,searchActivity,setSearchActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
+    const { activity, setActivity, activities, searchActivity, setSearchActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
 
 
 
 
     const [filterActivityType, setFliterActivityType] = useState(["task"]);
-    const filteredActivitites = activities?.filter((activity)=> activity&& activity?.activityTitle.toUpperCase().includes(searchActivity?.toUpperCase()))
-    .filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
+    const filteredActivitites = activities?.filter((activity) => activity && activity?.activityTitle.toUpperCase().includes(searchActivity?.toUpperCase()))
+        .filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
 
 
 
@@ -70,10 +71,15 @@ function KanbanBody({ sprint, stage }) {
                         headStyle={{ padding: "2%", border: "0" }}
                         onClick={() => showActivity(a)}
                         cover={
-                            <img
-                                src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"
-                                style={{ borderRadius: "0", padding: "1% 3%" }}
-                            />
+                            a?.attachment?.url && (
+                                a.attachment.mimeType?.startsWith("image/") && (
+                                    <img
+                                        src={a.attachment.url}
+                                        alt={a.attachment.fileName}
+                                        style={{ borderRadius: "0", padding: "1% 3%" }}
+
+                                    />
+                                ))
                         }
                         title={
                             <Flex justify="space-between" align="center" style={{ padding: "1% 3%", height: "100%" }}>
@@ -148,7 +154,7 @@ function KanbanBody({ sprint, stage }) {
                                             </Tooltip>
                                         )) :
                                         <Tooltip title="Unassigned" placement="top">
-                                            <Avatar icon={<UserOutlined/>} size={25} />
+                                            <Avatar icon={<UserOutlined />} size={25} />
                                         </Tooltip>
                                     }
 
@@ -162,7 +168,7 @@ function KanbanBody({ sprint, stage }) {
                     <Input
                         value={activityName}
                         onChange={(e) => setActivityName(e.target.value)}
-                        onPressEnter={()=>handleActivityCreate(sprint?.sprintName, stage?.stageName, "task", null)}
+                        onPressEnter={() => handleActivityCreate(sprint?.sprintName, stage?.stageName, "task", null)}
                         onBlur={() => setCreateActivityModal(false)}
                         placeholder="Enter activity name"
                         prefix={<FormOutlined />}
@@ -178,7 +184,7 @@ function KanbanBody({ sprint, stage }) {
 
             {/* Modal hiển thị chi tiết Activity */}
 
-            
+
 
         </Col>
     );
