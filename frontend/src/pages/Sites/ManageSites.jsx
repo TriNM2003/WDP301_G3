@@ -89,8 +89,8 @@ const fetchSites = () => {
     const sites = res.data.map((site, index) => {
       const siteOwner = site?.siteMember.find(member => member?.roles.includes("siteOwner"));
       let siteAvatar = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7MmifjwAGhgzOBMwJrZQqlhOBPc24RjG9w&s";
-      const siteOwnerEmail = siteOwner._id.email;
-      const siteOwnerAvatar = siteOwner._id.userAvatar;
+      const siteOwnerEmail = siteOwner?._id.email;
+      const siteOwnerAvatar = siteOwner?._id.userAvatar;
       if(site.siteAvatar !== "default.jpg"){
         siteAvatar = site.siteAvatar;
       }

@@ -8,30 +8,30 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const { projectMiddleware, siteMiddleware, } = require("../middlewares");
 const { isSiteOwner } = require("../middlewares/site.middleware");
+const { isActive } = require("../middlewares/account.middleware");
 
 
 
 const projectRouter = express.Router({ mergeParams: true });
 projectRouter.use(bodyParser.json());
+// check dang nhap va check active
+projectRouter.use(authMiddleware.verifyAccessToken)
+projectRouter.use(isActive)
 
 projectRouter.get("/trash",
-    authMiddleware.verifyAccessToken,
     projectController.getProjectTrash
 );
 
-
-projectRouter.use(bodyParser.json());
 projectRouter.get("/get-all",
-    [authMiddleware.verifyAccessToken],
     projectController.getAllProjects
 )
 
 projectRouter.get("/get-by-site",
-    [authMiddleware.verifyAccessToken,siteMiddleware.isInSite],
+    siteMiddleware.isInSite,
     projectController.getProjectsInSite
 )
 projectRouter.get("/:projectId",
-    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject],
+    projectMiddleware.isInProject,
 
     projectController.getProjectById
 )
@@ -40,19 +40,18 @@ projectRouter.get("/:projectId/get-project-members",
     projectController.getProjectMembersById
 )
 projectRouter.post("/:projectId/add-project-member",
-    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    [ projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     projectController.addProjectMember
 )
 projectRouter.put("/:projectId/edit-project-member",
-    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    [ projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     projectController.editProjectMemberRole
 )
 projectRouter.delete("/:projectId/remove-project-member",
-    [authMiddleware.verifyAccessToken, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
+    [ projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     projectController.removeProjectMember
 )
 projectRouter.put("/:projectId/project-setting",
-    authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
     cloudinary.upload.single("projectAvatar"),
@@ -60,40 +59,34 @@ projectRouter.put("/:projectId/project-setting",
 )
 // for site owner
 projectRouter.put("/:projectId/project-setting-v2",
-    authMiddleware.verifyAccessToken,
     siteMiddleware.isSiteOwner,
     cloudinary.upload.single("projectAvatar"),
     projectController.editProject
 )
 projectRouter.put("/:projectId/remove-to-trash",
-    authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
     projectController.removeToTrash
 );
 // for site owner
 projectRouter.put("/:projectId/remove-to-trash-v2",
-    authMiddleware.verifyAccessToken,
     siteMiddleware.isSiteOwner,
     projectController.removeToTrash
 );
 
 projectRouter.get("/trash",
-    authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
     projectController.getProjectTrash
 );
 
 projectRouter.put("/:projectId/restore",
-    authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
     projectController.restoreProject
 );
 
 projectRouter.delete("/:projectId/destroy",
-    authMiddleware.verifyAccessToken,
     projectMiddleware.isInProject,
     projectMiddleware.isProjectManager,
     projectController.destroyProject
@@ -102,13 +95,12 @@ projectRouter.delete("/:projectId/destroy",
 
 
 projectRouter.post("/create",
-    [authMiddleware.verifyAccessToken],
     projectController.createProject
 )
 
 // for site owner
 projectRouter.post("/create-v2",
-    [authMiddleware.verifyAccessToken, isSiteOwner],
+    isSiteOwner,
     projectController.createProjectV2
 )
 

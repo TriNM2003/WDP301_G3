@@ -7,8 +7,9 @@ const { accountMiddleware } = require("../middlewares");
 
 
 const notificationRouter = express.Router();
+notificationRouter.use([authMiddleware.verifyAccessToken, accountMiddleware.isActive])
+
 notificationRouter.get("/get-all",
-    [authMiddleware.verifyAccessToken,accountMiddleware.isActive],
     notificationController.getAlls
 )
 
