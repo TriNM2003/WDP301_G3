@@ -20,15 +20,15 @@ activityRouter.get("/:activityId/get-by-id",
     activityController.getById
 )
 activityRouter.post("/create",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
     activityController.createActivity
 )
 activityRouter.put("/:activityId/edit",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject, activityMiddleware.isInActivity],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject, activityMiddleware.isInActivity,activityMiddleware.isNotDone],
     activityController.editActivity
 )
 activityRouter.put("/:activityId/upload",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject, activityMiddleware.isInActivity],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject, activityMiddleware.isInActivity,activityMiddleware.isNotDone],
     cloudinary.upload.single("attachment"),
     activityController.uploadAttachment
 )
@@ -37,11 +37,11 @@ activityRouter.put("/:activityId/move",
     activityController.moveActivity
 )
 activityRouter.put("/:activityId/assignMember",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
     activityController.assignMember
 )
 activityRouter.put("/:activityId/removeAssignee",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
     activityController.removeAssignMember
 )
 activityRouter.delete("/:activityId/delete",
@@ -51,7 +51,7 @@ activityRouter.delete("/:activityId/delete",
 
 //Comment 
 activityRouter.post("/:activityId/comments/post",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
     activityController.createComment
 )
 activityRouter.get("/:activityId/comments/get-all",
@@ -59,11 +59,11 @@ activityRouter.get("/:activityId/comments/get-all",
     activityController.getAllComment
 )
 activityRouter.put("/:activityId/comments/:commentId/edit",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
     activityController.editComment
 )
 activityRouter.delete("/:activityId/comments/:commentId/delete",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
     activityController.deleteComment
 )
 

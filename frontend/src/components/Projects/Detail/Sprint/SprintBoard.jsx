@@ -16,13 +16,12 @@ import axios from "axios";
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, selectedSprint, setSelectedSprint, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   // Activities
   const [filterActivityType, setFliterActivityType] = useState(["task"]);
   const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
   const [isDeleteSprint, setIsDeleteSprint] = useState(false);
-  const [selectedSprint, setSelectedSprint] = useState(null);
   const [deleteSprint, setDeleteSprint] = useState(null);
 
   //DND
@@ -94,6 +93,8 @@ const SprintBoard = () => {
         .then((res) => {
           const updatedSprints = sprints.map(s => s._id === res?.data?.sprint?._id ? res?.data?.sprint : s);
           setSprints(updatedSprints);
+          activityModalLoading();
+
           message.success("Edit sprint successfully");
           showNotification(`Project update`, `${user?.username} just edit sprint  "${sprint?.sprintName}".`);
         })
@@ -117,10 +118,10 @@ const SprintBoard = () => {
         console.log("delte");
       }
     }
-  };  
+  };
   const handleDeleteSprint = () => {
     axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${deleteSprint?._id}/delete`,
-      { newSprint: selectedSprint},
+      { newSprint: selectedSprint },
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`
@@ -224,7 +225,7 @@ const SprintBoard = () => {
                       style={{ borderRadius: "0%" }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        showCompletedSprint();
+                        showCompletedSprint(sprint);
                       }}
                     >
                       <CheckOutlined /> Complete sprint
@@ -239,7 +240,7 @@ const SprintBoard = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         editSprint(sprint, "sprintStatus", "active")
-                        // showCompletedSprint();
+
                       }}
                     >
                       Active sprint
@@ -250,8 +251,8 @@ const SprintBoard = () => {
                         <Menu onClick={(e) => e.domEvent.stopPropagation()}>
                           <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false}>Edit sprint</Menu.Item>
                           <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false} danger onClick={() => {
-                             setDeleteSprint(sprint); // Cập nhật deleteSprint trước
-                             setTimeout(() => handleDeleteClick(), 100);  
+                            setDeleteSprint(sprint); // Cập nhật deleteSprint trước
+                            setTimeout(() => handleDeleteClick(), 100);
                           }} >Delete sprint</Menu.Item>
                         </Menu>
                       }

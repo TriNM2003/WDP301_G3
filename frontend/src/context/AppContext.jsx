@@ -35,7 +35,6 @@ const AppProvider = ({ children }) => {
   //Stage
   const [stages, setStages] = useState([]);
 
-
   // Activity
   const [activityTypes, setActivityTypes] = useState([]);
   const [deleteActivity, setDeleteActivity] = useState(false);
@@ -62,8 +61,10 @@ const AppProvider = ({ children }) => {
   const [activity, setActivity] = useState({});
 
   //Sprint
-  const [completedSprint, setCompletedSprint] = useState(false);
+  const [completedSprint, setCompletedSprint] = useState(null);
+  const [isCompletedSprint, setIsCompletedSprint] = useState(false);
   const [sprints, setSprints] = useState([])
+  const [selectedSprint, setSelectedSprint] = useState(null);
 
 
 
@@ -341,7 +342,7 @@ const AppProvider = ({ children }) => {
       })
       .catch((err) => {
         message.error(err.response?.data?.error?.message || "Move activity failed");
-        console.log(err);
+        // console.log(err);
       })
   }
   // delete Activity
@@ -416,27 +417,47 @@ const AppProvider = ({ children }) => {
 
 
   //Complete sprint
-  const showCompletedSprint = () => {
-    setCompletedSprint(true);
+  const showCompletedSprint = (sprint) => {
+    setCompletedSprint(sprint)
+    setIsCompletedSprint(true);
   };
 
   const handleCompletedCancel = () => {
-    setCompletedSprint(false);
+    setCompletedSprint()
+    setIsCompletedSprint(false);
   };
 
   const handleCompletedSprint = () => {
-    message.success({
-      content: `🎯 (Sprint name) has been completed successfully! 🚀 
-                  - ✅ 10 (activitys) completed 
-                  - ⚠️ 3 (uncompleted bugs) moved to {sprint}`,
-      duration: 4, // Thời gian hiển thị message (4 giây)
+    if (completedSprint) {
+      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
+        { newSprintId: selectedSprint|| null },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      )
+        .then((res) => {
+          const updatedSprints = sprints.map(s => s._id == res?.data?.sprint?._id ? res?.data?.sprint : s);
+          setSprints(updatedSprints);
+          activityModalLoading();
+          message.success({
+            content: `🎯 (${completedSprint?.sprintName}) has been completed successfully!`,
+            duration: 4,
 
-    });
-    showNotification(`Project update`, `🎯 (Sprint name) has been completed successfully! 🚀 
-    - ✅ 10 (activitys) completed 
-    - ⚠️ 3 (uncompleted bugs) moved to  {sprint}`)
+          });
+          showNotification(`Project update`, `🎯 (${completedSprint?.sprintName}) has been completed successfully!`)
 
-    setCompletedSprint(false);
+          setIsCompletedSprint(false);
+          setCompletedSprint();
+
+        })
+        .catch((err) => {
+          message.error(err.response?.data?.error?.message || "Complete sprint failed");
+
+        })
+
+    }
 
   };
 
@@ -465,7 +486,8 @@ const AppProvider = ({ children }) => {
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
-      handleMoveActivity, searchActivity, setSearchActivity, activityTypes
+      handleMoveActivity, searchActivity, setSearchActivity, activityTypes,
+      isCompletedSprint, setIsCompletedSprint, selectedSprint, setSelectedSprint
 
 
     }}>

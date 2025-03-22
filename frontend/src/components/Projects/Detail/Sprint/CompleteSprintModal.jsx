@@ -7,8 +7,15 @@ import { green, orange } from '@ant-design/colors'
 import { Option } from 'antd/es/mentions'
 
 function CompleteSprintModal() {
-    const { handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
-  
+    const { handleActivityCreate, activities, stages, sprints, isCompletedSprint,selectedSprint, setSelectedSprint, setIsCompletedSprint,createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+
+    const completedActivities = activities?.filter((activity) => {
+        return activity?.sprint?._id == completedSprint?._id && activity?.stage?.stageStatus?.toUpperCase() == "DONE"
+    })
+    const uncompletedActivities = activities?.filter((activity) => {
+        return activity?.sprint?._id == completedSprint?._id && activity?.stage?.stageStatus?.toUpperCase() != "DONE"
+    })
+    console.log(selectedSprint);
     return (
         <Modal
             title={
@@ -19,7 +26,7 @@ function CompleteSprintModal() {
                     </Title>
                 </div>
             }
-            open={completedSprint}
+            open={isCompletedSprint}
             onOk={handleCompletedSprint}
             onCancel={handleCompletedCancel}
             footer={[
@@ -31,23 +38,29 @@ function CompleteSprintModal() {
                 </Button>,
             ]}
         >
-            <strong>This sprint contains:</strong>
+            <span>This sprint<strong> {completedSprint?.sprintName}</strong> contains:</span>
             <ul>
-                <li><CheckSquareFilled style={{ color: green[6] }} /> 0 completed activities</li>
-                <li><WarningFilled style={{ color: orange[4] }} /> 7 uncompleted activities</li>
+                <li><CheckSquareFilled style={{ color: green[6] }} /> {completedActivities?.length || 0} completed activities</li>
+                <li><WarningFilled style={{ color: orange[4] }} /> {uncompletedActivities?.length || 0} uncompleted activities</li>
             </ul>
 
             <Divider />
 
             <strong strong>Complete or move uncompleted activities to:</strong>
-            <Select
-                value="{moveTo}"
-                onChange="{setMoveTo}"
-                style={{ width: "100%", marginTop: 5, marginBottom: 15 }}
-            >
-                <Option value="New sprint">New sprint</Option>
-                <Option value="Backlog">Backlog</Option>
-            </Select>
+                <Select
+                    value={selectedSprint || "Backlog"}
+                    onSelect={(value)=>setSelectedSprint(value)}
+                    style={{ width: "100%", marginTop: 5, marginBottom: 15 }}
+                >
+                    <Option value="Backlog">Backlog</Option>
+                    {sprints
+                        .filter(s => s?._id !== completedSprint?._id)
+                        .map(s => (
+                            <Select.Option key={s?._id} value={s?._id} disabled={s?.sprintStatus == "completed"}>
+                                {s.sprintName}
+                            </Select.Option>
+                        ))}
+                </Select>
         </Modal>
     )
 }

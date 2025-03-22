@@ -113,7 +113,9 @@ function ActivityDetail() {
       message.success("Edit activity successfully");
       showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
     } catch (err) {
-      console.error(err?.response?.data?.error?.message);
+      message.error(err?.response?.data?.error?.message || "Edit activity fail!");
+      setIsDescription(false);
+      setNewDescription("")
     }
   };
 
@@ -143,6 +145,7 @@ function ActivityDetail() {
       message.success("File uploaded successfully");
     } catch (err) {
       message.error(err?.response?.data?.error?.mesage || "Upload failed!");
+      setAttachmentUploading(false);
     }
   };
 
@@ -170,7 +173,8 @@ function ActivityDetail() {
         showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
       })
       .catch((err) => {
-        console.log(err);
+        message.error(err?.response?.data?.error?.message ||"Assign member fail");
+
       })
 
   }
@@ -197,7 +201,7 @@ function ActivityDetail() {
           showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
         })
         .catch((err) => {
-          console.log(err);
+          message.error(err?.response?.data?.error?.message ||"Remove assignee fail");
         })
     }
   }
@@ -260,7 +264,10 @@ function ActivityDetail() {
         message.success("Post comment successfully");
         showNotification(`Project update`, `${user?.username} just comment activity "${res.data.activity?.activityTitle}".`);
       })
-      .catch((err) => message.error(err?.data?.error?.message || "Post comment fail!"))
+      .catch((err) => {
+        message.error(err?.data?.error?.message || "Post comment fail!");
+        setNewComment("");
+      })
 
 
 
