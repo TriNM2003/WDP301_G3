@@ -14,7 +14,7 @@ function SiteSider() {
 
   let isSiteOwner = false;
 
-  isSiteOwner = site?.siteMember?.find(siteMember => siteMember._id === user._id).roles.includes("siteOwner"); 
+  isSiteOwner = site?.siteMember?.find(siteMember => siteMember._id === user._id)?.roles?.includes("siteOwner"); 
 
   
   
@@ -36,7 +36,7 @@ function SiteSider() {
     ? teams
       .filter(team =>
         team.teamMembers?.some(member =>
-          member._id?._id === user._id && member.roles.includes("teamLeader")
+          member._id?._id === user._id && member?.roles?.includes("teamLeader")
         )
       )
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))

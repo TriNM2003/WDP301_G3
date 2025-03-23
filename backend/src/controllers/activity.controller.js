@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const { activityService, notificationService } = require('../services');
+const fs = require('fs');
 
 
 
@@ -99,6 +100,28 @@ const editActivity = async (req, res, next) => {
             
         }
         const updatedActivity = await activityService.edit(req.body,activityId)
+        if (!updatedActivity) {
+            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
+
+        }
+         res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity  })
+    } catch (error) {
+        next(error);
+    }
+}
+
+const uploadAttachment = async (req, res, next) => {
+    try {
+        const {id} = req.payload;
+        const {activityId} = req.params;
+        console.log("Req file:", req.file);
+        const activity = await db.Activity.findById(activityId).populate("project");
+
+        if (!activity) {
+            return res.status(400).json({ error: { status: 400, message: "Activity not found" }})
+
+        }
+        const updatedActivity = await activityService.uploadAttachment(id,activityId,req.file)
         if (!updatedActivity) {
             return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
 
@@ -285,6 +308,7 @@ const activityController = {
     getById,
     createActivity,
     editActivity,
+    uploadAttachment,
     assignMember,
     removeAssignMember,
     removeActivity,

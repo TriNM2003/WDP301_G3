@@ -1,6 +1,6 @@
 import { blue, cyan, gray, grey, orange, red, yellow } from '@ant-design/colors'
-import { BugOutlined, CalendarOutlined, CloseOutlined, CommentOutlined, DeleteOutlined, DoubleRightOutlined, DownOutlined, EditOutlined, EllipsisOutlined, FireOutlined, FormOutlined, MinusOutlined, MoreOutlined, PaperClipOutlined, PieChartOutlined, PlusOutlined, SearchOutlined, SendOutlined, UpOutlined, UserAddOutlined, UserOutlined } from '@ant-design/icons'
-import { Avatar, Button, Col, DatePicker, Dropdown, Flex, Form, Input, List, Menu, Modal, Popconfirm, Progress, Row, Select, Skeleton, Space, Tag, Tooltip, Typography, message } from 'antd'
+import { BugOutlined, CalendarOutlined, CloseOutlined, CloudUploadOutlined, CommentOutlined, DeleteOutlined, DoubleRightOutlined, DownOutlined, EditOutlined, EllipsisOutlined, FileTextOutlined, FireOutlined, FormOutlined, MinusOutlined, MoreOutlined, PaperClipOutlined, PieChartOutlined, PlusOutlined, SearchOutlined, SendOutlined, UpOutlined, UploadOutlined, UserAddOutlined, UserOutlined } from '@ant-design/icons'
+import { Avatar, Button, Col, DatePicker, Dropdown, Flex, Form, Image, Input, List, Menu, Modal, Popconfirm, Progress, Row, Select, Skeleton, Space, Tag, Tooltip, Typography, Upload, message } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { Option } from 'antd/es/mentions'
 import Title from 'antd/es/typography/Title'
@@ -11,6 +11,7 @@ import dayjs from 'dayjs'
 import SubActivity from './SubActivity'
 import axios from 'axios'
 import SubMenu from 'antd/es/menu/SubMenu'
+import ImgCrop from 'antd-img-crop';
 
 
 function ActivityDetail() {
@@ -28,6 +29,7 @@ function ActivityDetail() {
   const [projectMembers, setProjectMembers] = useState([])
   const [assigneeFilter, setAssigneeFilter] = useState("");
   const [orderActivities, setOrderActivities] = useState("createdAt");
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
 
 
 
@@ -111,7 +113,39 @@ function ActivityDetail() {
       message.success("Edit activity successfully");
       showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
     } catch (err) {
-      console.error(err?.response?.data?.error?.message);
+      message.error(err?.response?.data?.error?.message || "Edit activity fail!");
+      setIsDescription(false);
+      setNewDescription("")
+    }
+  };
+
+  const handleAttachmentChange = async ({ file }) => {
+    const formData = new FormData();
+    formData.append("attachment", file);
+    setAttachmentUploading(true); 
+    console.log(file);
+    try {
+      const res = await axios.put(
+        `${siteAPI}/${site._id}/projects/${project._id}/activities/${activity._id}/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setAttachmentUploading(false);
+      activityModalLoading();
+      setActivity(res.data.activity);
+      const updateActivities = activities.map((a) =>
+        a._id == res.data.activity._id ? res.data.activity : a
+      );
+      setActivities(updateActivities);
+      message.success("File uploaded successfully");
+    } catch (err) {
+      message.error(err?.response?.data?.error?.mesage || "Upload failed!");
+      setAttachmentUploading(false);
     }
   };
 
@@ -139,7 +173,8 @@ function ActivityDetail() {
         showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
       })
       .catch((err) => {
-        console.log(err);
+        message.error(err?.response?.data?.error?.message ||"Assign member fail");
+
       })
 
   }
@@ -166,7 +201,7 @@ function ActivityDetail() {
           showNotification(`Project update`, `User1 just edited activity "${res.data.activity?.activityTitle}".`);
         })
         .catch((err) => {
-          console.log(err);
+          message.error(err?.response?.data?.error?.message ||"Remove assignee fail");
         })
     }
   }
@@ -229,7 +264,10 @@ function ActivityDetail() {
         message.success("Post comment successfully");
         showNotification(`Project update`, `${user?.username} just comment activity "${res.data.activity?.activityTitle}".`);
       })
-      .catch((err) => message.error(err?.data?.error?.message || "Post comment fail!"))
+      .catch((err) => {
+        message.error(err?.data?.error?.message || "Post comment fail!");
+        setNewComment("");
+      })
 
 
 
@@ -773,6 +811,59 @@ function ActivityDetail() {
                           handleEditActivity("dueDate", value);
                         }}
                       />
+                    )}
+                  </Flex>
+                  <Flex justify="space-between" align="center" style={{ width: "100%" }}>
+                    <small style={{ fontWeight: "bolder", color: gray[4] }}><CloudUploadOutlined /> Attachment </small>
+                    {activityLoading ? (
+                      <Skeleton.Button active size="small" style={{ width: "100%" }} />
+                    ) : (
+                      <Flex style={{ width: "50%" }} justify='space-between'>
+                        {activity?.attachment?.url && (
+                          activity.attachment.mimeType?.startsWith("image/") ? (
+                            <Image
+                              src={activity.attachment.url}
+                              alt={activity.attachment.fileName}
+                              style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: 4 }}
+                            />
+                          ) : (
+                            <a
+                              href={activity.attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: "inline-flex", alignItems: "center",
+               
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              <FileTextOutlined />
+                              <text
+                              style={{
+                                maxWidth: "100%", 
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                              
+                              >{activity.attachment.fileName}</text>
+                            </a>
+                          )
+
+                        )}
+
+                        <Upload
+                          showUploadList={false}
+                          maxCount={1}
+                          customRequest={handleAttachmentChange}
+                          accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.txt,.xls,.csv,.xlsx"
+                        >
+                          <Button icon={<UploadOutlined />} loading={attachmentUploading} ></Button>
+                        </Upload>
+                      </Flex>
+
                     )}
                   </Flex>
 

@@ -63,8 +63,9 @@ const ManageProjects = () => {
   }
 
 
-  const fetchData = async (userList) => {
-    //get all user to find project manager info
+  const fetchData = async () => {
+    try {
+      //get all user to find project manager info
     const users = await authAxios.get(`${userApi}/all`);
     setAllUser(users.data);
     const filteredEmails = users?.data?.reduce((acc, currUser) => {
@@ -89,6 +90,10 @@ const ManageProjects = () => {
     const projectsOfSameSite = result.data.filter(project => project?.site?.toString() === site?._id?.toString()) || [];
     // console.log(tableData(projectsOfSameSite, users.data))
     setProjects(tableData(projectsOfSameSite, users.data));
+    } catch (error) {
+      console.log(error)
+    }
+    
   }
 
   const formatDate = (mongoDate) => {
