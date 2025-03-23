@@ -84,19 +84,27 @@ const editProfile = async (userId, profileData, file) => {
             throw new Error("Phone number is invalid. Please enter a valid phone number");
         }
         if (profileData.dob) {
-            const dobDate = new Date(profileData.dob);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const dob = new Date(profileData.dob);         // Chuyển đổi ngày sinh từ string sang Date object
+            const today = new Date();                      // Lấy ngày hiện tại
 
-            const ageDiffMs = today - dobDate;
-            const ageDate = new Date(ageDiffMs);
-            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            // Tính tuổi theo năm
+            const age = today.getFullYear() - dob.getFullYear();
 
-            if (dobDate >= today) {
+            // Kiểm tra đã qua sinh nhật trong năm chưa
+            const hasBirthdayPassed =
+                today.getMonth() > dob.getMonth() ||
+                (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+            // Nếu chưa qua sinh nhật, giảm 1 tuổi
+            const exactAge = hasBirthdayPassed ? age : age - 1;
+
+            // Validate: ngày sinh không được lớn hơn ngày hôm nay
+            if (dob > today) {
                 throw new Error("Date of birth must be in the past.");
             }
 
-            if (age < 16) {
+            // Validate: phải đủ 16 tuổi trở lên
+            if (exactAge < 16) {
                 throw new Error("You must be at least 16 years old.");
             }
         }

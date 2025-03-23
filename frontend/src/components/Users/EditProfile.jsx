@@ -14,6 +14,7 @@ const EditProfile = () => {
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [initialForm, setInitialForm] = useState(null);
     const [form, setForm] = useState({
         fullName: '',
         address: '',
@@ -34,6 +35,7 @@ const EditProfile = () => {
         })
             .then(response => {
                 setForm(response.data);
+                setInitialForm(response.data); 
                 setImagePreview(response.data.userAvatar);
             })
             .catch(error => {
@@ -54,18 +56,20 @@ const EditProfile = () => {
         }
 
         if (name === "dob" && value) {
-            const dobDate = new Date(value);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-        
-            const ageDiffMs = today - dobDate;
-            const ageDate = new Date(ageDiffMs);
-            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-        
-            if (dobDate >= today) {
-                error = "Date of birth must be in the past.";
-            } else if (age < 16) {
-                error = "You must be at least 16 years old.";
+            const dob = new Date(value);            // Chuyển input DOB thành Date object
+            const today = new Date();               // Lấy ngày hiện tại
+
+            const age = today.getFullYear() - dob.getFullYear(); // Tính tuổi cơ bản
+            const hasBirthdayPassed =              // Kiểm tra đã qua sinh nhật chưa
+                today.getMonth() > dob.getMonth() ||
+                (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+            const exactAge = hasBirthdayPassed ? age : age - 1; // Nếu chưa qua sinh nhật thì trừ đi 1
+
+            if (dob > today) {
+                error = "Date of birth must be in the past.";   // Không được chọn ngày trong tương lai
+            } else if (exactAge < 16) {
+                error = "You must be at least 16 years old.";   // Tuổi phải >= 16
             }
         }
 
@@ -136,13 +140,12 @@ const EditProfile = () => {
     };
 
     const handleDiscard = () => {
-        setForm({
-            fullName: '',
-            address: '',
-            dob: '',
-            phoneNumber: '',
-        });
-        setErrors({});
+        if (initialForm) {
+            setForm(initialForm);
+            setImagePreview(initialForm.userAvatar); // reset avatar
+            setSelectedFile(null); // bỏ file ảnh đã chọn
+            setErrors({});
+        }
     };
 
     const handleLogout = () => {
