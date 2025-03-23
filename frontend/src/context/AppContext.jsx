@@ -432,7 +432,7 @@ const AppProvider = ({ children }) => {
   const handleCompletedSprint = () => {
     if (completedSprint) {
       axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
-        { newSprintId: selectedSprint|| null },
+        { newSprintId: selectedSprint != "Backlog" ? selectedSprint: null },
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`

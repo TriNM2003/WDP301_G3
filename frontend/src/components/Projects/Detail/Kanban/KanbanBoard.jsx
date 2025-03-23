@@ -125,7 +125,7 @@ const KanbanBoard = () => {
                                         Filter   <DownOutlined />
                                     </Button>
                                 </Dropdown>
-                                <Button variant="solid" style={{ borderRadius: "0%" }} onClick={showCompletedSprint}> Complete sprint</Button>
+                                <Button variant="solid" style={{ borderRadius: "0%" }} onClick={()=>showCompletedSprint(activeSprint)}> Complete sprint</Button>
                                 <CompleteSprintModal />
 
                             </Flex>
