@@ -88,17 +88,30 @@ const createProject = async (projectData, creatorId, siteId) => {
         const savedProject = await newProject.save();
 
 
+  // 🟢 Tạo 3 stage mặc định với parent
+  let prevStageId = null;
+  const stages = [];
 
-        // Tạo 3 stage mặc định
-        const stages = [
-            { stageName: "To Do", project: savedProject._id, stageStatus: "todo" },
-            { stageName: "Doing", project: savedProject._id, stageStatus: "doing" },
-            { stageName: "Done", project: savedProject._id, stageStatus: "done" }
-        ];
+  const stageData = [
+      { stageName: "To Do", stageStatus: "todo", stageColor: "#89CFF0" },
+      { stageName: "Doing", stageStatus: "doing", stageColor: "#FFD700" },
+      { stageName: "Done", stageStatus: "done", stageColor: "#90EE90" }
+  ];
 
-        const createdStages = await db.Stage.insertMany(stages);
-        savedProject.stages = createdStages.map(stage => stage._id);
-        await savedProject.save()
+  for (const data of stageData) {
+      const newStage = new db.Stage({
+          ...data,
+          project: savedProject._id,
+          parent: prevStageId // Gán parent là stage trước đó
+      });
+
+      const savedStage = await newStage.save();
+      stages.push(savedStage._id);
+      prevStageId = savedStage._id; // Cập nhật parent cho stage tiếp theo
+  }
+
+  savedProject.stages = stages;
+  await savedProject.save();
 
         // Cập nhật danh sách project của các user trong model User
         const memberIds = projectMembers.map(member => member._id);

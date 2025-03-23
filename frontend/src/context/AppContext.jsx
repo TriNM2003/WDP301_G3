@@ -48,6 +48,7 @@ const AppProvider = ({ children }) => {
   const [isActivityTitle, setIsActivityTitle] = useState(false)
   const [activityLoading, setActivityLoading] = useState(false)
   const [userActivities, setUserActivities] = useState([]);
+
   // Team
 
   const [teams, setTeams] = useState({});
@@ -466,7 +467,7 @@ const AppProvider = ({ children }) => {
 
 
     }}>
-      {children}
+      {children} 
     </AppContext.Provider>
   );
 };

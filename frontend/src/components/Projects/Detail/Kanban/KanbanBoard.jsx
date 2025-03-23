@@ -1,5 +1,5 @@
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useState,useEffect  } from "react";
 import { Row, Col, Card, Typography, Button, Flex, Menu, Dropdown, Tooltip, Progress, Avatar, Tag, Input, Switch, Checkbox, Modal, Divider, Select, message } from "antd";
 import { cyan, gray, green, grey, greyDark, orange, red, yellow } from "@ant-design/colors";
 import { CheckOutlined, CheckSquareFilled, DeleteOutlined, DownOutlined, EllipsisOutlined, FireOutlined, GroupOutlined, MoreOutlined, PlusOutlined, SearchOutlined, SettingOutlined, UpOutlined, WarningFilled } from "@ant-design/icons";
@@ -16,8 +16,7 @@ const { Title } = Typography;
 
 const KanbanBoard = () => {
     const { showNotification, sprints, stages, setStages,searchActivity,setSearchActivity, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
-
-
+    
 
     const [filters, setFilters] = useState({
         assigned: false,

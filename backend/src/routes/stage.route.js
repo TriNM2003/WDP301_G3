@@ -11,6 +11,22 @@ stageRouter.get("/get-all",
     [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
     stageController.getStagesByProjectId
 )
+stageRouter.post("/update-parents",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    stageController.updateStageParents
+)
+stageRouter.post("/add",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    stageController.addStage
+)
+stageRouter.post("/update",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    stageController.updateStage
+)
+stageRouter.post("/delete",
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    stageController.deleteStage
+)
 
 stageRouter.use(bodyParser.json());
 

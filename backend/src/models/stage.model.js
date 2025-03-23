@@ -23,6 +23,9 @@ const stageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'stage'
     },
+    stageColor: {
+        type: String
+    },
     isDestroyed:{
         type:Boolean,
         default:false
