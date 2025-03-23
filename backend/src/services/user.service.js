@@ -5,6 +5,7 @@ const createHttpErrors = require("http-errors");
 const { cloudinary } = require('../configs/cloudinary');
 const fs = require('fs');
 const nodemailer = require("nodemailer");
+const { mailer } = require('../configs');
 
 const getAllUsers = async () => {
     return await db.User.find({});
@@ -85,10 +86,18 @@ const editProfile = async (userId, profileData, file) => {
         if (profileData.dob) {
             const dobDate = new Date(profileData.dob);
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Đặt về 00:00:00 để tránh lỗi so sánh
+            today.setHours(0, 0, 0, 0);
+
+            const ageDiffMs = today - dobDate;
+            const ageDate = new Date(ageDiffMs);
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 
             if (dobDate >= today) {
                 throw new Error("Date of birth must be in the past.");
+            }
+
+            if (age < 16) {
+                throw new Error("You must be at least 16 years old.");
             }
         }
 
@@ -123,23 +132,12 @@ const sendDeleteAccountEmail = async (userId, email) => {
         if (email !== user.email) throw new Error("Incorrect email");
 
         const deleteLink = `http://localhost:3000/profile/confirm-delete`;
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
+        const to = user.email;
+        const subject = "Confirm Account Deletion";
+        const body = `<h2>Confirm Account Deletion</h2><p>Click the button below to permanently delete your account:</p>
+            <a href="${deleteLink}" style="padding: 10px 20px; background: red; color: #fff; text-decoration: none; border-radius: 5px;">Confirm Delete</a>`;
+        await mailer.sendEmail(to, subject, body);
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: "Confirm Account Deletion",
-            html: `<h2>Confirm Account Deletion</h2><p>Click the button below to permanently delete your account:</p>
-                <a href="${deleteLink}" style="padding: 10px 20px; background: red; color: #fff; text-decoration: none; border-radius: 5px;">Confirm Delete</a>`
-        };
-
-        await transporter.sendMail(mailOptions);
         return { message: "A confirmation email has been sent. Please check your inbox." };
     } catch (error) {
         throw error;

@@ -8,56 +8,45 @@ const { teamController } = require("../controllers");
 const teamRouter = express.Router({mergeParams: true});
 teamRouter.use(bodyParser.json());
 
+teamRouter.use(authMiddleware.verifyAccessToken);
+teamRouter.use(accountMiddleware.isActive);
+teamRouter.use(siteMiddleware.isInSite);
+
 teamRouter.get("/teams", 
-    authMiddleware.verifyAccessToken, 
-    accountMiddleware.isActive,
-    siteMiddleware.isInSite,
     teamController.getAllTeams
 );
 
 teamRouter.get("/:teamId/team-members", 
-    authMiddleware.verifyAccessToken, 
-    accountMiddleware.isActive,
-    siteMiddleware.isInSite,
     teamController.getTeamMembers
 );
 
 
 teamRouter.post("/:teamId/add-team-member", 
-    authMiddleware.verifyAccessToken,
-    accountMiddleware.isActive,
-    siteMiddleware.isInSite,
     teamController.addTeamMember
 );
 
 teamRouter.post("/:teamId/kick-team-member", 
-    authMiddleware.verifyAccessToken, 
-    accountMiddleware.isActive,
-    siteMiddleware.isInSite,
     teamController.kickTeamMember
 );
 
 // get team in site
 teamRouter.get("/get-teams-in-site", 
-    authMiddleware.verifyAccessToken,
     teamController.getTeamsInSite
 );
 
 // create team 
 teamRouter.post("/create-team", 
-    authMiddleware.verifyAccessToken, 
     teamController.createTeam
 );
 
 // get team activites
 teamRouter.get("/:teamSlug", 
-    authMiddleware.verifyAccessToken, 
     teamController.getTeamActivities
 );
 
 //delete team
 teamRouter.delete("/:teamId/remove-team",
-    [authMiddleware.verifyAccessToken, siteMiddleware.isInSite, siteMiddleware.isSiteOwner,],
+    siteMiddleware.isSiteOwner,
     teamController.removeTeam
 )
 

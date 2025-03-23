@@ -151,7 +151,7 @@ const sendDeactivateSiteEmail = async (siteId) => {
 
 
         try {
-            const deactivatedLink = "";
+            const deactivatedLink = "http://localhost:3000/site/deactivate-site";
             const to = siteOwner._id.email;
             const subject = "Confirm deactivate site";
             const body = `
@@ -190,7 +190,7 @@ const deactivateSite = async (siteId) => {
         try {
 
             await mailer.sendEmail(siteMemberEmails, "Site deactivation update", `<h2>Your site ${site.siteName} has been deactivated!</h2>`);
-            return {DeactivateSite, message: "Site deactivated successfully!"};
+            return { DeactivateSite, message: "Site deactivated successfully!" };
         }
         catch (error) {
             console.error("Error sending email notification:", error);
@@ -261,12 +261,16 @@ const inviteMemberByEmail = async (senderId, receiverId, siteId) => {
     }
     // tao invitation moi
     const updatedSite = await Site.findByIdAndUpdate(site._id,
-        {$addToSet: {invitations: {
-            _id: new mongoose.Types.ObjectId(),
-            sender: sender._id,
-            receiver: receiver._id,
-        }}},
-        {new: true}
+        {
+            $addToSet: {
+                invitations: {
+                    _id: new mongoose.Types.ObjectId(),
+                    sender: sender._id,
+                    receiver: receiver._id,
+                }
+            }
+        },
+        { new: true }
     )
     const invitationId = updatedSite.invitations[updatedSite.invitations.length - 1]._id
 
@@ -348,23 +352,23 @@ const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
         throw new Error("Site does not exist!");
     }
     const member = await User.findById(siteMemberId)
-    if(!member){
+    if (!member) {
         throw new Error("Member does not exist!");
     }
     // xoa member khoi danh sach member cua cac project
     await db.Project.findOneAndUpdate(
-        {"projectMember._id": siteMemberId},
+        { "projectMember._id": siteMemberId },
         { $pull: { projectMember: { _id: siteMemberId } } }
     )
     // xoa member khoi danh sach membe cua cac team
     await db.Team.findOneAndUpdate(
-        {"teamMembers._id": siteMemberId},
+        { "teamMembers._id": siteMemberId },
         { $pull: { teamMembers: { _id: siteMemberId } } }
     )
     const updateSiteMember = await Site.findOneAndUpdate(
         { "siteMember._id": siteMemberId },
         { $pull: { siteMember: { _id: siteMemberId } } },
-        { new: true } 
+        { new: true }
     ).select("siteMember").populate("siteMember._id");
     await User.findOneAndUpdate(
         { _id: siteMemberId }, // Tìm user theo _id
@@ -541,14 +545,14 @@ async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArr
             return {
                 _id: member._id,
                 roles: rolesArray
-        }
+            }
         } else {
             return member;
         }
     })
     const updatedSite = await Site.findByIdAndUpdate(siteId,
-        {$set: {siteMember: updatedSiteMember}},
-        {new : true}
+        { $set: { siteMember: updatedSiteMember } },
+        { new: true }
     );
     const siteOwner = await User.findById(siteOwnerId);
     await notificationService.createNotification(siteOwnerId,

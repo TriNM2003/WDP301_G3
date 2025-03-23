@@ -170,22 +170,24 @@ const TeamMemberManagement = () => {
             return;
         }
         setLoadingKick(true);
-        try {
-            const response = await axios.post(
-                `http://localhost:9999/sites/${site._id}/teams/${teamId}/kick-team-member`,
-                { userId },
-                { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
-            );
-            message.success(`Successfully removed ${selectedUser.username} from the team`);
-            showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
-            setIsKickMemberModalVisible(false);
-            fetchTeamMembers(teamId); // Cập nhật danh sách
-        } catch (error) {
-            console.error("Kick Member Error:", error.response ? error.response.data : error);
-            message.error(error.response?.data?.message || "Failed to remove user.");
-        } finally {
-            setLoadingKick(false);
-        }
+        setTimeout(async () => {
+            try {
+                const response = await axios.post(
+                    `http://localhost:9999/sites/${site._id}/teams/${teamId}/kick-team-member`,
+                    { userId },
+                    { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
+                );
+                message.success(`Successfully removed ${selectedUser.username} from the team`);
+                showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
+                setIsKickMemberModalVisible(false);
+                fetchTeamMembers(teamId); // Cập nhật danh sách
+            } catch (error) {
+                console.error("Kick Member Error:", error.response ? error.response.data : error);
+                message.error(error.response?.data?.message || "Failed to remove user.");
+            } finally {
+                setLoadingKick(false);
+            }
+        }, 1000);
     };
 
 
@@ -202,27 +204,30 @@ const TeamMemberManagement = () => {
             return;
         }
 
+
         setLoadingAdd(true);
-        try {
-            await axios.post(
-                `${siteAPI}/${site._id}/teams/${teamId}/add-team-member`,
-                { username: searchUser, role: selectedRole },
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-            );
+        setTimeout(async () => {
+            try {
+                await axios.post(
+                    `${siteAPI}/${site._id}/teams/${teamId}/add-team-member`,
+                    { username: searchUser, role: selectedRole },
+                    { headers: { Authorization: `Bearer ${accessToken}` } }
+                );
 
-            message.success(`Successfully added ${searchUser} to the team`);
-            showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
+                message.success(`Successfully added ${searchUser} to the team`);
+                showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
 
-            setIsAddMemberModalVisible(false);
-            setSearchUser(""); // Reset input sau khi thêm thành viên thành công
-            setFilteredMembers([]);
-            fetchTeamMembers(teamId); // Cập nhật danh sách thành viên trong team
-        } catch (error) {
-            console.error("Error adding team member:", error);
-            message.error(error.response?.data?.message || "Failed to add user.");
-        } finally {
-            setLoadingAdd(false);
-        }
+                setIsAddMemberModalVisible(false);
+                setSearchUser(""); // Reset input sau khi thêm thành viên thành công
+                setFilteredMembers([]);
+                fetchTeamMembers(teamId); // Cập nhật danh sách thành viên trong team
+            } catch (error) {
+                console.error("Error adding team member:", error);
+                message.error(error.response?.data?.message || "Failed to add user.");
+            } finally {
+                setLoadingAdd(false);
+            }
+        }, 1000);
     };
 
     if (loading) return <Spin tip="Loading..." style={{ display: "block", marginTop: 50 }} />;
@@ -230,8 +235,8 @@ const TeamMemberManagement = () => {
     return (
         <Layout style={{ padding: "24px", minHeight: "100%", background: "white" }}>
             <Breadcrumb>
-                <Breadcrumb.Item><Link>Team</Link></Breadcrumb.Item>
-                <Breadcrumb.Item><Link>Team member</Link></Breadcrumb.Item>
+                <Breadcrumb.Item><Link to={`/site/teams/${teamSlug}`}>Team</Link></Breadcrumb.Item>
+                <Breadcrumb.Item><Link to={`/site/teams/${teamSlug}/manage-member`}>Team member</Link></Breadcrumb.Item>
             </Breadcrumb>
 
             <Row justify="space-between" align="middle" style={{ marginBottom: "20px" }}>

@@ -57,9 +57,15 @@ const EditProfile = () => {
             const dobDate = new Date(value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
+        
+            const ageDiffMs = today - dobDate;
+            const ageDate = new Date(ageDiffMs);
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        
             if (dobDate >= today) {
                 error = "Date of birth must be in the past.";
+            } else if (age < 16) {
+                error = "You must be at least 16 years old.";
             }
         }
 
