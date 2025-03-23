@@ -5,7 +5,7 @@ import Title from 'antd/es/typography/Title';
 import React, { useState } from 'react'
 
 
-const EditProjectSettingsModal = ({editProjectModalVisisble, setEditProjectModalVisible, handleEditProject, currentProjectSettings, setCurrentProjectSettings, handleFileChange, imagePreview}) => {
+const EditProjectSettingsModal = ({loading, editProjectModalVisisble, setEditProjectModalVisible, handleEditProject, currentProjectSettings, setCurrentProjectSettings, handleFileChange, imagePreview}) => {
   return (
     <Modal
       title="Edit project"
@@ -14,7 +14,7 @@ const EditProjectSettingsModal = ({editProjectModalVisisble, setEditProjectModal
       onCancel={() => setEditProjectModalVisible(false)}
       footer={[
         <div style={{display: "flex", justifyContent: "center", marginTop: "10%", gap:"5px"}}>
-            <Button key="add" style={{ backgroundColor: green[6], color: "#fff"}} onClick={handleEditProject}>
+            <Button key="add" style={{ backgroundColor: green[6], color: "#fff"}} onClick={handleEditProject} loading={loading}>
           Save
         </Button>,
         <Button key="cancel" danger onClick={() => setEditProjectModalVisible(false)}>
@@ -34,6 +34,11 @@ const EditProjectSettingsModal = ({editProjectModalVisisble, setEditProjectModal
         <div  style={{textAlign: "center"}}>
             <Title level={5}>Project name</Title>
             <Input style={{width: "50%"}} value={currentProjectSettings.projectName} onChange={(e) => setCurrentProjectSettings({...currentProjectSettings, projectName: e.target.value})} placeholder='Enter project name'/>
+        </div>
+
+        <div  style={{textAlign: "center"}}>
+            <Title level={5}>Project slug</Title>
+            <Input style={{width: "50%"}} value={currentProjectSettings.projectSlug} onChange={(e) => setCurrentProjectSettings({...currentProjectSettings, projectSlug: e.target.value})} placeholder='Enter project slug'/>
         </div>
       
     </Modal>

@@ -28,6 +28,7 @@ const ManageProjectMember = () => {
   const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState();
   const [selectMemberRole, setSelectedMemberRole] = useState();
+  const [loading, setLoading] = useState(false);
   
   // filter by name and role
   const filteredMembers = projectMembers.filter((member) => {
@@ -112,27 +113,36 @@ const ManageProjectMember = () => {
   }
 
   const handleAddMember = async () => {
-    console.clear();
-    if(selectedEmail === "" || selectedEmail === undefined){
-      showMessage("error", "Please select site member email", 2);
-      return;
+    try {
+      setLoading(true)
+      console.clear();
+      if (selectedEmail === "" || selectedEmail === undefined) {
+        showMessage("error", "Please select site member email", 2);
+        return;
+      }
+      const currentUser = userEmails.find(user => user.value === selectedEmail)
+      const newProjectMemberListRaw = await authAxios.post(`${projectAPI}/${project._id}/add-project-member`,
+        {
+          projectMemberId: currentUser.userId,
+          projectMemberRole: selectMemberRole
+        })
+      console.log(newProjectMemberListRaw.data);
+      setAddMemberModalVisible(false);
+      showNotification(`Project member ${currentUser.value} has been add to project ${project?.projectName}`)
+      await showMessage("success", "Add project member successfully", 2);
+      // cap nhap du lieu moi
+      const newEmailList = userEmails.filter(email => email.value !== selectedEmail);
+      setUserEmails(newEmailList);
+      setSelectedEmail();
+      const newProjectMemberList = formattedProjectMembers(newProjectMemberListRaw.data);
+      setProjectMembers(newProjectMemberList);
+      setSelectedMemberRole();
+    } catch (error) {
+      console.log(error)
+    } finally{
+      setLoading(false)
     }
-    const currentUser = userEmails.find(user => user.value === selectedEmail)
-   const newProjectMemberListRaw = await authAxios.post(`${projectAPI}/${project._id}/add-project-member`, 
-    { projectMemberId: currentUser.userId,
-      projectMemberRole: selectMemberRole
-    })
-    console.log(newProjectMemberListRaw.data);
-    setAddMemberModalVisible(false);
-    showNotification(`Project member ${currentUser.value} has been add to project ${project?.projectName}`)
-    await showMessage("success", "Add project member successfully", 2);
-    // cap nhap du lieu moi
-    const newEmailList = userEmails.filter(email => email.value !== selectedEmail);
-    setUserEmails(newEmailList);
-    setSelectedEmail();
-    const newProjectMemberList = formattedProjectMembers(newProjectMemberListRaw.data);
-    setProjectMembers(newProjectMemberList);
-    setSelectedMemberRole();
+    
   }
 
  // Xử lý đổi vai trò
@@ -224,6 +234,7 @@ const handleRoleChange = async (oldRoles, updatedRoleList, projectMemberId, proj
       selectMemberRole={selectMemberRole}
       setSelectedMemberRole={setSelectedMemberRole}
       projectRoles={projectRoles}
+      loading={loading}
       />
     </div>
   );

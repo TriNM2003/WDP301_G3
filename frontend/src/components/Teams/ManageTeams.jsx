@@ -89,6 +89,7 @@ const ManageTeams = () => {
           teamLeader: teamLeader?._id.email,
           teamAvatar: team?.teamAvatar,
           teamLeaderAvatar: teamLeader?._id.userAvatar,
+          teamSlug: team?.teamSlug,
           createDate: team?.createdAt,
           updateDate: team?.updatedAt
         }
@@ -149,7 +150,7 @@ const ManageTeams = () => {
       render: (text, record) => (
         <Space>
           <Avatar src={record.teamAvatar} />
-          {text}
+          <span onClick={() => nav(`/site/teams/${record?.teamSlug}`)} style={{cursor: "pointer"}}>{text}</span>
         </Space>
       ),
         sorter: (a, b) => a.teamName.localeCompare(b.teamName),

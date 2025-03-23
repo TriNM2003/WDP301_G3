@@ -46,8 +46,9 @@ const getSiteMembersById = async (req, res, next) => {
 
 const createSite = async (req, res, next) => {
     try {
+        const {id} = req.payload;
         const {siteName, siteOwner} = req.body;
-        const newSite = await SiteService.createSite(siteName, siteOwner);
+        const newSite = await SiteService.createSite(id, siteName, siteOwner);
         res.status(200).json(newSite);
     } catch (error) {
         res.status(400).json({ 
@@ -154,7 +155,6 @@ const inviteMemberByEmail = async (req, res, next) => {
 
 const processingInvitation = async (req, res, next) => {
     try {
-        // const {id} = req.payload;
         const {invitationId, decision} = req.body;
         // console.log(id, invitationId);
         const result = await siteService.processingInvitation(invitationId, decision)
@@ -255,6 +255,17 @@ async function changeSiteMemberRoles(req, res, next){
     }
 }
 
+
+async function requestSite(req, res, next){
+    try {
+        const {emailSubject, emailBody} = req.body;
+        const result = await siteService.requestSite(emailSubject, emailBody);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error)
+    }
+}
+
 const siteController = {
     getSiteById,
     createSite,
@@ -272,6 +283,7 @@ const siteController = {
     activeSite,
     adminEditSite,
     changeSiteMemberRoles,
+    requestSite,
 }
 
 module.exports = siteController;

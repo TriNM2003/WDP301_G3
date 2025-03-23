@@ -7,58 +7,51 @@ const multer = require("multer");
 const path = require("path");
 const { UserController } = require("../controllers");
 const cloudinary = require("../configs/cloudinary");
+const { isActive } = require("../middlewares/account.middleware");
 
 
 userRouter.use(bodyParser.json());
+userRouter.use([authMiddleware.verifyAccessToken, isActive]);
 
 userRouter.get("/all",
-    authMiddleware.verifyAccessToken,
     UserController.getAllUsers
 )
 
 userRouter.get("/user-profile", 
-    authMiddleware.verifyAccessToken, 
     UserController.getUserById,
 );
 
 userRouter.put("/edit-profile", 
-    authMiddleware.verifyAccessToken,
     cloudinary.upload.single("userAvatar"),  // Middleware upload file
     UserController.editProfile
 );
 
 
 userRouter.post("/send-delete-email", 
-    authMiddleware.verifyAccessToken, 
     UserController.sendDeleteAccountEmail
 );
 
 
 userRouter.delete("/confirm-delete", 
-    authMiddleware.verifyAccessToken, 
     UserController.confirmDeleteAccount
 );
 
 
 userRouter.put("/change-password",
-    authMiddleware.verifyAccessToken,
     UserController.changePassword
 );
 
 // get activity by userId
 userRouter.get("/user-activities", 
-    authMiddleware.verifyAccessToken, 
     UserController.getUserActivities
 
 );
 
 // getUserInfoByUserIdFromParams
 userRouter.get("/user/:userId",
-    authMiddleware.verifyAccessToken,
     UserController.getUserInfoByUserIdFromParams
 );
 userRouter.get("/:userId/get-user-by-id",
-    authMiddleware.verifyAccessToken,
     UserController.getOtherUserById
 )
 

@@ -60,5 +60,7 @@ siteRouter.put("/:siteId/active", adminMiddleware.isAdmin, siteController.active
 siteRouter.put("/:siteId/adminEdit", adminMiddleware.isAdmin, siteController.adminEditSite);
 
 siteRouter.put("/:siteId/change-site-member-roles", [ siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.changeSiteMemberRoles)
+siteRouter.post("/request-site", siteController.requestSite);
+
 
 module.exports = siteRouter;
