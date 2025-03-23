@@ -15,7 +15,6 @@ function CompleteSprintModal() {
     const uncompletedActivities = activities?.filter((activity) => {
         return activity?.sprint?._id == completedSprint?._id && activity?.stage?.stageStatus?.toUpperCase() != "DONE"
     })
-    console.log(selectedSprint);
     return (
         <Modal
             title={

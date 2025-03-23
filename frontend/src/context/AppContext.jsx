@@ -319,6 +319,7 @@ const AppProvider = ({ children }) => {
   }
   // moveActivity
   const handleMoveActivity = async (field, selectedActivity, data) => {
+    console.log(field, selectedActivity, data);
     axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${selectedActivity?._id}/move`,
       {
         [field]: data

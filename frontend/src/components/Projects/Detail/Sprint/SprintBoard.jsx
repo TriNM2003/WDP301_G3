@@ -1,38 +1,95 @@
-import React, { useContext, useState } from "react";
-import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal, message, Select } from "antd";
+import React, { useContext, useEffect, useState } from "react";
+import { Collapse, Button, Tag, Space, Flex, Dropdown, Menu, Avatar, Tooltip, DatePicker, Progress, Input, Modal, message, Select, Form } from "antd";
 import { CheckOutlined, DoubleRightOutlined, DownOutlined, DownloadOutlined, EllipsisOutlined, FieldTimeOutlined, FormOutlined, MinusOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { blue, cyan, gray, grey, orange, red } from "@ant-design/colors";
 import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
-import { DndContext, MouseSensor, useSensor } from "@dnd-kit/core"
+import { DndContext, DragOverlay, MouseSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import CompleteSprintModal from "./CompleteSprintModal";
 import ActivityDetail from "../../../Activity/ActivityDetail";
 import SprintActivity from "../../../Activity/SprintActivity";
 import { AppContext } from "../../../../context/AppContext";
+import { useDroppable } from "@dnd-kit/core";
+
 import axios from "axios";
+import DropContainer from "./DropContainer";
 
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
   const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, selectedSprint, setSelectedSprint, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
+  const [activeDragActivity, setActiveDragActivity] = useState(null);
+
   // Activities
   const [filterActivityType, setFliterActivityType] = useState(["task"]);
   const filteredActivitites = activities?.filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
   const [isDeleteSprint, setIsDeleteSprint] = useState(false);
   const [deleteSprint, setDeleteSprint] = useState(null);
+  const [editSprintModal, setEditSprintModal] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const [editSprintForm] = Form.useForm();
 
   //DND
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5, // Cần di chuyển chuột ít nhất 5px để kích hoạt drag
+    },
+  });
+
+  const sensors = useSensors(mouseSensor);
   const handleDragEnd = (e) => {
+    console.log(e);
     const { over, active } = e;
-    console.log("handleDrageEnd:", e);
-  }
+
+    if (!over || !activeDragActivity) {
+      setActiveDragActivity(null);
+      return;
+    }
+
+    const activity = activities?.find((activity) => activity?._id == active.id);
+    const overSprintId = over?.data?.current?.sprint?._id || "0"; // over.id sẽ là sprint id hoặc "0" cho backlog
+
+    const currentSprintId = activeDragActivity?.sprint?._id || "0";
+    const targetSprint = sprints.find((s) => s._id === overSprintId);
+    if (targetSprint?.sprintStatus == "completed") {
+      message.warning("Cannot move activity to a completed sprint.");
+      setActiveDragActivity(null);
+      return;
+    }
+    if (overSprintId !== currentSprintId) {
+      // Gọi hàm moveActivity
+      handleMoveActivity("sprint", activity, overSprintId == "0" ? null : overSprintId);
+    }
+
+    setActiveDragActivity(null);
+  };
+
 
   const handleDragStart = (e) => {
-    console.log("handleDrageStart:", e);
-  }
+    console.log(e);
+
+    const { active } = e;
+    const activityId = active?.id;
+
+    const foundActivity = activities.find(act => act._id === activityId);
+    if (foundActivity) {
+      setActiveDragActivity(foundActivity);
+    }
+  };
+
+
+  useEffect(() => {
+    const nonCompletedSprintIds = sprints
+      .filter(s => s.sprintStatus != "completed")
+      .map(s => s._id.toString());
+
+    setExpandedPanels(["0", ...nonCompletedSprintIds]);
+  }, [sprints]);
+
 
   // const handleDragOver = (event) => {
   //   const { over } = event;
@@ -73,36 +130,92 @@ const SprintBoard = () => {
   }
 
   // Edit sprint
-  const editSprint = (sprint, field, data) => {
-    if (field && data) {
-      if (field == "sprintStatus" && data == "active") {
-        const activeSprint = sprints.find(s => s.sprintStatus == "active" && s._id != sprint?._id);
-        if (activeSprint) {
-          message.error("Only one sprint can be active at a time. Please complete or deactivate the current active sprint first.");
-          return;
-        }
+  const editSprint = (sprint, updateData) => {
+    if (updateData.sprintStatus == "active") {
+      const activeSprint = sprints.find(s => s.sprintStatus == "active" && s?._id != sprint?._id);
+      if (activeSprint) {
+        message.error("Only one sprint can be active at a time.");
+        return;
       }
-      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`,
-        { [field]: data },
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        }
-      )
+    }
+
+    if (sprint) {
+      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`, updateData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
         .then((res) => {
-          const updatedSprints = sprints.map(s => s._id === res?.data?.sprint?._id ? res?.data?.sprint : s);
+          setSelectedSprint(res.data.sprint)
+          const updatedSprints = sprints.map(s => s?._id == res.data.sprint?._id ? res.data.sprint : s);
           setSprints(updatedSprints);
           activityModalLoading();
-
           message.success("Edit sprint successfully");
-          showNotification(`Project update`, `${user?.username} just edit sprint  "${sprint?.sprintName}".`);
+          showNotification(`Project update`, `${user?.username} just edited sprint "${sprint?.sprintName}".`);
         })
         .catch((err) => {
-          message.error(err?.data?.error?.message || "Edit sprint fail!")
-        })
+          message.error(err?.response?.data?.error?.message || "Edit sprint failed!");
+        });
     }
-  }
+  };
+  useEffect(() => {
+    if (selectedSprint && editSprintModal) {
+      editSprintForm.setFieldsValue({
+        sprintName: selectedSprint?.sprintName,
+        sprintGoal: selectedSprint?.sprintGoal,
+        startDate: selectedSprint?.startDate ? dayjs(selectedSprint.startDate) : null,
+        dueDate: selectedSprint?.dueDate ? dayjs(selectedSprint.dueDate) : null,
+      });
+    }
+  }, [selectedSprint, editSprintModal]);
+
+
+  const handleEditSprint = async () => {
+    try {
+      const values = await editSprintForm.validateFields();
+      const updatedFields = {};
+
+      if (values.sprintName !== selectedSprint?.sprintName) {
+        updatedFields.sprintName = values.sprintName;
+      }
+
+      if ((values.sprintGoal || "") !== (selectedSprint?.sprintGoal || "")) {
+        updatedFields.sprintGoal = values.sprintGoal || null;
+      }
+
+      const oldStart = selectedSprint?.startDate ? dayjs(selectedSprint.startDate) : null;
+      const newStart = values.startDate || null;
+
+      if (!oldStart?.isSame(newStart)) {
+        updatedFields.startDate = newStart;
+      }
+
+      const oldDue = selectedSprint?.dueDate ? dayjs(selectedSprint.dueDate) : null;
+      const newDue = values.dueDate || null;
+
+      if (!oldDue?.isSame(newDue)) {
+        updatedFields.dueDate = newDue;
+      }
+
+      if (Object.keys(updatedFields).length > 0) {
+        setEditLoading(true); // bật loading
+        await new Promise(resolve => setTimeout(resolve, 500)); // delay 500ms
+        await editSprint(selectedSprint, updatedFields); // chờ edit xong
+      }
+
+      editSprintForm.resetFields();
+
+    } catch (err) {
+      console.log(err);
+      message.error(err?.message || "No thing to update!");
+
+    } finally {
+      setEditLoading(false); // tắt loading
+    }
+  };
+
+
+
 
   // Delete sprint 
   const handleDeleteClick = () => {
@@ -144,7 +257,7 @@ const SprintBoard = () => {
   };
   return (
     <DndContext
-
+      sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     // onDragOver={handleDragOver}
@@ -179,14 +292,15 @@ const SprintBoard = () => {
             </Flex>
           } key="0">
             <SortableContext
+              id="0"
               items={filteredActivitites?.filter(a => a && !a.sprint).map(a => a._id)}
               strategy={verticalListSortingStrategy} >
               {/* Activity */}
-              <div style={{ minHeight: "50px" }} >
+              <DropContainer id="0">
                 {filteredActivitites?.filter(a => a && !a.sprint).map((activity) => {
-                  return <SprintActivity activity={activity} />
+                  return <SprintActivity key={activity?._id} activity={activity} data-sprint-id={activity?.sprint?._id || "0"} />
                 })}
-              </div >
+              </DropContainer >
             </SortableContext>
             {/* Create activity */}
             {createActivityModal ? (
@@ -214,21 +328,42 @@ const SprintBoard = () => {
                 <Flex justify="space-between" align="start">
                   <Space>
                     <Title level={5} style={{ margin: 0 }}>{sprint?.sprintName}</Title>
-                    <DatePicker.RangePicker format="DD-MM-YYYY" placeholder={['Start date', 'Due date']} value={[dayjs("2024-03-01"), dayjs("2024-03-15")]} variant="underlined" disabled />
+                    <DatePicker.RangePicker
+                      format="DD-MM-YYYY"
+                      placeholder={['Start date', 'Due date']}
+                      value={
+                        [sprint?.startDate && dayjs(sprint.startDate), sprint?.dueDate && dayjs(sprint.dueDate)]
+
+                      }
+                      variant="underlined"
+                      disabled
+                    />
                     <small style={{ color: grey[2] }}>({activities?.filter((activity) => activity?.sprint?._id == sprint?._id)?.length} activities)</small>
                   </Space>
                   <Space>
-                    {sprint?.sprintStatus == "active" && (<Button
+                    {sprint?.sprintStatus == "completed" && (<Button
                       size="small"
                       variant="solid"
                       color="green"
                       style={{ borderRadius: "0%" }}
                       onClick={(e) => {
                         e.stopPropagation();
+
+                      }}
+                    >
+                      <CheckOutlined /> Completed
+                    </Button>)
+                    }
+                    {sprint?.sprintStatus == "active" && (<Button
+                      size="small"
+                      variant="solid"
+                      style={{ borderRadius: "0%" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
                         showCompletedSprint(sprint);
                       }}
                     >
-                      <CheckOutlined /> Complete sprint
+                      Complete sprint
                     </Button>)
                     }
                     {sprint?.sprintStatus == "planning" && (<Button
@@ -239,7 +374,7 @@ const SprintBoard = () => {
                       disabled={sprints?.some(s => s?.sprintStatus == "active" && s._id != sprint?._id)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        editSprint(sprint, "sprintStatus", "active")
+                        editSprint(sprint, { sprintStatus: "active" })
 
                       }}
                     >
@@ -249,8 +384,17 @@ const SprintBoard = () => {
                     <Dropdown
                       overlay={
                         <Menu onClick={(e) => e.domEvent.stopPropagation()}>
-                          <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false}>Edit sprint</Menu.Item>
-                          <Menu.Item disabled={sprint?.sprintStatus == "completed" ? true : false} danger onClick={() => {
+                          <Menu.Item
+
+                            onClick={() => {
+                              setSelectedSprint(sprint)
+                              setEditSprintModal(true);
+
+                            }}
+                          >
+                            Edit sprint
+                          </Menu.Item>
+                          <Menu.Item danger onClick={() => {
                             setDeleteSprint(sprint); // Cập nhật deleteSprint trước
                             setTimeout(() => handleDeleteClick(), 100);
                           }} >Delete sprint</Menu.Item>
@@ -271,12 +415,13 @@ const SprintBoard = () => {
 
                   </Space>
                 </Flex>
-              } key={sprint?._id}>
+              } key={sprint._id}>
               <SortableContext
+                id={sprint?._id}
                 items={filteredActivitites?.filter(activity => activity?.sprint?._id == sprint?._id)
                   .map(activity => activity._id)}
                 strategy={verticalListSortingStrategy} >
-                <div style={{
+                <DropContainer id={sprint._id} style={{
 
                   border: filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0 ? "" : "2px dashed lightgray",
                 }} >
@@ -286,9 +431,9 @@ const SprintBoard = () => {
                   }
                   {filteredActivitites?.filter((activity) => activity?.sprint?._id == sprint?._id)
                     .map((activity) => (
-                      <SprintActivity key={activity?._id} activity={activity} />
+                      <SprintActivity key={activity?._id} activity={activity} data-sprint-id={activity?.sprint?._id || "0"} isPlaceholder={activeDragActivity?._id == activity?._id} />
                     ))}
-                </div>
+                </DropContainer>
 
               </SortableContext>
 
@@ -299,6 +444,14 @@ const SprintBoard = () => {
 
 
         </Collapse>
+        <DragOverlay>
+          {activeDragActivity && (
+            <SprintActivity
+              activity={activeDragActivity}
+              isDragging={true}
+            />
+          )}
+        </DragOverlay>
 
 
         {/* Complete modal */}
@@ -333,6 +486,68 @@ const SprintBoard = () => {
               ))}
           </Select>
         </Modal>
+        {/* Edit modal sprint */}
+        <Modal
+          open={editSprintModal}
+          title="Edit Sprint"
+          onCancel={() => {
+            setEditSprintModal(false);
+            setSelectedSprint(null);
+            editSprintForm.resetFields();
+          }}
+          onOk={handleEditSprint}
+          confirmLoading={editLoading}
+          okText="Save"
+        >
+          <Form
+            form={editSprintForm}
+            layout="vertical"
+            initialValues={{
+              sprintName: selectedSprint?.sprintName,
+              sprintGoal: selectedSprint?.sprintGoal,
+              startDate: selectedSprint?.startDate ? dayjs(selectedSprint.startDate) : null,
+              dueDate: selectedSprint?.dueDate ? dayjs(selectedSprint.dueDate) : null,
+            }}
+          >
+            <Form.Item label="Sprint name" name="sprintName" rules={[{ required: true, message: "Please enter sprint name" }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item label="Sprint goal" name="sprintGoal">
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="Start date"
+              name="startDate"
+              dependencies={['dueDate']}
+
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                disabledDate={(current) => {
+                  const end = editSprintForm.getFieldValue('dueDate');
+                  return end && current && current.isSameOrAfter(end, 'day');
+                }}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="End date"
+              name="dueDate"
+              dependencies={['startDate']}
+
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                disabledDate={(current) => {
+                  const start = editSprintForm.getFieldValue('startDate');
+                  return start && current && current.isSameOrBefore(start, 'day');
+                }}
+              />
+            </Form.Item>
+
+          </Form>
+        </Modal>
+
 
       </div >
     </DndContext >

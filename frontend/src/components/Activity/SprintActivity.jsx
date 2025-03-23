@@ -8,40 +8,45 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 
 
-function SprintActivity({ activity }) {
+function SprintActivity({ activity, isDragging }) {
     const { showDeleteActivity, activities, setActivities, sprints, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
 
     //DND
-    const [isClicking, setIsClicking] = useState(false);
-
-    const handleMouseDown = () => setIsClicking(true);
-    const handleMouseMove = () => setIsClicking(false);
-    const handleMouseUp = () => {
-        if (isClicking) {
-            showActivity(activity); // Chỉ mở khi là click
-        }
-    };
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    // const [isClicking, setIsClicking] = useState(false);
+    const isFromCompletedSprint = activity?.sprint?.sprintStatus == "completed";
+    // const handleMouseDown = () => setIsClicking(true);
+    // const handleMouseMove = () => setIsClicking(false);
+    // const handleMouseUp = () => {
+    //     if (isClicking) {
+    //         showActivity(activity); // Chỉ mở khi là click
+    //     }
+    // };
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
         id: activity?._id,
-        data: activity
+        data: activity,
+        disabled: isFromCompletedSprint,
     });
 
     const dndSprintActivity = {
         transform: CSS.Translate.toString(transform),
         transition,
+        cursor: isFromCompletedSprint ? "not-allowed" : "grab",
         opacity: isDragging ? 0.5 : undefined
     };
 
     return (
         <Flex
-            ref={setNodeRef}  {...attributes} {...listeners}
+            ref={setNodeRef}  {...attributes} {...(!isFromCompletedSprint ? listeners : {})}
             justify="space-between" align="center"
-            style={Object.assign({}, dndSprintActivity, { background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer" })}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            
+            style={Object.assign({}, dndSprintActivity, {
+                background: "white", border: `0.5px solid ${cyan[2]}`, padding: "0.5% 1%", cursor: "pointer", opacity: isDragging ? 0.8 : 1,
+                transform: isDragging ? "scale(1.05)" : "none",
+                boxShadow: isDragging ? "0 4px 12px rgba(0,0,0,0.1)" : "none",
+                transition: "all 0.2s ease",
+            })}
+
         >
-            <Space onMouseUp={handleMouseUp}>
+            <Space onClick={()=> showActivity(activity)} >
                 {activity.type.typeName == "task" && <FormOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "subtask" && <PaperClipOutlined style={{ color: blue[6] }} />}
                 {activity.type.typeName == "bug" && <BugOutlined style={{ color: yellow[6] }} />}
@@ -96,9 +101,9 @@ function SprintActivity({ activity }) {
                 }
                 <Dropdown
                     overlay={
-                        <Menu onClick={(e) => e.domEvent.stopPropagation()}>
-                            <Menu.Item onClick={() => { showActivity(activity) }}>Show activity detail</Menu.Item>
-                            <Menu.Item onClick={() => { showDeleteActivity(activity) }} danger>Delete activity</Menu.Item>
+                        <Menu onClick={(e) => e.domEvent.stopPropagation()} >
+                            <Menu.Item onMouseUp={() => { showActivity(activity) }}>Show activity detail</Menu.Item>
+                            <Menu.Item onMouseUp={() => { showDeleteActivity(activity) }} danger>Delete activity</Menu.Item>
                         </Menu>
                     }
                     trigger={["click"]}

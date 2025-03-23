@@ -24,11 +24,11 @@ sprintRouter.put("/:sprintId/edit",
 )
 
 sprintRouter.put("/:sprintId/complete",
-[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject,projectMiddleware.isProjectManager],
+[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject,projectMiddleware.isProjectManager,sprintMiddleware.isNotCompletedSprint],
     sprintController.completeSprint
 )
 sprintRouter.put("/:sprintId/delete",
-[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject,projectMiddleware.isProjectManager],
+[authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject,projectMiddleware.isProjectManager,sprintMiddleware.isNotCompletedSprint],
     sprintController.deleteSprint
 )
 
