@@ -82,8 +82,7 @@ const activitySchema = new mongoose.Schema({
         }
     }],
 
-    attachments: [
-        {
+    attachment: {
             fileName: {
                 type: String
             },
@@ -105,7 +104,7 @@ const activitySchema = new mongoose.Schema({
                 default: Date.now
             }
         }
-    ],
+    ,
     
     startDate: {
         type: Date

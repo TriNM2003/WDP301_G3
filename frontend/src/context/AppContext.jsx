@@ -35,19 +35,21 @@ const AppProvider = ({ children }) => {
   //Stage
   const [stages, setStages] = useState([]);
 
-
   // Activity
   const [activityTypes, setActivityTypes] = useState([]);
   const [deleteActivity, setDeleteActivity] = useState(false);
-  const [searchActivity,setSearchActivity]= useState("");
+  const [searchActivity, setSearchActivity] = useState("");
   const [activityToDelete, setActivityToDelete] = useState("");
   const [confirmActivity, setConfirmActivity] = useState("");
   const [activityModal, setActivityModal] = useState(false);
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
+  const [activeDragActivity, setActiveDragActivity] = useState(null);
+
   const [isActivityTitle, setIsActivityTitle] = useState(false)
   const [activityLoading, setActivityLoading] = useState(false)
   const [userActivities, setUserActivities] = useState([]);
+
   // Team
 
   const [teams, setTeams] = useState({});
@@ -62,8 +64,10 @@ const AppProvider = ({ children }) => {
   const [activity, setActivity] = useState({});
 
   //Sprint
-  const [completedSprint, setCompletedSprint] = useState(false);
+  const [completedSprint, setCompletedSprint] = useState(null);
+  const [isCompletedSprint, setIsCompletedSprint] = useState(false);
   const [sprints, setSprints] = useState([])
+  const [selectedSprint, setSelectedSprint] = useState(null);
 
 
 
@@ -134,18 +138,18 @@ const AppProvider = ({ children }) => {
           .catch(error => {
             console.log(error.response?.data?.message);
             // khong co refresh token hoac loi lay refresh token
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("accessTokenExp");
-          localStorage.removeItem("userId");
-          setUser({});
-          nav('/auth/login');
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("accessTokenExp");
+            localStorage.removeItem("userId");
+            setUser({});
+            nav('/auth/login');
           });
-      }else{
+      } else {
         localStorage.removeItem("accessToken");
-          localStorage.removeItem("accessTokenExp");
-          localStorage.removeItem("userId");
-          setUser({});
-          nav('/auth/login');
+        localStorage.removeItem("accessTokenExp");
+        localStorage.removeItem("userId");
+        setUser({});
+        nav('/auth/login');
       }
     }
 
@@ -302,7 +306,7 @@ const AppProvider = ({ children }) => {
         setCreateActivityModal(false);
       })
       .catch((err) => {
-        message.error(err?.response?.data?.error?.message||"Activity created failed!");
+        message.error(err?.response?.data?.error?.message || "Activity created failed!");
         setActivityName("");
 
         setCreateActivityModal(false);
@@ -341,7 +345,7 @@ const AppProvider = ({ children }) => {
       })
       .catch((err) => {
         message.error(err.response?.data?.error?.message || "Move activity failed");
-        console.log(err);
+        // console.log(err);
       })
   }
   // delete Activity
@@ -374,7 +378,7 @@ const AppProvider = ({ children }) => {
 
 
   const handleDeleteActivity = async () => {
-    if (confirmActivity === activityToDelete?.activityTitle) {
+    if (confirmActivity == activityToDelete?.activityTitle) {
       try {
         axios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
           {
@@ -390,7 +394,10 @@ const AppProvider = ({ children }) => {
         message.success(`Activity "${activityToDelete?.activityTitle}" has been deleted successfully!`);
         showNotification(`Project update`, `User1 just deleted activity ${activityToDelete?.activityTitle}.`);
         handleCloseDeleteActivityModal();
-        closeActivity();
+        if (activityToDelete?.type?.typeName == "task") {
+          closeActivity();
+
+        }
       } catch (error) {
 
       }
@@ -413,27 +420,47 @@ const AppProvider = ({ children }) => {
 
 
   //Complete sprint
-  const showCompletedSprint = () => {
-    setCompletedSprint(true);
+  const showCompletedSprint = (sprint) => {
+    setCompletedSprint(sprint)
+    setIsCompletedSprint(true);
   };
 
   const handleCompletedCancel = () => {
-    setCompletedSprint(false);
+    setCompletedSprint()
+    setIsCompletedSprint(false);
   };
 
   const handleCompletedSprint = () => {
-    message.success({
-      content: `🎯 (Sprint name) has been completed successfully! 🚀 
-                  - ✅ 10 (activitys) completed 
-                  - ⚠️ 3 (uncompleted bugs) moved to {sprint}`,
-      duration: 4, // Thời gian hiển thị message (4 giây)
+    if (completedSprint) {
+      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
+        { newSprintId: selectedSprint != "Backlog" ? selectedSprint: null },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      )
+        .then((res) => {
+          const updatedSprints = sprints.map(s => s._id == res?.data?.sprint?._id ? res?.data?.sprint : s);
+          setSprints(updatedSprints);
+          activityModalLoading();
+          message.success({
+            content: `🎯 (${completedSprint?.sprintName}) has been completed successfully!`,
+            duration: 4,
 
-    });
-    showNotification(`Project update`, `🎯 (Sprint name) has been completed successfully! 🚀 
-    - ✅ 10 (activitys) completed 
-    - ⚠️ 3 (uncompleted bugs) moved to  {sprint}`)
+          });
+          showNotification(`Project update`, `🎯 (${completedSprint?.sprintName}) has been completed successfully!`)
 
-    setCompletedSprint(false);
+          setIsCompletedSprint(false);
+          setCompletedSprint();
+
+        })
+        .catch((err) => {
+          message.error(err.response?.data?.error?.message || "Complete sprint failed");
+
+        })
+
+    }
 
   };
 
@@ -462,14 +489,16 @@ const AppProvider = ({ children }) => {
       stages, setStages, project, setProject, projects, setProjects, setSite, site, activities, setActivities, sprints, setSprints, activity, setActivity, activityLoading, setActivityLoading,
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
-      handleMoveActivity,searchActivity,setSearchActivity
+      handleMoveActivity, searchActivity, setSearchActivity, activityTypes,
+      isCompletedSprint, setIsCompletedSprint, selectedSprint, setSelectedSprint,
+      activeDragActivity, setActiveDragActivity
 
 
     }}>
-      {children}
+      {children} 
     </AppContext.Provider>
   );
 };
-  
+
 
 export default AppProvider;

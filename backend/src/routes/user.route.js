@@ -8,9 +8,11 @@ const multer = require("multer");
 const path = require("path");
 const { UserController } = require("../controllers");
 const cloudinary = require("../configs/cloudinary");
+const { isActive } = require("../middlewares/account.middleware");
 
 
 userRouter.use(bodyParser.json());
+userRouter.use([authMiddleware.verifyAccessToken, isActive]);
 
 userRouter.use(authMiddleware.verifyAccessToken);
 userRouter.use(accountMiddleware.isActive);
@@ -28,7 +30,9 @@ userRouter.get("/user-information",
 );
 
 userRouter.put("/edit-profile", 
+
     cloudinary.upload.single("userAvatar"),
+
     UserController.editProfile
 );
 
@@ -38,7 +42,9 @@ userRouter.post("/send-delete-email",
 );
 
 
+
 userRouter.delete("/confirm-delete",  
+
     UserController.confirmDeleteAccount
 );
 

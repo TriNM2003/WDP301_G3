@@ -11,6 +11,7 @@ import axios from 'axios';
 function AppHeader() {
     const { accessToken, user, setUser } = useContext(AppContext);
     const navigate = useNavigate();
+    const isAdmin = user?.roles?.some(role => role.roleName == "admin");
 
     const handleLogout = async () => {
         try {
@@ -67,11 +68,18 @@ function AppHeader() {
                             <Menu.Item key="2" extra="⌘P"  onClick={() => navigate('/profile/profile-info')}>Profile</Menu.Item>
                             <Menu.Item key="3" extra="⌘B"  onClick={() => navigate('/profile/edit-profile')}>Edit profile</Menu.Item>
                             <Menu.Item key="4" extra="⌘B"  onClick={() => navigate('/profile/change-password')}>Change password</Menu.Item>
-                            <Menu.Divider />
-                            <Menu.Item key="5" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S"
-                            onClick={() => handleLogout()}>
-                                Logout
-                            </Menu.Item>
+                            {isAdmin ?
+                                <>
+                                <Menu.Item key="5" extra="⌘B"  onClick={() => navigate('/admin/manage-sites')}>Manage sites</Menu.Item>
+                                <Menu.Item key="6" extra="⌘B"  onClick={() => navigate('/admin/dashboard')}>View dashboard</Menu.Item>
+                                <Menu.Divider />
+                                <Menu.Item key="7" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S" onClick={() => handleLogout()}> Logout</Menu.Item>
+                                </>:
+                                <>
+                                <Menu.Divider />
+                                <Menu.Item key="7" icon={<LogoutOutlined style={{color:"red", fontWeight:"bolder"}}/>}  extra="⌘S" onClick={() => handleLogout()}> Logout</Menu.Item>
+                                </>
+                            }
                         </Menu>
                     }
 

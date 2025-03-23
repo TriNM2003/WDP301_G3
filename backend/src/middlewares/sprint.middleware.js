@@ -5,7 +5,7 @@ const db = require("../models");
 const isNotCompletedSprint = async (req, res, next) => {
     try {
         const { sprintId } = req.params; 
-
+        
 
         const sprint = await db.Sprint.findOne({ _id: sprintId });
         if (!sprint) {
@@ -15,7 +15,7 @@ const isNotCompletedSprint = async (req, res, next) => {
         }
 
         if (sprint.sprintStatus == "completed") {
-            return res.status(400).json({  status: 400, message:"Cannot modify a completed sprint." })
+            return res.status(400).json({error:{  status: 400, message:"Cannot modify a completed sprint." }})
 
         }
 

@@ -157,7 +157,7 @@ function App() {
                         <Route path='members' element={<ManageProjectMember />} />
                       </Route>
                       <Route path="project-setting" element={<EditProject />} />
-
+                      <Route path="workflow" element={<Stage />} />
                       </>}
                       
                     </Route>

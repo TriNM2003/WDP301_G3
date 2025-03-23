@@ -25,6 +25,7 @@ import {
     Divider,
     Dropdown,
     Flex,
+    Image,
     Input,
     Menu,
     Modal,
@@ -44,142 +45,87 @@ import { Option } from "antd/es/mentions";
 import TextArea from "antd/es/input/TextArea";
 import ActivityDetail from "../../../Activity/ActivityDetail";
 import DeleteActivityModal from "../DeleteActivityModal";
-
+import { DndContext, DragOverlay } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import KanbanActivity from "../../../Activity/KanbanActivity";
+import DropContainer from "../Sprint/DropContainer";
 function KanbanBody({ sprint, stage }) {
-    const { activity, setActivity, activities,searchActivity,setSearchActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
+    const { activity, setActivity, activities, searchActivity, activeDragActivity, setActiveDragActivity, setSearchActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, activityModal, setActivityModal, showActivity, closeActivity, showDeleteActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity, showNotification } = useContext(AppContext);
+
 
 
 
 
     const [filterActivityType, setFliterActivityType] = useState(["task"]);
-    const filteredActivitites = activities?.filter((activity)=> activity&& activity?.activityTitle.toUpperCase().includes(searchActivity?.toUpperCase()))
-    .filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
-
-
+    const filteredActivitites = activities?.filter((activity) => activity && activity?.activityTitle.toUpperCase().includes(searchActivity?.toUpperCase()))
+        .filter((a) => a && (filterActivityType.length > 0 ? filterActivityType.includes(a?.type?.typeName) : true));
+    const [createActivityStageId, setCreateActivityStageId] = useState(null);
 
 
     return (
         <Col span={6} >
+
             <Card style={{ borderRadius: "0", background: "#F5F5F5", minHeight: "50% " }} bodyStyle={{ padding: "2%" }}>
-                {filteredActivitites?.filter(activity => activity?.stage?._id === stage?._id && activity?.sprint?._id === sprint?._id).map((a) => (
-                    <Card
-                        key={a._id}
-                        hoverable
-                        style={{ width: "100%", borderRadius: "1%", margin: "5% 0" }}
-                        bodyStyle={{ padding: "2%" }}
-                        headStyle={{ padding: "2%", border: "0" }}
-                        onClick={() => showActivity(a)}
-                        cover={
-                            <img
-                                src="https://i.pinimg.com/736x/45/3c/80/453c80d19293395102b3362b7b74be29.jpg"
-                                style={{ borderRadius: "0", padding: "1% 3%" }}
-                            />
-                        }
-                        title={
-                            <Flex justify="space-between" align="center" style={{ padding: "1% 3%", height: "100%" }}>
-                                <p style={{ margin: 0, color: "black" }}>{a?.activityTitle}</p>
-                                <Dropdown
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item key="1" icon={<DeleteOutlined />} danger onClick={(e) => {
-                                                e.domEvent.stopPropagation();
-                                                showDeleteActivity(a);
-                                            }}>
-                                                Delete activity
-                                            </Menu.Item>
-                                        </Menu>
-                                    }
-                                >
-                                    <EllipsisOutlined onClick={(e) => e.preventDefault()} />
-                                </Dropdown>
-                            </Flex>
-                        }
-                    >
-                        <Row justify="space-between" style={{ padding: "2% 3%" }}>
-                            <Col span={24}>
-                                <Progress percent={(a?.child?.filter((c) => c?.stage?.stageStatus == "done").length / a?.child?.length) * 100} percentPosition={{ align: "end", type: "outer" }} strokeColor={green[6]} />
-                            </Col>
-                            <Col span={8} align="start" style={{ display: "flex", alignItems: "center" }}>
-
-                                {a?.priority === "highest" && (
-                                    <Tag color="red" bordered={false}>
-                                        <strong>
-                                            <DoubleRightOutlined rotate="-90" style={{ color: red[6] }} /> Highest
-                                        </strong>
-                                    </Tag>
-                                )}
-                                {a?.priority === "high" && (
-                                    <Tag color="orange" bordered={false}>
-                                        <strong>
-                                            <UpOutlined style={{ color: orange[6] }} /> High
-                                        </strong>
-                                    </Tag>
-                                )}
-                                {a?.priority === "medium" && (
-                                    <Tag color="blue" bordered={false}>
-                                        <strong>
-                                            <MinusOutlined style={{ color: blue[6] }} /> Medium
-                                        </strong>
-                                    </Tag>
-                                )}
-                                {a?.priority === "low" && (
-                                    <Tag color="cyan" bordered={false}>
-                                        <strong>
-                                            <DownOutlined style={{ color: cyan[6] }} /> Low
-                                        </strong>
-                                    </Tag>
-                                )}
-                                {a?.priority === "lowest" && (
-                                    <Tag color="cyan" bordered={false}>
-                                        <strong>
-                                            <DoubleRightOutlined rotate="90" style={{ color: cyan[4] }} /> Lowest
-                                        </strong>
-                                    </Tag>
-                                )}
+                <SortableContext
+                    id={stage?._id}
+                    items={filteredActivitites?.filter(activity => activity?.stage?._id === stage?._id && activity?.sprint?._id == sprint?._id).map(a => a._id)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    <DropContainer id={stage?._id}>
+                        {filteredActivitites?.filter(activity => activity?.stage?._id == stage?._id && activity?.sprint?._id == sprint?._id).map((a) => (
+                            <KanbanActivity key={a?._id} a={a} />
+                        ))}
+                    </DropContainer>
+                </SortableContext>
 
 
-                            </Col>
-                            <Col span={8} align="end">
-                                <Avatar.Group max={{ count: 2 }}>
-                                    {a?.assignee?.length > 0 ?
-                                        a?.assignee?.map((as) => (
-                                            <Tooltip title={as?.username} placement="top">
-                                                <Avatar src={as?.userAvatar} size={25} />
-                                            </Tooltip>
-                                        )) :
-                                        <Tooltip title="Unassigned" placement="top">
-                                            <Avatar icon={<UserOutlined/>} size={25} />
-                                        </Tooltip>
-                                    }
-
-                                </Avatar.Group>
-                            </Col>
-                        </Row>
-                    </Card>
-                ))}
-
-                {createActivityModal ? (
+                {createActivityModal && createActivityStageId == stage._id ? (
                     <Input
                         value={activityName}
+                        autoFocus
                         onChange={(e) => setActivityName(e.target.value)}
-                        onPressEnter={()=>handleActivityCreate(sprint?.sprintName, stage?.stageName, "task", null)}
-                        onBlur={() => setCreateActivityModal(false)}
+                        onPressEnter={() => {
+                            handleActivityCreate(sprint?.sprintName, stage?.stageName, "task", null);
+                            setCreateActivityModal(false);
+                            setCreateActivityStageId(null);
+                        }}
+                        onBlur={() => {
+                            setCreateActivityModal(false);
+                            setCreateActivityStageId(null);
+                        }}
                         placeholder="Enter activity name"
                         prefix={<FormOutlined />}
                         style={{ borderRadius: 0 }}
                     />
                 ) : (
-                    <Button type="text" style={{ width: "100%", borderRadius: "0", color: gray[4] }} onClick={() => setCreateActivityModal(true)}>
+                    <Button
+                        type="text"
+                        style={{ width: "100%", borderRadius: "0", color: gray[4] }}
+                        onClick={() => {
+                            setCreateActivityModal(true);
+                            setCreateActivityStageId(stage._id);
+                        }}
+                    >
                         <PlusOutlined /> Create activity
                     </Button>
                 )}
+
             </Card>
 
 
             {/* Modal hiển thị chi tiết Activity */}
 
-            
 
+            <DragOverlay>
+                {activeDragActivity && (
+                    <KanbanActivity
+                        key={activeDragActivity?._id}
+                        a={activeDragActivity}
+                        isDragging={true}
+                    />
+                )}
+            </DragOverlay>
         </Col>
     );
 }

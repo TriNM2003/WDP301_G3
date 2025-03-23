@@ -25,7 +25,8 @@ const InvitationTable = ({handleCancelInvitation, filteredInvitations}) => {
           title: "Create date",
           dataIndex: "createDate",
           key: "createDate",
-          sorter: (a,b) => new Date(a.createDate) - new Date(b.createDate)
+          sorter: (a,b) => new Date(a.createDate) - new Date(b.createDate),
+          defaultSortOrder: "descend"
         },
         {
             title: "Last updated",

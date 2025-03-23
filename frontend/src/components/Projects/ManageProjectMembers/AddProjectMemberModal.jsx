@@ -3,7 +3,7 @@ import { Avatar, Button, Modal, Select, Tag } from 'antd'
 import Title from 'antd/es/skeleton/Title'
 import React, { useState } from 'react'
 
-const AddProjectMemberModal = ({addMemberModalVisible, setAddMemberModalVisible, handleAddMember, selectedEmail, setSelectedEmail, userEmails, selectMemberRole, setSelectedMemberRole, projectRoles}) => {
+const AddProjectMemberModal = ({addMemberModalVisible, setAddMemberModalVisible, handleAddMember, selectedEmail, setSelectedEmail, userEmails, selectMemberRole, setSelectedMemberRole, projectRoles, loading}) => {
   const [searchValue, setSearchValue] = useState(""); // Giá trị input tìm kiếm
   const [filteredOptions, setFilteredOptions] = useState([]); // Danh sách email lọc
   const handleSearch = (input) => {
@@ -25,7 +25,7 @@ const AddProjectMemberModal = ({addMemberModalVisible, setAddMemberModalVisible,
         visible={addMemberModalVisible}
         onCancel={() => setAddMemberModalVisible(false)}
         footer={[
-          <Button key="add" color={green[6]} variant="solid" onClick={() => handleAddMember()}>
+          <Button key="add" color={green[6]} variant="solid" onClick={() => handleAddMember()} loading={loading}>
             Add
           </Button>,
           <Button key="cancel" color="danger" variant="solid" onClick={() => setAddMemberModalVisible(false)} danger>

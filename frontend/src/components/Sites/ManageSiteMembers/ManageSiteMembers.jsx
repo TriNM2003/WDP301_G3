@@ -26,6 +26,8 @@ const ManageSiteMembers = () => {
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState();
   const [inviteLoading, setInviteLoading] = useState();
+  const [changeRoleLoading, setChangeRoleLoading] = useState(false);
+  const [revokeAccessLoading, setRevokeAccessLoading] = useState(false);
 
 
 useEffect(() => {
@@ -106,6 +108,7 @@ const fetchData = async () => {
   // Xử lý xóa thành viên bằng Popconfirm
   const handleRevokeAccess = async (name, sitememberid) => {
     try {
+      setRevokeAccessLoading(true);
       if(!siteAPI && !site._id){
         showMessage("error", "Site data not found", 2);
         return;
@@ -140,6 +143,8 @@ const fetchData = async () => {
       showNotification(`Member ${name} has been revoke access 🔒 from site ${site.siteName}`);
     } catch (error) {
       console.log(error)
+    } finally{
+      setRevokeAccessLoading(false);
     }
   };
 
@@ -147,7 +152,8 @@ const fetchData = async () => {
   // Xử lý đổi vai trò
   const handleRoleChange = async (siteMemberId, oldRole, newRole, siteMemberEmail) => {
     try {
-      console.log("role changed", siteMemberId, oldRole, newRole)
+      setChangeRoleLoading(true);
+      // console.log("role changed", siteMemberId, oldRole, newRole)
       if (oldRole.includes("siteOwner")) {
         message.warning("Cannot change site owner role", 2);
         return;
@@ -166,6 +172,8 @@ const fetchData = async () => {
       await fetchData();
     } catch (error) {
       console.log(error)
+    } finally{
+      setChangeRoleLoading(false)
     }
     
   };
@@ -182,7 +190,7 @@ const fetchData = async () => {
       {/* filter */}
       <ManageSiteMemberFilter site={site} formatRole={formatRole} setSelectedFilterRole={setSelectedFilterRole} />
       {/* Bảng danh sách thành viên */}
-      <SiteMemberTable handleRoleChange={handleRoleChange} formatRole={formatRole} site={site} members={filteredMembers} handleRevokeAccess={handleRevokeAccess}/>
+      <SiteMemberTable loading={changeRoleLoading} handleRoleChange={handleRoleChange} formatRole={formatRole} site={site} members={filteredMembers} handleRevokeAccess={handleRevokeAccess} revokeAccessLoading={revokeAccessLoading}/>
       {/* Modal mời thành viên */}
       <InviteMemberModal inviteModalVisible={inviteModalVisible} setInviteModalVisible={setInviteModalVisible} handleInviteMember={handleInviteMember} selectedEmail={selectedEmail} setSelectedEmail={setSelectedEmail} userEmails={invitaionEmails} inviteLoading={inviteLoading} />
     </div>

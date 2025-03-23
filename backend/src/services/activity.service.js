@@ -5,6 +5,8 @@ const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 const { default: mongoose } = require('mongoose');
 const notificationService = require('./notification.service');
+const { cloudinary } = require('../configs/cloudinary');
+const fs = require('fs');
 
 const getActivitiesByProjectId = async (projectId) => {
     try {
@@ -82,7 +84,7 @@ const create = async (data, project) => {
             $addToSet: { activities: createdActivity._id }
         }
         )
-        
+
         return createdActivity;
     } catch (error) {
         throw error;
@@ -113,7 +115,7 @@ const edit = async (data, activityId) => {
                     description: description !== undefined ? description : currentActivity.description,
                     parent: parent || currentActivity.parent,
                     priority: priority || currentActivity.priority,
-                    startDate: startDate ,
+                    startDate: startDate,
                     dueDate: dueDate,
                     child: child || currentActivity.child,
                 }
@@ -146,6 +148,61 @@ const edit = async (data, activityId) => {
         throw error;
     }
 };
+
+const uploadAttachment = async (userId, activityId, file) => {
+
+        const activity = await db.Activity.findOne({
+            _id: activityId,
+            isDestroyed: { $ne: true }
+        });
+
+        if (!activity) {
+            throw new Error("Activity not found or already deleted");
+        }
+
+        let newAttachmentUrl = activity.attachment?.url;
+
+        if (file) {
+            try {
+
+                const result = await cloudinary.uploader.upload(file.path, {
+                    resource_type: "raw" // 👈 Cho phép upload mọi loại file
+                });
+
+                if (result && result.secure_url) {
+                    newAttachmentUrl = result.secure_url;
+                    fs.unlink(file.path, (err) => {
+                        if (err) console.error("Error deleting local file:", err);
+                    });
+                } else {
+                    throw new Error("Failed to upload image");
+                }
+            } catch (error) {
+                console.error("Cloudinary Upload Error:", error);
+                fs.unlink(file.path, () => { });
+                throw new Error("Failed to upload file to cloud.");
+            }
+        }
+
+        const newAttachment = {
+            fileName: file.originalname || 'unknown',
+            url: newAttachmentUrl,
+            size: file.size,
+            mimeType: file.mimetype,
+            uploadedBy: userId,
+            uploadedAt: Date.now()
+        };
+
+        const updatedActivity = await db.Activity.findOneAndUpdate(
+            { _id: activityId, isDestroyed: { $ne: true } },
+            { $set: { attachment: newAttachment } },
+            { new: true, runValidators: true }
+        );
+
+        return updatedActivity;
+};
+
+
 
 const moveActivity = async (data, activityId) => {
     try {
@@ -345,7 +402,7 @@ const remove = async (activityId) => {
 
 const getAllComments = async (activityId) => {
     try {
- 
+
         const activity = await db.Activity.findOne(
             { _id: activityId, isDestroyed: { $ne: true } }
         ).populate({
@@ -410,8 +467,8 @@ const deleteComment = async (activityId, commentId) => {
     try {
         // Tìm và cập nhật activity để xóa comment có _id tương ứng
         const updatedActivity = await db.Activity.findOneAndUpdate(
-            { _id: activityId, isDestroyed: { $ne: true }, "comments._id": commentId }, 
-            { $pull: { comments: { _id: commentId } } }, 
+            { _id: activityId, isDestroyed: { $ne: true }, "comments._id": commentId },
+            { $pull: { comments: { _id: commentId } } },
             { new: true, runValidators: true }
         );
 
@@ -432,6 +489,7 @@ const activityService = {
     getById,
     create,
     edit,
+    uploadAttachment,
     moveActivity,
     assignMember,
     removeAssignMember,
