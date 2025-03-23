@@ -38,26 +38,50 @@ const editSprint = async (req, res, next) => {
 
         const sprint = await db.Sprint.findOne({ _id: sprintId });
         if (!sprint) {
-            return res.status(404).json({ status: 404, message: "Sprint does not exist" })
-
+            return res.status(404).json({ status: 404, message: "Sprint does not exist" });
         }
 
-
-        if (sprintStatus !== undefined) {
-            if (!["planning", "active"].includes(sprintStatus)) {
-
-                return res.status(404).json({ status: 404, message: "Invalid sprint status" })
-
+   
+        if (sprintStatus == "active") {
+            // Kiểm tra đủ thông tin
+            if (!sprint?.sprintGoal || !sprint?.startDate || !sprint?.dueDate) {
+                return res.status(400).json({
+                    error: {
+                        status: 400,
+                        message: "To activate a sprint: sprintGoal, startDate, and dueDate are required.",
+                    }
+                });
             }
         }
+        const lastCompletedSprint = await db.Sprint.findOne({
+            project: projectId,
+            sprintStatus: "completed",
+        })
+            .sort({ dueDate: -1 });
 
-        const updatedSprint = await sprintService.edit(req.body,projectId, sprintId)
-        return res.status(200).json({ status: 200, message: "Sprint updated successfully", sprint: updatedSprint })
+        console.log(lastCompletedSprint)
+
+        if (lastCompletedSprint && new Date(startDate).getTime() <= new Date(lastCompletedSprint.dueDate).getTime()) {
+            return res.status(400).json({
+                error: {
+                    status: 400,
+                    message: `Sprint start date must be after the last completed sprint (${lastCompletedSprint.sprintName})'s due date.`,
+                }
+            });
+        }
+        // Tiến hành cập nhật
+        const updatedSprint = await sprintService.edit(req.body, projectId, sprintId);
+        return res.status(200).json({
+            status: 200,
+            message: "Sprint updated successfully",
+            sprint: updatedSprint,
+        });
 
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
+
 
 
 const deleteSprint = async (req, res, next) => {
@@ -65,32 +89,28 @@ const deleteSprint = async (req, res, next) => {
         const { sprintId } = req.params;
         const { newSprint } = req.body;
 
-       
-        const sprint = await db.Sprint.findOne({ _id: sprintId });
-        if (!sprint) {
-            return res.status(404).json({ status: 404, message: "Sprint does not exist" });
-        }
+
 
 
         const activities = await db.Activity.find({ sprint: sprintId, isDestroyed: { $ne: true } });
 
         if (activities.length > 0) {
-            if (!newSprint) {
-                return res.status(400).json({ status: 400, message: "Sprint has activities. Please provide a new sprint to move them." });
-            }
 
 
-            const targetSprint = await db.Sprint.findOne({ _id: newSprint });
-            if (!targetSprint) {
-                return res.status(404).json({ status: 404, message: "New sprint does not exist" });
-            }
-            if (targetSprint.sprintStatus == "completed") {
-                return res.status(400).json({ status: 400, message: "Cannot move activities to a completed sprint." });
+            if (newSprint) {
+                const targetSprint = await db.Sprint.findOne({ _id: newSprint });
+                if (!targetSprint) {
+                    return res.status(404).json({ status: 404, message: "New sprint does not exist" });
+                }
+                if (targetSprint.sprintStatus == "completed") {
+                    return res.status(400).json({ status: 400, message: "Cannot move activities to a completed sprint." });
+                }
             }
 
             for (const activity of activities) {
-                await activityService.moveActivity({ sprint: newSprint }, activity._id);
+                await activityService.moveActivity({ sprint: newSprint || null }, activity._id);
             }
+
         }
 
         const deletedSprint = await sprintService.deleteSprint(sprintId);

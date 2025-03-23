@@ -1,5 +1,5 @@
 import { blue, green, grey, orange, red } from '@ant-design/colors'
-import { ArrowUpOutlined, BugOutlined, CheckCircleOutlined, CloseCircleOutlined, DollarCircleOutlined, ExclamationCircleOutlined, FireFilled, FireOutlined, FireTwoTone, FormOutlined, PaperClipOutlined, PlusCircleFilled, PlusCircleOutlined, ProfileOutlined } from '@ant-design/icons'
+import { ArrowUpOutlined, BugOutlined, CheckCircleOutlined, CloseCircleOutlined, DollarCircleOutlined, ExclamationCircleOutlined, FireFilled, FireOutlined, FireTwoTone, FormOutlined, PaperClipOutlined, PlusCircleFilled, PlusCircleOutlined, ProfileOutlined, UserOutlined } from '@ant-design/icons'
 import { Avatar, Card, Col, Flex, Progress, Row, Space, Statistic } from 'antd'
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { icons } from 'antd/es/image/PreviewGroup'
@@ -9,7 +9,7 @@ import { AppContext } from '../../../context/AppContext'
 
 
 function Summary() {
-  const { activities,stages } = useContext(AppContext);
+  const { activities, stages, activityTypes } = useContext(AppContext);
   const now = new Date();
   const newCreated = activities?.filter(activity => {
     const activityDate = new Date(activity?.createdAt);
@@ -36,12 +36,21 @@ function Summary() {
 
   //Capacity
   const uniqueAssigneesMap = new Map();
+  const totalActivities = activities?.length || 0;
+  const taskCounts = new Map();
+  let unassignedCount = 0;
   activities?.forEach(activity => {
-    activity.assignee?.forEach(a => {
-      if (!uniqueAssigneesMap.has(a._id)) {
-        uniqueAssigneesMap.set(a._id, a);
-      }
-    });
+    if (!activity.assignee || activity.assignee.length === 0) {
+      unassignedCount++; // Đếm số task chưa có assignee
+    } else {
+      activity.assignee.forEach(a => {
+        if (!uniqueAssigneesMap.has(a._id)) {
+          uniqueAssigneesMap.set(a._id, a);
+          taskCounts.set(a._id, 0);
+        }
+        taskCounts.set(a._id, taskCounts.get(a._id) + 1);
+      });
+    }
   });
 
   const uniqueAssignees = Array.from(uniqueAssigneesMap.values());
@@ -54,9 +63,18 @@ function Summary() {
     const percentage = activities?.length > 0 ? (count / activities?.length) * 100 : 0;
     return {
       name: assignee.username,
-      value: Number(percentage.toFixed(0))
+      value: Number(percentage.toFixed(0)),
+      avatar: assignee.userAvatar
     }
   });
+  if (unassignedCount > 0) {
+    const unassignedPercentage = totalActivities > 0 ? (unassignedCount / totalActivities) * 100 : 0;
+    capacityOverview.push({
+      name: "Unassigned",
+      value: Math.round(unassignedPercentage),
+      avatar: null
+    });
+  }
   // console.log(uniqueAssignees);
 
   //Priority
@@ -90,10 +108,19 @@ function Summary() {
     return {
       name: stage?.stageName?.charAt(0).toUpperCase() + stage?.stageName?.slice(1),
       value: activities.filter(activity => activity?.stage?._id == stage?._id)?.length || 0,
-      color:  `#${Math.floor(Math.random()*16777215).toString(16)}`
+      color: stage?.stageColor ||  `#${Math.floor(Math.random() * 16777215).toString(16)}`
     }
   })
- 
+
+  const typeData = activityTypes?.map((type) => {
+    return {
+      name: type.typeName,
+      value: (activities?.filter((a) => a && a?.type._id == type._id)?.length / activities  ?.length).toFixed(1) * 100
+    }
+  })
+
+// console.log(typeData);
+
 
   return (
     <div style={{ padding: "2% 5%", overflow: "auto", maxHeight: "100%" }}>
@@ -197,7 +224,7 @@ function Summary() {
                 return <Flex style={{ margin: "2% 0" }} justify='space-between' align='start'>
                   <Col span={4}>
                     <Space>
-                      <Avatar src={<img src="https://i.pinimg.com/736x/49/9c/5e/499c5e44dcb6bc40bcf47cd3d6d1fdf0.jpg" alt="avatar" />} />
+                      <Avatar src={data?.avatar} icon={!data.avatar && <UserOutlined />} />
                       <text style={{
                         maxWidth: "60px", // Giới hạn chiều rộng để hiển thị chữ
                         whiteSpace: "nowrap",
@@ -274,64 +301,40 @@ function Summary() {
 
                 </Col>
               </Flex>
-              <Flex style={{ margin: "2% 0" }} justify='space-between' align='start'>
-                <Col span={4}>
-                  <Space>
-                    <FormOutlined color={blue.primary} />
-                    <text style={{
-                      maxWidth: "60px", // Giới hạn chiều rộng để hiển thị chữ
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      display: "inline-block"
-                    }}>Activity
-                    </text>
-                  </Space>
-                </Col>
-                <Col span={18}>
-                  <Progress
+              {typeData?.map((type) => {
+                return (<Flex style={{ margin: "2% 0" }} justify='space-between' align='start'>
+                  <Col span={5}>
+                    <Space>
+                      {type?.name == "task" && <FormOutlined />}
+                      {type?.name == "subtask" && <PaperClipOutlined />}
+                      {type?.name == "bug" && <BugOutlined />}
+                      <strong style={{
+                        maxWidth: "100%", // Giới hạn chiều rộng để hiển thị chữ
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "inline-block"
+                      }}>{type?.name?.toUpperCase()}
+                      </strong>
+                    </Space>
+                  </Col>
+                  <Col span={18}>
+                    <Progress
 
-                    percent={65}
-                    percentPosition={{
-                      type: 'inner',
-                      align: 'end'
+                      percent={type?.value}
+                      percentPosition={{
+                        type: 'inner',
+                        align: 'end'
 
-                    }}
-                    strokeLinecap="square"
-                    size={["100%", 25]}
-                    strokeColor={green[3]}
-                  />
-                </Col>
-              </Flex>
-              <Flex style={{ margin: "2% 0" }} justify='space-between' align='start'>
-                <Col span={4}>
-                  <Space>
-                    <PaperClipOutlined />
-                    <text style={{
-                      maxWidth: "60px", // Giới hạn chiều rộng để hiển thị chữ
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      display: "inline-block"
-                    }}>Subactivity
-                    </text>
-                  </Space>
-                </Col>
-                <Col span={18}>
-                  <Progress
+                      }}
+                      strokeLinecap="square"
+                      size={["100%", 25]}
+                      strokeColor={green[3]}
+                    />
+                  </Col>
+                </Flex>)
+              })}
 
-                    percent={65}
-                    percentPosition={{
-                      type: 'inner',
-                      align: 'end'
-
-                    }}
-                    strokeLinecap="square"
-                    size={["100%", 25]}
-                    strokeColor={green[3]}
-                  />
-                </Col>
-              </Flex>
             </div>
 
 
