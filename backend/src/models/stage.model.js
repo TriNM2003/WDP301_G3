@@ -18,10 +18,13 @@ const stageSchema = new mongoose.Schema({
     stageStatus: {
         type: String,
         enum: ['todo', 'doing', 'done'],
-    },
+    }, 
     parent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'stage'
+    },
+    stageColor: {
+        type: String
     },
     isDestroyed:{
         type:Boolean,

@@ -1,5 +1,5 @@
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useState,useEffect  } from "react";
 import { Row, Col, Card, Typography, Button, Flex, Menu, Dropdown, Tooltip, Progress, Avatar, Tag, Input, Switch, Checkbox, Modal, Divider, Select, message } from "antd";
 import { cyan, gray, green, grey, greyDark, orange, red, yellow } from "@ant-design/colors";
 import { CheckOutlined, CheckSquareFilled, DeleteOutlined, DownOutlined, EllipsisOutlined, FireOutlined, GroupOutlined, MoreOutlined, PlusOutlined, SearchOutlined, SettingOutlined, UpOutlined, WarningFilled } from "@ant-design/icons";
@@ -17,6 +17,7 @@ import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortabl
 const { Title } = Typography;
 
 const KanbanBoard = () => {
+
     const { showNotification, sprints, activeDragActivity, activityModalLoading, setActiveDragActivity, activities, stages, setStages, handleMoveActivity, searchActivity, setSearchActivity, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
     const [filterActivityType, setFliterActivityType] = useState(["task"]);
     const filteredActivitites = activities?.filter((activity) => activity && activity?.activityTitle.toUpperCase().includes(searchActivity?.toUpperCase()))
@@ -61,6 +62,7 @@ const KanbanBoard = () => {
         }
         setActiveDragActivity(null);
     };
+
 
 
 

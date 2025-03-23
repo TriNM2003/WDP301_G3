@@ -49,6 +49,7 @@ const ProjectList = () => {
 
 
 
+
     const filteredProjectsByUser = Array.isArray(projects)
         ? projects?.filter((project) =>
             project.projectMember?.some(member => member._id?._id === user._id)
@@ -83,19 +84,18 @@ const ProjectList = () => {
     })();
 
 
+   
     // Tìm 4 project có thời gian cập nhật gần nhất của tài khoản hiện tại
-    // projectMember.find(member => member._id === user._id)
     const recentProjects = Array.isArray(projects)
-        ? projects
-            ?.filter(project => project.projectMember.some(member => member._id?._id === user._id))
-            .map(project => ({
-                ...project,
-                lastUpdated: project?.updatedAt || null
-            }))
-            .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-            .slice(0, 4)
-        : [];
-
+    ? projects
+      .filter(project => project?.projectStatus === "active" &&  project.projectMember.some(member => member._id?._id === user._id))
+      .map(project => ({
+        ...project,
+        lastUpdated: project?.updatedAt || null
+      }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .slice(0, 4)
+    : [];
 
 
     // filter activities by week
@@ -123,18 +123,18 @@ const ProjectList = () => {
 
 
     // Tính số project active của user hiện tại
-    const activeProjectsCount = filteredProjectsByUser.filter((project) => {
+    const activeProjectsCount = filteredProjectsByUser?.filter((project) => {
         // Nếu project.projectStatus không có, coi như active theo mặc định
         return (project.projectStatus || "active") === "active";
     }).length;
 
     // Tính tổng số activity được assign cho user hiện tại
-    const assignedActivitiesCount = userActivities.filter((activity) => {
+    const assignedActivitiesCount = userActivities?.filter((activity) => {
         return activity.assignee?.some(assignee => assignee._id === user._id);
     }).length;
 
     // Tính số activity sắp hết hạn trong vòng 2 ngày (chỉ tính các activity chưa hết hạn)
-    const expiringActivitiesCount = userActivities.filter((activity) => {
+    const expiringActivitiesCount = userActivities?.filter((activity) => {
         if (!activity.dueDate) return false;
         const diffDays = dayjs(activity.dueDate).diff(dayjs(), "day");
         // Chỉ tính các activity có hạn từ 0 đến 2 ngày
