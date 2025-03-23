@@ -105,7 +105,6 @@ const StageManagement = () => {
   const [loading, setLoading] = useState(false)
   const { accessToken, siteAPI, site, project, stages, setStages, activities } = useContext(AppContext)
 
-  console.log("activities:", activities);
 
 
   const breadCrumbItems = [
@@ -303,7 +302,7 @@ const StageManagement = () => {
       }
     }
 
-    console.log("Adding stage with parentId:", parentId, "and childId:", childId);
+
 
     try {
       const response = await axios.post(
@@ -357,7 +356,7 @@ const StageManagement = () => {
 
 
   useEffect(() => {
-    console.log("Stages updated:", stages);
+
   }, [stages]);
 
 
