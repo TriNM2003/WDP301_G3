@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
+const {User, SystemRole} = require("../models/");
 const passport = require("../configs/passport.config");
 const { stringify } = require("qs");
 const redisClient = require("../configs/redisClient");
@@ -25,6 +25,7 @@ const register = async (req) => {
         };
     }
     const hashedPassword = await bcryptUtils.encryptPassword(password, 10);
+    const userRole = await SystemRole.findOne({roleName: "user"});
     const newUser = new User({
         username,
         email,
@@ -33,8 +34,7 @@ const register = async (req) => {
         phoneNumber: null,
         dob: null,
         address: null,
-
-        roles: [],
+        roles: [userRole._id],
         userAvatar: "https://i.pinimg.com/736x/2e/9b/34/2e9b3443e8afa8d383c132c7b3745d47.jpg",
         notifications: [],
         activities: [],
@@ -54,7 +54,8 @@ const register = async (req) => {
 
 
 const login = async (username, password, res) => {
-    const user = await User.findOne({username: username});
+    const user = await User.findOne({username: username}).populate("roles");
+    console.log(user)
     if (!user) {
         return {
             status: 404,
@@ -91,11 +92,16 @@ const login = async (username, password, res) => {
         message: "Account not activated! Redirecting to activation page...",
         token
     };
-} 
+} if(user.status === "deactived") {
+    return {
+        status: 400,
+        message: "Account is deactived!"
+    };
+}
     // accessToken
-    const accessToken = jwtUtils.generateAccessToken(user);
+    const accessToken = jwtUtils.generateAccessToken(user._id);
     // refresh token
-    const refreshToken = jwtUtils.generateRefreshToken(user);
+    const refreshToken = jwtUtils.generateRefreshToken(user._id);
     // luu vao trong redis
     await redisUtils.setRefreshToken(user._id, refreshToken, jwtUtils.refreshTokenExp);
     return {
@@ -130,7 +136,7 @@ const getUserByAccessToken = async (accessToken) => {
     const decodedAccessToken = jwtUtils.decode(accessToken);
 
     // get user
-    const user = await User.findById(decodedAccessToken.id);
+    const user = await User.findById(decodedAccessToken.id).populate("roles");
 
     // Nếu tài khoản chưa kích hoạt, gửi token về FE để kích hoạt
   if (user.status === "inactive") {
@@ -177,7 +183,7 @@ const refreshAccessToken = async (req, res) => {
     }
 
     // Tạo accessToken mới
-    const accessToken = jwtUtils.generateAccessToken(user);
+    const accessToken = jwtUtils.generateAccessToken(user._id);
 
     return {
         message: "Refresh access token successfully!",

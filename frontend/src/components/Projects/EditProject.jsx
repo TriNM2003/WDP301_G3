@@ -1,80 +1,236 @@
-import React, { useState } from "react";
-import { Form, Input, Button, Card, Row, Col, Typography, Dropdown, Breadcrumb, Avatar, Upload, Select, Modal, message } from "antd";
-import { EllipsisOutlined, UploadOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-
-const { Title } = Typography;
+import React, { useState, useEffect, useContext } from "react";
+import { Form, Input, Button, Card, Row, Col, Typography, Avatar, Upload, Modal, message, Dropdown } from "antd";
+import { UploadOutlined, ExclamationCircleOutlined, EllipsisOutlined } from "@ant-design/icons";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import axios from 'axios';
+import { AppContext } from '../../context/AppContext'
+const { Title, Text } = Typography;
 
 const EditProject = () => {
-    const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
+    const { projectSlug } = useParams();
+    const navigate = useNavigate();
+    const { showNotification, siteAPI, site, accessToken, setProjects, user, projects } = useContext(AppContext);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [confirmProjectName, setConfirmProjectName] = useState("");
-    const [projectName, setProjectName] = useState("Example Project");
+    const [loading, setLoading] = useState(false);
+    const [removing, setRemoving] = useState(false);
+    const [projectData, setProjectData] = useState({
+        projectName: '',
+        projectAvatar: '',
+        projectSlug: '',
+        projectManager: '',
+    });
+    const [imagePreview, setImagePreview] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isProjectMember, setIsProjectMember] = useState(true);
+    const [errors, setErrors] = useState({})
 
-    const handleSubmit = (values) => {
-        console.log("Form values:", values);
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            console.log("Changes saved!");
-        }, 2000);
-    };
+    useEffect(() => {
+        if (site._id && accessToken) {
+            fetchProjectData();
+        }
 
-    const handleDeleteProject = () => {
-        setIsDeleteModalVisible(true);
-    };
+    }, [site, accessToken, projectSlug]);
 
-    const handleConfirmDelete = () => {
-        if (confirmProjectName === projectName) {
-            setIsDeleteModalVisible(false);
-            message.success(`Project "${projectName}" has been deleted.`);
-            setConfirmProjectName("");
-        } else {
-            message.error("Project name does not match!");
+    const fetchProjectData = async () => {
+        try {
+            //Fetch danh sách dự án để tìm ID từ slug
+            const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/get-all`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+            });
+
+            const projects = Array.isArray(response.data) ? response.data : response.data.projects;
+            if (!projects || projects.length == 0) {
+                message.error("No projects found!");
+                navigate(`/sites/${site._id}`);
+                return;
+            }
+
+            // Tìm project theo slug để lấy ID
+            const project = projects.find(p => p.projectSlug == projectSlug);
+            if (!project) {
+                message.error("Project not found!");
+                navigate(`/sites/${site._id}`);
+                return;
+            }
+
+            const projectId = project._id;
+
+            //  Fetch chi tiết project từ ID
+            const projectResponse = await axios.get(`http://localhost:9999/sites/${site._id}/projects/${projectId}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+            });
+
+            const { projectName, projectAvatar, projectMember, projectStatus } = projectResponse.data;
+
+            // Nếu project bị archived, chặn truy cập
+            if (projectStatus === "archived") {
+                message.error("This project has been moved to trash!");
+                navigate(`/sites/${site._id}`);
+                return;
+            }
+
+            //  Kiểm tra quyền truy cập (chỉ projectManager mới có quyền)
+            const manager = projectMember.find(member => member.roles.includes("projectManager"));
+
+            if (!manager || manager._id._id !== user._id) {
+                // message.error("Access Denied! You don't have permission to access this project.");
+                // navigate(`/sites/${site._id}`);
+                // return;
+            } else {
+                setIsProjectMember(false);
+            }
+
+            // Lưu dữ liệu nếu người dùng có quyền
+            setProjectData({
+                projectId,
+                projectName,
+                projectAvatar,
+                projectManager: manager?._id.username || "Unknown",
+                projectSlug,
+                projectStatus
+            });
+
+            setImagePreview(projectAvatar);
+
+        } catch (error) {
+            console.error("Error fetching project data:", error);
+            message.error("Failed to load project data.");
         }
     };
+
+    const handleChange = (e) => {
+        setProjectData({ ...projectData, [e.target.name]: e.target.value });
+        setErrors({ ...errors, [e.target.name]: "" }); // Xóa lỗi khi user nhập lại
+    };
+    
+    const validateForm = () => {
+        let newErrors = {};
+        
+        if (!projectData.projectName || projectData.projectName.trim().length === 0) {
+            newErrors.projectName = "Project name is required";
+        } else if (projectData.projectName.length < 3) {
+            newErrors.projectName = "Project name must be at least 3 characters long";
+        }
+    
+        if (!projectData.projectSlug || projectData.projectSlug.trim().length === 0) {
+            newErrors.projectSlug = "Project slug is required";
+        } else if (projectData.projectSlug.length < 3) {
+            newErrors.projectSlug = "Project slug must be at least 3 characters long";
+        }
+    
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleFileChange = ({ file }) => {
+        const fileReader = new FileReader();
+        fileReader.onload = () => setImagePreview(fileReader.result);
+        fileReader.readAsDataURL(file);
+        setSelectedFile(file);
+    };
+
+    const handleSave = async () => {
+        if (!validateForm()) return;
+
+        const formData = new FormData();
+        formData.append("projectName", projectData.projectName);
+        formData.append("projectSlug", projectData.projectSlug);
+        if (selectedFile) {
+            formData.append("projectAvatar", selectedFile);
+        }
+        setLoading(true);
+        setTimeout(async () => {
+            try {
+                const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                message.success("Project updated successfully!");
+                setImagePreview(response.data.projectAvatar);
+                const newProjectSlug = response.data.projectSlug;
+                const updatedProjects = projects.map(p =>
+                    p._id === projectData.projectId ? { ...p, projectName: projectData.projectName, projectSlug: newProjectSlug } : p
+                );
+                setProjects(updatedProjects);
+                if (newProjectSlug !== projectSlug) {
+                    navigate(`/site/list/projects/${newProjectSlug}/project-setting`, { replace: true });
+                }
+            } catch (error) {
+                console.error("Error updating project:", error);
+                message.error("Failed to update project.");
+            } finally {
+                setLoading(false);
+            }
+        }, 1000);
+    };
+    const handleRemoveToTrash = async () => {
+        if (confirmProjectName !== projectData.projectName) {
+            message.error("Project name does not match.");
+            return;
+        }
+        setRemoving(true);
+        setTimeout(async () => {
+            try {
+                await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {}, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+                    }
+                });
+                message.success("Project moved to trash!");
+                const updatedProjects = projects.filter(p => p._id !== projectData.projectId);
+                setProjects(updatedProjects);
+                navigate("/site");
+            } catch (error) {
+                console.error("Error moving project to trash:", error);
+                message.error("Failed to move project to trash.");
+            } finally {
+                setRemoving(false);
+            }
+        }, 1000);
+    };
+
 
     return (
         <div style={{ padding: "24px", minHeight: "100%" }}>
             <Row justify="space-between" align="middle" style={{ margin: "0 100px 20px" }}>
-                {/* Breadcrumb */}
                 <Col>
-                    <Breadcrumb>
-                        <Breadcrumb.Item><Link to="/site/project">Projects</Link></Breadcrumb.Item>
-                        <Breadcrumb.Item><Link to="/site/project/project-setting">Project Setting</Link></Breadcrumb.Item>
-                    </Breadcrumb>
-                    <Row>
-                        <Title level={3}>Project Setting</Title>
-                    </Row>
+                    <Link to={`/site/list/projects`}>Projects</Link> / <Link to={`/site/${site._id}/project/${projectData.projectId}/settings`}>Project Setting</Link>
+                    <Title level={3}>Project Setting</Title>
                 </Col>
 
                 {/* More Options Button */}
                 <Col>
-                    <Dropdown
-                        overlay={
-                            <Button
-                                type="primary"
-                                danger
-                                style={{
-                                    width: "100%",
-                                    maxWidth: "180px",
-                                    height: "45px",
-                                    fontSize: "16px",
-                                    borderRadius: "6px",
-                                    display: showDeactivate ? "block" : "none",
-                                }}
-                                onClick={handleDeleteProject}
-                            >
-                                Delete Project
-                            </Button>
-                        }
-                        trigger={["click"]}
-                        onOpenChange={(visible) => setShowDeactivate(visible)}
-                    >
-                        <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
-                    </Dropdown>
+                    {!isProjectMember &&
+                        <Dropdown
+
+                            overlay={
+                                <Button
+                                    type="primary"
+                                    danger
+                                    style={{
+                                        width: "100%",
+                                        maxWidth: "180px",
+                                        height: "45px",
+                                        fontSize: "16px",
+                                        borderRadius: "6px",
+                                        display: showDeactivate ? "block" : "none",
+                                    }}
+                                    onClick={() => setIsDeleteModalVisible(true)}
+                                >
+                                    Move to trash
+                                </Button>
+                            }
+                            trigger={["click"]}
+                            onOpenChange={(visible) => setShowDeactivate(visible)}
+                        >
+                            <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
+                        </Dropdown>
+                    }
+
                 </Col>
             </Row>
 
@@ -82,58 +238,64 @@ const EditProject = () => {
                 <Col xs={24} sm={16} md={12}>
                     <Card style={{ padding: "0 100px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
                         <Row justify="center" style={{ marginBottom: '20px' }}>
-                            <Avatar size={100} style={{ borderRadius: '0' }} src="https://steamuserimages-a.akamaihd.net/ugc/948474504894470428/A2935C316283E70322CFF16DB671B2B61C602507/" />
+                            <Avatar size={100} src={imagePreview || "default.jpg"} />
                         </Row>
-                        <Form.Item>
-                            <Upload showUploadList={false} beforeUpload={() => false}>
-                                <Button icon={<UploadOutlined />}>Upload Image</Button>
-                            </Upload>
-                        </Form.Item>
-                        <Form layout="vertical" form={form} onFinish={handleSubmit}>
-                            <Form.Item label="Project Name" name="projectName" rules={[{ required: true, message: "This field is required!" }]}>
-                                <Input placeholder="Enter project name" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
+                        {!isProjectMember &&
+                            <Form.Item >
+                                <Upload showUploadList={false} beforeUpload={() => false} onChange={handleFileChange}>
+                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                </Upload>
+                            </Form.Item>
+                        }
+
+
+                        <Form layout="vertical">
+                            <Form.Item label="Project Name" validateStatus={errors.projectName ? "error" : ""} help={errors.projectName}>
+                                <Input name="projectName" value={projectData.projectName} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
 
                             <Form.Item label="Project Manager">
-                                <Select defaultValue="lucy" style={{ width: '100%', textAlign: 'left' }} options={[
-                                    { value: 'jack', label: 'Jack', disabled: true },
-                                    { value: 'lucy', label: 'Lucy', disabled: true },
-                                    { value: 'Yiminghe', label: 'yiminghe', disabled: true },
-                                    { value: 'disabled', label: 'Disabled', disabled: true },
-                                ]} />
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign: 'left' }}>
+                                    <Text>{projectData.projectManager}</Text>
+                                </div>
+
                             </Form.Item>
 
-                            <Form.Item style={{ textAlign: "left" }}>
-                                <Button type="primary" htmlType="submit" loading={loading} style={{
-                                    width: "100%",
-                                    borderRadius: "0",
-                                    fontSize: "16px",
-                                    padding: "10px",
-                                }}>
-                                    Save Change
-                                </Button>
+                            <Form.Item label="Project Slug" validateStatus={errors.projectSlug ? "error" : ""} help={errors.projectSlug}>
+                                <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
+
+                            {!isProjectMember &&
+                                <Form.Item>
+                                    <Button type="primary" onClick={handleSave} loading={loading} style={{ width: "100%" }}>
+                                        Save Changes
+                                    </Button>
+                                </Form.Item>
+                            }
+
                         </Form>
                     </Card>
                 </Col>
             </Row>
-
             {/* Delete Confirmation Modal */}
             <Modal
                 title={
                     <span>
                         <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginRight: "10px" }} />
-                        Confirm Site Deactivation
+                        Confirm Remove to Trash
                     </span>
                 }
                 open={isDeleteModalVisible}
                 onCancel={() => setIsDeleteModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="confirm" type="primary" danger onClick={handleConfirmDelete}>Delete</Button>
+                    <Button key="confirm" type="primary" loading={removing} danger onClick={handleRemoveToTrash}>
+                        Confirm
+                    </Button>
                 ]}
             >
-                <p>To confirm deletion, please type the project name: <strong>{projectName}</strong></p>
+                <p>Are you sure you want to move this project to trash?</p>
+                <p>To confirm, type the project name: <strong>{projectData.projectName}</strong></p>
                 <Input
                     placeholder="Enter project name"
                     value={confirmProjectName}

@@ -21,31 +21,35 @@ const siteSchema = new mongoose.Schema({
             enum: ['siteOwner', 'siteMember'],
         }]
     }],
-    
+    siteSlug:{
+        type: String,
+        required: true,
+        minlength: 3,
+    },
     invitations: [{
         _id: {
-            type: mongoose.Schema.Types.ObjectId
-        },
+            type: mongoose.Schema.Types.ObjectId,
+            default: () => new mongoose.Types.ObjectId()
+        },        
         sender: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
-            required: true
-           // required
+            required: true,
         },
-        receivers: [{
+        receiver: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
-            required: true
-        }],
+            required: true,
+        },
         status: {
             type: String,
-            enum: ['pending', 'accepted', 'declined', "expired"],
+            enum: ['pending', 'accepted', 'declined', "expired", "cancelled"],
             default: 'pending'
         },
         expireAt: {
             type: Date,
-            //tim hieu thoi gian tu dong het han
-        },
+            default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 ngày
+        },   
         createdAt: {
             type: Date,
             default: Date.now
@@ -62,6 +66,11 @@ const siteSchema = new mongoose.Schema({
     siteDescription: {
         type: String
     },
+    siteStatus: {
+        type: String,
+        enum: ['active', 'deactivated'],
+        default: "active"
+    }
 
 }, {timestamps: true});
 

@@ -17,9 +17,14 @@ const projectSchema = new mongoose.Schema({
             enum: ['projectManager', 'projectMember'],
         }]
     }],
+    projectSlug:{
+        type: String,
+        required: true,
+        minlength: 3,
+    },
     projectStatus: {
         type: String,
-        enum: ['active', 'archived'],
+        enum: ['active', 'archived', 'destroyed'],
         default: 'active'
     },
     projectRoles: [{

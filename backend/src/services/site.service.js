@@ -1,0 +1,647 @@
+const Site = require("../models/site.model");
+const fs = require("fs")
+const { cloudinary } = require('../configs/cloudinary');
+const cloudinaryFile = require('../configs/cloudinary');
+const path = require('path');
+const { User } = require("../models");
+const db = require('../models');
+const JWT = require('jsonwebtoken');
+const bcrypt = require("bcrypt")
+const morgan = require("morgan")
+const createHttpErrors = require("http-errors");
+const nodemailer = require("nodemailer")
+const { slugify } = require("../utils/slugify.util");
+const { mailer } = require("../configs");
+const { default: mongoose } = require("mongoose");
+const notificationService = require("./notification.service");
+
+
+const getAllSites = async () => {
+    const sites = await Site.find({}).populate("siteMember._id");
+    return sites;
+}
+
+const getSiteById = async (id) => {
+    const site = await Site.findById(id).populate("siteMember._id");
+    if (!site) {
+        throw new Error("No site found");
+    }
+    return site;
+}
+
+const getSiteMembersById = async (id) => {
+    const site = await Site.findById(id).populate("siteMember._id");
+    if (!site) {
+        throw new Error("No site found");
+    }
+    return site.siteMember;
+}
+
+const createSite = async ( adminId,siteName, siteOwner) => {
+    const admin = await User.findById(adminId);
+    const siteOwnerData = await User.findOne({ email: siteOwner });
+    console.log(siteName, siteOwner)
+    //check user co site chua
+    const checkUserSite = await Site.findOne({ siteMember: { $elemMatch: { _id: siteOwnerData._id } } });
+    if (checkUserSite) {
+        throw new Error("Each user can only have 1 site");
+    }
+    //check site name
+    const checkSiteName = await Site.findOne({ siteName: siteName });
+    if (checkSiteName) {
+        throw new Error("Site name already taken, please choose another name");
+    }
+
+    // tao site moi
+    const newSite = await Site.insertOne({
+        siteName: siteName,
+        siteRoles: ["siteOwner", "siteMember"],
+        siteMember: [{
+            _id: siteOwnerData._id,
+            roles: ["siteOwner","siteMember"]
+        }],
+        siteSlug: slugify(siteName)
+    });
+
+    // cap nhap site cua user
+    await User.findByIdAndUpdate(siteOwnerData._id,
+        {$set: {site: newSite._id}}
+    )
+
+    await notificationService.createNotification(admin._id,
+        [siteOwnerData._id],
+        `A new site named ${newSite.siteName} has been created for you by admin ${admin.email}`,
+        "site"
+    )
+    await mailer.sendEmail(siteOwnerData.email,
+        "A new site has been created for you",
+        `<p>A new site named <b style="color: blue">${newSite.siteName}</b> has been created for you by admin ${admin.email} <br/>
+            Good luck with your future projects!
+        </p>
+        `
+    );
+    return newSite;
+}
+
+const editSite = async (siteId, updateData, imageFile) => {
+    try {
+        const site = await Site.findById(siteId);
+        if (!site) throw new Error("Site not found");
+
+        if (!updateData.siteName || updateData.siteName.trim().length === 0) {
+            throw new Error("Site name is required");
+        }
+
+        if (updateData.siteName.length < 3) {
+            throw new Error("Site name must be at least 3 characters long");
+        }
+
+        if (!updateData.siteSlug || updateData.siteSlug.trim().length === 0) {
+            throw new Error("Site slug is required");
+        }
+
+        const existingSite = await Site.findOne({ siteName: updateData.siteName, _id: { $ne: siteId } });
+        if (existingSite) {
+            throw new Error("Site name already taken, please choose another name");
+        }
+
+
+        let newAvatarUrl = site.siteAvatar;
+
+        // 🔹 Nếu có ảnh mới, upload lên Cloudinary và xóa ảnh cũ
+        if (imageFile) {
+            try {
+                const result = await cloudinary.uploader.upload(imageFile.path);
+                if (result && result.secure_url) {
+                    newAvatarUrl = result.secure_url;
+                    fs.unlink(imageFile.path, (err) => {
+                        if (err) console.error("Error deleting local file:", err);
+                    });
+                } else {
+                    throw new Error("Failed to upload image");
+                }
+            } catch (error) {
+                console.error("Cloudinary Upload Error:", error);
+                fs.unlink(imageFile.path, () => { });
+                throw new Error("Failed to edit site! Try again.");
+            }
+        }
+
+        const newSite = {
+            siteName: updateData.siteName || site.siteName,
+            siteDescription: updateData.siteDescription || site.siteDescription,
+            siteAvatar: newAvatarUrl,
+            siteSlug: slugify(updateData.siteSlug || site.siteSlug),
+        }
+
+        const updatedSite = await Site.findByIdAndUpdate(siteId, {
+            $set: {
+                siteName: newSite.siteName,
+                siteDescription: newSite.siteDescription,
+                siteAvatar: newSite.siteAvatar,
+                siteSlug: newSite.siteSlug
+            }
+        }, { new: true });
+
+        return updatedSite;
+    } catch (error) {
+        throw error;
+    }
+};
+
+//gửi email xác nhận deactive site đến siteOwner
+const sendDeactivateSiteEmail = async (siteId) => {
+    try {
+        const site = await Site.findById(siteId).populate("siteMember._id");
+        if (!site) {
+            throw new Error("Site not found");
+        }
+
+        const siteOwner = site.siteMember.find(member => member.roles.includes("siteOwner"));
+        if (!siteOwner) {
+            throw new Error("Site owner not found");
+        }
+
+
+        try {
+            const deactivatedLink = "http://localhost:3000/site/deactivate-site";
+            const to = siteOwner._id.email;
+            const subject = "Confirm deactivate site";
+            const body = `
+                    <h2>Are you sure you want to deactivate site ${site.siteName}?</h2>
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <p>Click the link below to confirm deactivation:</p>
+            <a href="${deactivatedLink}" style="display: inline-block; padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
+                Confirm deactivate
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+                `;
+            await mailer.sendEmail(to, subject, body);
+            return { message: "Deactivate site email sent successfully!" };
+        }
+        catch (error) {
+            console.error("Error sending email notification:", error);
+            throw new Error("Failed to send email notification");
+        }
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
+const deactivateSite = async (siteId) => {
+    try {
+        const site = await Site.findById(siteId).populate("siteMember._id");
+        if (!site) throw new Error("Site not found");
+
+        // 🔹 Chuyển trạng thái site thành "deactivated"
+        const DeactivateSite = await Site.findByIdAndUpdate(siteId, { $set: { siteStatus: "deactivated" } }, { new: true });
+        const siteMemberEmails = site.siteMember.map(member => member._id.email).join(", ");
+
+        try {
+
+            await mailer.sendEmail(siteMemberEmails, "Site deactivation update", `<h2>Your site ${site.siteName} has been deactivated!</h2>`);
+            return { DeactivateSite, message: "Site deactivated successfully!" };
+        }
+        catch (error) {
+            console.error("Error sending email notification:", error);
+            throw new Error("Failed to send email notification");
+        }
+    } catch (error) {
+        throw error;
+    }
+};
+
+const getSiteByUserId = async (userId) => {
+    try {
+        const site = await db.Site.findOne({
+            "siteMember._id": userId
+        });
+        return site;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// get all user in site
+const getAllUsersInSite = async (siteId) => {
+    try {
+
+        const site = await db.Site.findById(siteId).populate({
+            path: "siteMember._id",
+            select: "username email userAvatar fullName"
+        });
+
+        if (!site) {
+            throw new Error("Site not found");
+        }
+
+
+        return site.siteMember.map(member => ({
+            _id: member._id._id,
+            username: member._id.username,
+            email: member._id.email,
+            userAvatar: member._id.userAvatar,
+            fullName: member._id.fullName,
+            roles: member.roles
+        }));
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
+
+
+const inviteMemberByEmail = async (senderId, receiverId, siteId) => {
+    const sender = await User.findById(senderId);
+    if (!sender) {
+        throw new Error("Sender does not exist!");
+    }
+    const receiver = await User.findById(receiverId);
+    if (!receiver) {
+        throw new Error("Receiver does not exist!");
+    }
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site does not exist!");
+    }
+    if (receiver.site === site._id) {
+        throw new Error("Receiver already site member!");
+    }
+    // tao invitation moi
+    const updatedSite = await Site.findByIdAndUpdate(site._id,
+        {
+            $addToSet: {
+                invitations: {
+                    _id: new mongoose.Types.ObjectId(),
+                    sender: sender._id,
+                    receiver: receiver._id,
+                }
+            }
+        },
+        { new: true }
+    )
+    const invitationId = updatedSite.invitations[updatedSite.invitations.length - 1]._id
+
+    const acceptUrl = `http://localhost:3000/processing-invitation?invitationId=${invitationId}&decision=accepted`;
+    const declineUrl = `http://localhost:3000/processing-invitation?invitationId=${invitationId}&decision=declined`;
+    const to = receiver.email;
+    const subject = `You have been invited to site ${site.siteName}`;
+    const body = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <p>Click the button below to become a member:</p>
+            <a href="${acceptUrl}" style="display: inline-block; padding: 10px 20px; background: #1890ff; color: #fff; text-decoration: none; border-radius: 5px;">
+                Accept
+            </a>
+            <p>Or click the button below to decline the invitation:</p>
+            <a href="${declineUrl}" style="display: inline-block; padding: 10px 20px; background:rgb(255, 24, 24); color: #fff; text-decoration: none; border-radius: 5px;">
+                Decline
+            </a>
+            <p>If you didn't request this, please ignore this email.</p>
+        </div>
+    `;
+    await mailer.sendEmail(to, subject, body);
+    return updatedSite.invitations;
+}
+
+const processingInvitation = async (invitationId, decision) => {
+    const invitationSite = await Site.findOne({ "invitations._id": invitationId });
+    if (!invitationSite) {
+        throw new Error("Invitation does not exist!");
+    }
+    const siteOwnerId = invitationSite.siteMember.find(member => member.roles.includes("siteOwner"))._id;
+    const siteOwner = await User.findById(siteOwnerId);
+    const invitation = invitationSite.invitations.find(item => item._id.toString() === invitationId);
+    //    if(invitation.receiver !== user._id){
+    //     throw new Error("User are not receiver!");
+    //    }
+    //check status == pending
+    if (invitation.status !== "pending") {
+        throw new Error("Invitation has been processed or expired!");
+    }
+
+    // Kiểm tra nếu invitation đã hết hạn
+    if (invitation.expireAt && invitation.expireAt < new Date()) {
+        invitation.status = "expired",
+            await invitationSite.save();
+        throw new Error("Invitation has expired!");
+    }
+
+    // xu ly invitation
+    if (decision === "accepted") {
+        invitation.status = "accepted"
+        const newMember = await User.findById(invitation.receiver);
+        if (!newMember) {
+            throw new Error("Receiver does not exist!");
+        }
+        if (newMember.status !== "active") {
+            throw new Error("Receiver is not activated!");
+        }
+        invitationSite.siteMember.push({
+            _id: newMember._id,
+            roles: ["siteMember"]
+        })
+        newMember.site = invitationSite._id;
+        await invitationSite.save();
+        await newMember.save();
+        await notificationService.createNotification(siteOwner._id,
+            [newMember._id],
+            `You have accepted invitation to become site member of site ${invitationSite.siteName}`,
+        "site");
+        await mailer.sendEmail(newMember.email, "Site invitation update", 
+            `
+            <h3>Congratulation, </h3>
+            <p>You have become member of site <b>${invitationSite.siteName}</b></p>
+            `)
+    } else if (decision === "declined") {
+        const declinedUser = await User.findById(invitation.receiver);
+        invitation.status = "declined"
+        await invitationSite.save();
+        await notificationService.createNotification(declinedUser._id,
+            [siteOwner._id],
+            `User ${declinedUser.email} has declined invitation to your site`,
+            "site");
+        await mailer.sendEmail(siteOwner.email, "Site invitation update", 
+            `
+            <p>User <b>${declinedUser.email}</b> has declined you invitation to your site</p>
+            `)
+    } else {
+        throw new Error("No decision provided!");
+    }
+
+    return {
+        decision: decision,
+        invitation: invitation
+    };
+}
+
+const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site does not exist!");
+    }
+    const member = await User.findById(siteMemberId)
+    if (!member) {
+        throw new Error("Member does not exist!");
+    }
+    // xoa member khoi danh sach member cua cac project
+    await db.Project.findOneAndUpdate(
+        { "projectMember._id": siteMemberId },
+        { $pull: { projectMember: { _id: siteMemberId } } }
+    )
+    // xoa member khoi danh sach membe cua cac team
+    await db.Team.findOneAndUpdate(
+        { "teamMembers._id": siteMemberId },
+        { $pull: { teamMembers: { _id: siteMemberId } } }
+    )
+    const updateSiteMember = await Site.findOneAndUpdate(
+        { "siteMember._id": siteMemberId },
+        { $pull: { siteMember: { _id: siteMemberId } } },
+        { new: true }
+    ).select("siteMember").populate("siteMember._id");
+    await User.findOneAndUpdate(
+        { _id: siteMemberId }, // Tìm user theo _id
+        { $unset: { site: "" } } // Xóa trường site
+    );
+    const siteOwnerEmail = updateSiteMember?.siteMember.find(member => member.roles.includes("siteOwner"))?._id.email;
+    const to = member.email;
+    const subject = `You have been revoked access`;
+    const body = `<h3>You have been revoked access from site ${site.siteName} by site owner ${siteOwnerEmail}</h3>
+                    <p>If this a mistake, please contact your site owner</p>
+    `;
+    await mailer.sendEmail(to, subject, body)
+    return {
+        message: `Revoke site member ${siteMemberId} from site ${siteId} successfully!`,
+        siteMember: updateSiteMember
+    };
+}
+
+const getInvitaionsBySiteId = async (siteId) => {
+    const allInvitations = await Site.findOne(
+        { _id: siteId },
+        { invitations: 1, _id: 0 }
+    ).populate("invitations.receiver");
+    if (allInvitations === null) {
+        throw new Error("Site not found!")
+    }
+    return allInvitations || [];
+}
+
+
+const cancelInvitationById = async (siteId, invitationId) => {
+    // Tìm site trước để kiểm tra invitation
+    const site = await Site.findOne(
+        { _id: siteId, "invitations._id": invitationId },
+        { "invitations.$": 1 } // Chỉ lấy invitation có _id tương ứng
+    );
+
+    // Kiểm tra nếu không tìm thấy invitation
+    if (!site || !site.invitations || site.invitations.length === 0) {
+        throw new Error(`Invitation with ID ${invitationId} not found in site ${siteId}`);
+    }
+
+    const invitation = site.invitations[0]; // Vì chỉ lấy invitation khớp ID
+    if (invitation.status !== "pending") {
+        throw new Error(`Only invitations with status 'pending' can be cancelled.`);
+    }
+
+    // Cập nhật trạng thái invitation trực tiếp trong DB
+    const updateInvitations = await Site.findOneAndUpdate(
+        { _id: siteId, "invitations._id": invitationId },
+        { $set: { "invitations.$.status": "cancelled" } }, // Chỉ cập nhật status
+        { new: true }
+    ).select("invitations");
+
+    // Kiểm tra update có thành công không
+    if (!updateInvitations) {
+        throw new Error(`Failed to update invitation status.`);
+    }
+
+    // Lấy thông tin site để gửi email
+    const currentSite = await Site.findById(siteId).select("siteName");
+    if (!currentSite) {
+        throw new Error(`Site with ID ${siteId} not found.`);
+    }
+
+    // Lấy thông tin receiver của invitation đã bị hủy
+    const receiverId = invitation.receiver;
+    const receiver = await User.findById(receiverId).select("email");
+    if (!receiver) {
+        throw new Error(`User with ID ${receiverId} not found.`);
+    }
+
+    const to = receiver.email;
+    const subject = `Your invitation to site ${currentSite.siteName} has been cancelled`;
+    const body = `
+        <p>Your invitation to site <b>${currentSite.siteName}</b> has been cancelled by its site owner.</p>
+    `;
+
+    await mailer.sendEmail(to, subject, body);
+
+    return updateInvitations;
+};
+
+
+async function activeSite(siteId) {
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site not found");
+    }
+    if (site.siteStatus === "active") {
+        throw new Error("Site is already active");
+    }
+
+    const updatedSite = await Site.findByIdAndUpdate(siteId,
+        { $set: { siteStatus: "active" } },
+        { new: true }
+    );
+    // const populatedSite = updatedSite.populate("siteMember._id");
+
+    return updatedSite;
+}
+
+async function adminEditSite(siteId, siteOwnerId, adminId) {
+    const site = await Site.findById(siteId);
+    if (!site) {
+        throw new Error("Site not found");
+    }
+    const siteOwner = await User.findById(siteOwnerId);
+    if (!siteOwner) {
+        throw new Error("New site owner account does not exist");
+    }
+    if (siteOwner.status !== "active") {
+        throw new Error("New site owner account are not activated");
+    }
+    // if(site.siteStatus === "deactivated"){
+    //     throw new Error("Site is deactivated! Please activate before editing");
+    // }
+
+    const isMemberOfSite = site.siteMember.find(member => member._id.toString() === siteOwnerId.toString())
+    if (isMemberOfSite) {
+        const updatedMemberList = site.siteMember.map(member => {
+            if (member._id.toString() === siteOwnerId.toString()) {
+                return {
+                    _id: member._id,
+                    roles: ["siteOwner", "siteMember"]
+                };
+            } else {
+                return {
+                    _id: member._id,
+                    roles: ["siteMember"]
+                };
+            }
+        })
+        const updatedSite = await Site.findByIdAndUpdate(siteId,
+            { $set: { siteMember: updatedMemberList } },
+            { new: true }
+        );
+        const admin = await User.findById(adminId);
+        await notificationService.createNotification(adminId,
+            updatedMemberList.map(receiver => {
+                return receiver._id
+            }),
+            `Site ${site.siteName}: site owner role has been assign to user ${siteOwner.email} by Admin ${admin.email}`,
+            "site"
+        )
+        return updatedSite;
+    } else {
+        throw new Error("Cannot assign member of other site as this site owner!");
+    }
+
+}
+
+async function changeSiteMemberRoles(siteOwnerId, siteId, siteMemberId, rolesArray) {
+    function camelCaseArrayToString(arr) {
+        return arr.map(str =>
+            str.replace(/([a-z])([A-Z])/g, '$1 $2') // Thêm khoảng trắng trước chữ in hoa
+                .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
+        ).join(', '); // Nối các phần tử bằng dấu ", "
+    }
+
+    const member = await User.findById(siteMemberId);
+    if (!member) throw new Error("Member does not exist in system")
+    const site = await Site.findById(siteId);
+    if (!site) throw new Error("Site does not exist")
+    const memberInSite = site?.siteMember.find(member => member._id.toString() === siteMemberId.toString());
+    if (!memberInSite) throw new Error("User is not a member in site")
+    if (memberInSite.roles.includes("siteOwner")) throw new Error("Cannot change role of Site Owner")
+    if (rolesArray.includes("siteOwner")) throw new Error("Cannot assign role Site Owner to site member")
+    let isValidRole = true;
+    for (let i = 0; i < rolesArray.length; i++) {
+        if (!site.siteRoles.includes(rolesArray[i])) {
+            isValidRole = false;
+        }
+    }
+    if (!isValidRole) {
+        throw new Error("New role does not exist in site role");
+    }
+
+    const updatedSiteMember = site.siteMember.map(member => {
+        if (member._id.toString() === siteMemberId.toString()) {
+            return {
+                _id: member._id,
+                roles: rolesArray
+            }
+        } else {
+            return member;
+        }
+    })
+    const updatedSite = await Site.findByIdAndUpdate(siteId,
+        { $set: { siteMember: updatedSiteMember } },
+        { new: true }
+    );
+    const siteOwner = await User.findById(siteOwnerId);
+    await notificationService.createNotification(siteOwnerId,
+        site.siteMember.map(member => {
+            return member._id
+        }),
+        `Site ${site.siteName}: Member ${member.email} role has been changed to ${camelCaseArrayToString(rolesArray)} by Site owner ${siteOwner.email}`,
+        "site"
+    );
+    const to = member.email;
+    const subject = `Your role has been changed`;
+    const body = `Your role in site <strong>${site.siteName}</strong> has been changed to <strong>${camelCaseArrayToString(rolesArray)}</strong> by Site owner <strong>${siteOwner.email}</strong>`
+    await mailer.sendEmail(to, subject, body);
+    return updatedSite;
+}
+
+async function requestSite(emailSubject, emailBody){
+    if(emailSubject.length <= 0){
+        throw new Error("Email subject cannot be empty")
+    }
+    if(emailBody.length <= 0){
+        throw new Error("Email body cannot be empty")
+    }
+    const adminRole = await db.SystemRole.findOne({roleName: "admin"});
+    const admin = await User.findOne({roles: adminRole._id});
+    // console.log(admin)
+    await mailer.sendEmail(admin.email, emailSubject, emailBody);
+    return "Send site creation request successfully!";
+}
+
+
+
+const siteService = {
+    getSiteById,
+    createSite,
+    editSite,
+    getSiteByUserId,
+    inviteMemberByEmail, processingInvitation,
+    getAllSites,
+    deactivateSite, revokeSiteMemberAccess,
+    getSiteMembersById,
+    getAllUsersInSite,
+    getInvitaionsBySiteId,
+    cancelInvitationById,
+    sendDeactivateSiteEmail,
+    activeSite,
+    adminEditSite,
+    changeSiteMemberRoles,
+    requestSite,
+}
+
+module.exports = siteService;

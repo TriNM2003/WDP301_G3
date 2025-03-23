@@ -41,7 +41,7 @@ const LoginForm = () => {
                       });
                     }, 2000);
                     break;
-              case 'deactivate':
+              case 'deactived':
                   setTimeout(() => {
                       setLoading(false);
                       messageApi.open({
@@ -151,7 +151,7 @@ const LoginForm = () => {
                         });
                       }, 2000);
                       break;
-                case 'deactivate':
+                case 'deactived':
                     setTimeout(() => {
                         setLoading(false);
                         messageApi.open({
@@ -169,7 +169,7 @@ const LoginForm = () => {
                     }).then(() => {
                         localStorage.setItem("accessToken", loginResult.accessToken);
                         localStorage.setItem("accessTokenExp", Math.floor(Date.now() / 1000) + loginResult.accessTokenExp);
-                        localStorage.setItem("userId", loginResult.user.id);
+                        localStorage.setItem("userId", loginResult.user._id);
                         setUser(loginResult.user);
                         setLoading(false);
                         nav('/home')

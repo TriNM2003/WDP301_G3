@@ -10,10 +10,21 @@ const activitySchema = new mongoose.Schema({
     description: {
         type: String
     },
+    priority: {
+        type: String,
+        default:"medium",
+        enum:["lowest","low","medium","high","highest"]
+    },
     parent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'activity'
+        ref: 'activity',
+        default: null
     },
+    child: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'activity',
+        default:[]
+    }],
     project: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'project',
@@ -21,7 +32,8 @@ const activitySchema = new mongoose.Schema({
     },
     sprint: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'sprint'
+        ref: 'sprint',
+        default:null
     },
     stage: {
         type: mongoose.Schema.Types.ObjectId,
@@ -40,8 +52,13 @@ const activitySchema = new mongoose.Schema({
     },
     assignee: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'user',
+        default:[]
     }],
+    isDestroyed: {
+        type: Boolean,
+        default: false 
+    },
     comments: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId
@@ -62,11 +79,10 @@ const activitySchema = new mongoose.Schema({
         updatedAt: {
             type: Date,
             default: Date.now
-        }   
+        }
     }],
 
-    attachments: [
-        {
+    attachment: {
             fileName: {
                 type: String
             },
@@ -88,7 +104,8 @@ const activitySchema = new mongoose.Schema({
                 default: Date.now
             }
         }
-    ],
+    ,
+    
     startDate: {
         type: Date
     },
@@ -96,13 +113,16 @@ const activitySchema = new mongoose.Schema({
         type: Date,
         // lon hon hoac bang startDate 
         validate: {
-            validator: function(v) {
+            validator: function (v) {
+                if (v != null && this.startDate != null) { 
                 return v >= this.startDate;
-            },
-            message: 'Due date must be greater than or equal to start date'
-        }
+            }
+        },
+        message: 'Due date must be greater than or equal to start date'
+    },
+    
 
-    }
+}
 }, { timestamps: true });
 
 const Activity = mongoose.model("activity", activitySchema);

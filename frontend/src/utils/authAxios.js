@@ -24,7 +24,6 @@ const getRefreshToken = async () => {
 }
 
 const getNewAccessToken = async ({refreshToken, userId}) => {
-
     // lay access token sau khi refresh va dat vao localStorage roi gui request
     const result = await axios.post("http://localhost:9999/auth/refresh", {
      refreshToken: refreshToken,
@@ -33,63 +32,6 @@ const getNewAccessToken = async ({refreshToken, userId}) => {
     return result.data;
 }
 
-// // dieu kien truoc khi gui request
-// authAxios.interceptors.request.use(async(confirm) => {
-//     //check accesss token truoc khi gui request
-//     const accessToken = localStorage.getItem("accessToken");
-//     const accessTokenExp = localStorage.getItem("accessTokenExp");
-//     let refreshTokenData;
-//     let newAccessToken;
-
-//     if (accessToken) {
-//         // check token expiration
-//         const isExpired = Math.floor(Date.now() / 1000) > Number(accessTokenExp);
-//         // const isExpired = Date.now() *1000 > localStorage.getItem("accessTokenExp");
-//         if(isExpired){
-//             console.log("Access token is expired. Getting new access token...");
-//             refreshTokenData = await getRefreshToken();
-//             if (!refreshTokenData || !refreshTokenData.refreshToken) {
-//                 console.log("User refresh token does not exist!");
-//                 localStorage.clear();
-//                 window.location.href = "/login";
-//                 return Promise.reject("User refresh token does not exist!");
-//             }
-
-//             newAccessToken = await getNewAccessToken(refreshTokenData)
-//             if (!newAccessToken || !newAccessToken.accessToken) {
-//                 console.log("Error getting new access token");
-//                 localStorage.clear();
-//                 window.location.href = "/login";
-//                 return Promise.reject("Error getting new access token");
-//             }else{
-//                 localStorage.setItem("accessToken", newAccessToken.accessToken);
-//                 localStorage.setItem("accessTokenExp", Math.floor(Date.now() / 1000) + newAccessToken.accessTokenExp);
-//                 confirm.headers.authorization = `Bearer ${newAccessToken.accessToken}`;
-//             }
-            
-//         }else{
-//             confirm.headers.authorization = `Bearer ${accessToken}`;
-//         }
-//     }else{
-//         refreshTokenData = await getRefreshToken();
-//         if(!refreshTokenData){
-//             return Promise.reject("User refresh token does not exist!");
-//         }
-//         newAccessToken = await getNewAccessToken(refreshTokenData);
-//         if(!newAccessToken){
-//             return Promise.reject("Error getting new access token");
-//         }else{
-//             localStorage.setItem("accessToken", newAccessToken.accessToken);
-//             localStorage.setItem("accessTokenExp", Math.floor(Date.now() / 1000) + newAccessToken.accessTokenExp);
-//             confirm.headers.authorization = `Bearer ${newAccessToken.accessToken}`;
-//         }
-//     }
-
-//     return confirm;
-// }, (error) => {
-//     console.log("Error request:", error);
-//     return Promise.reject(error);
-// });
 
 // Interceptor cho request: Kiểm tra và làm mới access token nếu cần
 authAxios.interceptors.request.use(async (config) => {

@@ -11,13 +11,24 @@ const stageSchema = new mongoose.Schema({
         ref: 'project',
         required: true
     },
+    activities:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'activity',
+    }],
     stageStatus: {
         type: String,
         enum: ['todo', 'doing', 'done'],
-    },
+    }, 
     parent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'stage'
+    },
+    stageColor: {
+        type: String
+    },
+    isDestroyed:{
+        type:Boolean,
+        default:false
     }
 }, { timestamps: true });
 

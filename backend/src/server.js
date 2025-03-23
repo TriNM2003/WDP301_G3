@@ -11,10 +11,15 @@ const path = require("path");
 const passport = require("./configs/passport.config");
 const cookieParser = require("cookie-parser");
 
+const http = require("http");
+
 
 const app = express();
 const db = require("./models/index");
-const { systemRoleRouter, authRouter, userRouter } = require("./routes");
+const server = http.createServer(app);
+const { systemRoleRouter, authRouter, userRouter, projectRouter, activityRouter, siteRouter, activityTypeRouter, notificationRouter, sprintRouter, stageRouter, teamRouter } = require("./routes");
+const { setupSocket } = require("./services/socket-io.service");
+
 // Sử dụng cors middleware để cho phép request từ localhost:3000
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -45,18 +50,25 @@ app.get("/", async (req, res, next) => {
 
 // Định tuyến theo các chức năng thực tế
 app.use("/systemRoles", systemRoleRouter);
-
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
+app.use("/sites", siteRouter);
+app.use("/sites/:siteId/projects", projectRouter);
+app.use("/sites/:siteId/projects/:projectId/activities", activityRouter);
+app.use("/activityTypes", activityTypeRouter);
+app.use("/notifications", notificationRouter);
+app.use("/sites/:siteId/projects/:projectId/sprints", sprintRouter);
+app.use("/sites/:siteId/projects/:projectId/stages", stageRouter);
+app.use("/sites/:siteId/teams", teamRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
+setupSocket(server);
 app.use(async (req, res, next) => {
   next(httpsErrors(404, "Bad Request"));
 });
 app.use(async (err, req, res, next) => {
-  res.status = err.status || 500;
-  res.send({ error: { status: err.status, message: err.message } });
+  resStatus = err.status || 500;
+  return res.status(resStatus||500).json({ error: { status: err.status, message: err.message } });
 });
 
 const host = process.env.HOSTNAME;
