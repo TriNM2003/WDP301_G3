@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, Button, Input, Row, Col, message, Breadcrumb, Menu, Upload, Modal, Avatar, Form } from 'antd';
 import { UploadOutlined, ExclamationCircleOutlined, UserOutlined, LockOutlined, LogoutOutlined, DeleteOutlined, } from '@ant-design/icons';
 import { green, red, gray } from "@ant-design/colors";
 import { Link, useNavigate } from 'react-router-dom';
+import { AppContext } from '../../context/AppContext'
 import axios from 'axios';
 const EditProfile = () => {
+    const { accessToken, user, setUser } = useContext(AppContext);
     const [selectedKey, setSelectedKey] = useState('1');
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [form, setForm] = useState({  
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [initialForm, setInitialForm] = useState(null);
+    const [form, setForm] = useState({
         fullName: '',
         address: '',
         dob: '',
@@ -31,6 +35,7 @@ const EditProfile = () => {
         })
             .then(response => {
                 setForm(response.data);
+                setInitialForm(response.data); 
                 setImagePreview(response.data.userAvatar);
             })
             .catch(error => {
@@ -38,13 +43,51 @@ const EditProfile = () => {
             });
     }, []);
 
+    // Xử lý hiển thị lỗi ngay khi nhập dữ liệu
+    const validateInput = (name, value) => {
+        let error = '';
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        if (name === "fullName" && value && !/^[a-zA-ZÀ-Ỹà-ỹ\s]+$/.test(value)) {
+            error = "Full name is invalid. Only letters and spaces are allowed.";
+        }
+
+        if (name === "phoneNumber" && value && !/^(0[3|5|7|8|9])+([0-9]{8})$/.test(value)) {
+            error = "Phone number is invalid. Please enter a valid phone number.";
+        }
+
+        if (name === "dob" && value) {
+            const dob = new Date(value);            // Chuyển input DOB thành Date object
+            const today = new Date();               // Lấy ngày hiện tại
+
+            const age = today.getFullYear() - dob.getFullYear(); // Tính tuổi cơ bản
+            const hasBirthdayPassed =              // Kiểm tra đã qua sinh nhật chưa
+                today.getMonth() > dob.getMonth() ||
+                (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+            const exactAge = hasBirthdayPassed ? age : age - 1; // Nếu chưa qua sinh nhật thì trừ đi 1
+
+            if (dob > today) {
+                error = "Date of birth must be in the past.";   // Không được chọn ngày trong tương lai
+            } else if (exactAge < 16) {
+                error = "You must be at least 16 years old.";   // Tuổi phải >= 16
+            }
+        }
+
+        setErrors(prevErrors => ({
+            ...prevErrors,
+            [name]: error
+        }));
     };
 
-     // Xử lý chọn ảnh và hiển thị ngay lập tức
-     const handleFileChange = ({ file }) => {
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+        validateInput(name, value);
+    };
+
+    // Xử lý chọn ảnh và hiển thị ngay lập tức
+    const handleFileChange = ({ file }) => {
         const fileReader = new FileReader();
         fileReader.onload = () => setImagePreview(fileReader.result);
         fileReader.readAsDataURL(file);
@@ -53,6 +96,17 @@ const EditProfile = () => {
 
     // Xử lý lưu thông tin user
     const handleSave = async () => {
+        let validationErrors = {};
+
+        Object.keys(form).forEach(key => {
+            validateInput(key, form[key]);
+            if (errors[key]) validationErrors[key] = errors[key];
+        });
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
         const formData = new FormData();
         formData.append("fullName", form.fullName);
         formData.append("address", form.address);
@@ -63,35 +117,54 @@ const EditProfile = () => {
             formData.append("userAvatar", selectedFile);  // Gửi file ảnh
         }
         setLoading(true)
-        axios.put('http://localhost:9999/users/edit-profile', formData, {
-            headers: { 
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-        .then(response => {
-            message.success("Profile updated successfully");
-            setImagePreview(response.data.userAvatar);
-            setTimeout(window.location.reload(), 3000);
-        })
-        .catch(error => {
-            message.error(error.response?.data?.message );
-        })
-        .finally(() => setLoading(false));
+        setTimeout(async () => {
+            axios.put('http://localhost:9999/users/edit-profile', formData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+                .then(response => {
+                    message.success("Profile updated successfully");
+                    setImagePreview(response.data.userAvatar);
+                    setUser(prevUser => ({
+                        ...prevUser,
+                        ...response.data
+                    }));
+                })
+                .catch(error => {
+                    message.error(error.response?.data?.message);
+                })
+                .finally(() => setLoading(false));
+        }, 1000);
     };
 
     const handleDiscard = () => {
-        setForm({ 
-            fullName: '',
-            address: '',
-            dob: '',
-            phoneNumber: '', });
-        setErrors({});
+        if (initialForm) {
+            setForm(initialForm);
+            setImagePreview(initialForm.userAvatar); // reset avatar
+            setSelectedFile(null); // bỏ file ảnh đã chọn
+            setErrors({});
+        }
     };
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
         window.location.href = '/auth/login';
+    };
+
+    // Xử lý mở Modal xóa tài khoản
+    const openDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(true);
+    };
+
+    // Xử lý đóng Modal xóa tài khoản
+    const closeDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(false);
     };
 
     const handleDeleteRequest = async () => {
@@ -100,7 +173,7 @@ const EditProfile = () => {
             return;
         }
 
-        setLoading(true);
+        setDeleteLoading(true);
         axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
@@ -113,11 +186,11 @@ const EditProfile = () => {
             .catch(error => {
                 setEmailError(error.response?.data?.message || "Incorrect password");
             })
-            .finally(() => setLoading(false));
+            .finally(() => setDeleteLoading(false));
     };
     const handleMenuClick = (e) => {
         if (e.key === '4') {
-            setIsDeleteModalVisible(true);
+            openDeleteModal();
         } else {
             setSelectedKey(e.key);
         }
@@ -126,15 +199,15 @@ const EditProfile = () => {
 
     return (
         <div style={{ minHeight: '100%', width: '100%', padding: '20px' }}>
-        {contextHolder}
-        <Row gutter={[16, 16]} justify="center">
-        <Col xs={24} sm={8} md={6} lg={4}>
+            {contextHolder}
+            <Row gutter={[16, 16]} justify="center">
+                <Col xs={24} sm={8} md={6} lg={4}>
                     <Breadcrumb style={{ marginBottom: '16px' }}>
                         <Breadcrumb.Item><Link to="/profile/profile-info">Profile</Link></Breadcrumb.Item>
                         <Breadcrumb.Item><Link to="/profile/edit-profile">Edit Profile</Link></Breadcrumb.Item>
                     </Breadcrumb>
 
-                    <Menu mode="vertical" selectedKeys={[selectedKey]}  onClick={handleMenuClick}
+                    <Menu mode="vertical" selectedKeys={[selectedKey]} onClick={handleMenuClick}
                         style={{ width: '100%', borderRadius: '8px', border: 'none', backgroundColor: '#fafafa', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
                         <Menu.Item key="1" icon={<UserOutlined />} style={{ borderRadius: '8px', borderRight: '3px solid #1890ff' }}>
                             <Link to="/profile/edit-profile">Profile settings</Link>
@@ -150,33 +223,33 @@ const EditProfile = () => {
                         </Menu.Item>
                     </Menu>
                 </Col>
-            <Col xs={24} sm={16} md={12} lg={10}>
-            <Card style={{ width: '100%', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                <Col xs={24} sm={16} md={12} lg={10}>
+                    <Card style={{ width: '100%', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
                         <h2 style={{ textAlign: 'center' }}>Edit Profile</h2>
-                        
+
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} src={imagePreview || "https://www.w3schools.com/howto/img_avatar.png"} />
                         </Row>
 
                         <Form layout="vertical">
                             <Form.Item label="Avatar">
-                            <Upload 
-                            showUploadList={false}
-                            beforeUpload={() => false}  // Ngăn tải lên tự động
-                            onChange={handleFileChange}
-                        >
-                            <Button icon={<UploadOutlined />}>Upload Image</Button>
-                        </Upload>
+                                <Upload
+                                    showUploadList={false}
+                                    beforeUpload={() => false}  // Ngăn tải lên tự động
+                                    onChange={handleFileChange}
+                                >
+                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                </Upload>
                             </Form.Item>
 
                             <Form.Item label="Username">
-                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px' , textAlign:'left' }}>
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign: 'left' }}>
                                     {form.username}
                                 </div>
                             </Form.Item>
 
                             <Form.Item label="Email">
-                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign:'left' }}>
+                                <div style={{ backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px', textAlign: 'left' }}>
                                     {form.email}
                                 </div>
                             </Form.Item>
@@ -203,15 +276,15 @@ const EditProfile = () => {
                             </Form.Item>
                         </Form>
                     </Card>
-            </Col>
-        </Row >
-        <Modal
+                </Col>
+            </Row >
+            <Modal
                 title="Confirm Account Deletion"
                 open={isDeleteModalVisible}
-                onCancel={() => setIsDeleteModalVisible(false)}
+                onCancel={closeDeleteModal}
                 footer={[
-                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
+                    <Button key="cancel" onClick={closeDeleteModal}>Cancel</Button>,
+                    <Button key="delete" type="primary" danger loading={deleteLoading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
                 <p>Please enter your email to proceed with account deletion.</p>
@@ -219,7 +292,7 @@ const EditProfile = () => {
                 {emailError && <p style={{ color: "red", marginTop: "5px" }}>{emailError}</p>}
             </Modal>
         </div>
-        
+
 
     )
 };

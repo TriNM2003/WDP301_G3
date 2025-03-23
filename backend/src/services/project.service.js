@@ -187,6 +187,21 @@ const editProject = async (projectId, projectData, file) => {
     const project = await getProjectById(projectId);
     if (!project) throw new Error("Project not found");
 
+    if (!projectData.projectName || projectData.projectName.trim().length === 0) {
+        throw new Error("Project name is required");
+    }
+    if (projectData.projectName.length < 3) {
+        throw new Error("Project name must be at least 3 characters long");
+    }
+
+    // Validate project slug
+    if (!projectData.projectSlug || projectData.projectSlug.trim().length === 0) {
+        throw new Error("Project slug is required");
+    }
+    if (projectData.projectSlug.length < 3) {
+        throw new Error("Project slug must be at least 3 characters long");
+    }
+
     let newProjectAvatar = project.projectAvatar;
     if (file) {
         try {

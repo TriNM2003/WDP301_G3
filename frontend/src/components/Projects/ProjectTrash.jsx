@@ -78,31 +78,34 @@ const ProjectTrash = () => {
     const handleConfirm = async () => {
         if (!selectedProject) return;
         setLoading(true);
-        try {
-            if (modalType === "Restore") {
-                await axios.put(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/restore`, {}, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-                });
-                message.success(`Project "${selectedProject.projectName}" has been restored successfully.`);
-                showNotification("success", "Project Restored", `Project "${selectedProject.projectName}" has been restored successfully.`);
-            } else if (modalType === "Delete") {
-                if (confirmProjectName !== selectedProject.projectName) {
-                    alert("Project name does not match!");
-                    return;
+        setTimeout(async () => {
+            try {
+                if (modalType === "Restore") {
+                    await axios.put(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/restore`, {}, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+                    });
+                    message.success(`Project "${selectedProject.projectName}" has been restored successfully.`);
+                    showNotification("success", "Project Restored", `Project "${selectedProject.projectName}" has been restored successfully.`);
+                } else if (modalType === "Delete") {
+                    if (confirmProjectName !== selectedProject.projectName) {
+                        alert("Project name does not match!");
+                        return;
+                    }
+                    await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+                    });
+                    message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);
+                    showNotification("success", "Project Deleted", `Project "${selectedProject.projectName}" has been deleted permanently.`);
                 }
-                await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-                });
-                message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);
-                showNotification("success", "Project Deleted", `Project "${selectedProject.projectName}" has been deleted permanently.`);
+                setIsModalVisible(false);
+                setTimeout(fetchProjects, 1000);
+                setTimeout(() => window.location.reload(), 1000); 
+            } catch (error) {
+                console.error(`Error performing ${modalType.toLowerCase()} project:`, error);
+            } finally {
+                setLoading(false);
             }
-            setIsModalVisible(false);
-            fetchProjects();
-        } catch (error) {
-            console.error(`Error performing ${modalType.toLowerCase()} project:`, error);
-        } finally {
-            setLoading(false); 
-        }
+        }, 1000);
     };
 
     const filteredProjects = projects.filter((project) =>
@@ -210,12 +213,12 @@ const ProjectTrash = () => {
                 footer={[
                     <Button key="cancel" onClick={() => setIsModalVisible(false)}>Cancel</Button>,
                     modalType === "Delete" && (
-                        <Button key="confirm" type="primary" danger onClick={handleConfirm} disabled={confirmProjectName !== selectedProject?.projectName}>
+                        <Button key="confirm" type="primary" loading={loading} danger onClick={handleConfirm} disabled={confirmProjectName !== selectedProject?.projectName}>
                             Confirm Delete
                         </Button>
                     ),
                     modalType === "Restore" && (
-                        <Button key="confirm" type="primary" onClick={handleConfirm}>
+                        <Button key="confirm" type="primary" loading={loading} onClick={handleConfirm}>
                             Confirm Restore
                         </Button>
                     )

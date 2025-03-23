@@ -17,32 +17,8 @@ const ChangePassword = () => {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
-
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const validateForm = () => {
-        let newErrors = {};
-
-        if (!form.oldPassword) newErrors.oldPassword = 'Old password is required';
-        if (!form.newPassword) {
-            newErrors.newPassword = 'New password is required';
-        } else {
-            if (form.newPassword.length < 8) newErrors.newPassword = 'Password must be at least 8 characters';
-            if (form.newPassword.includes(" ")) newErrors.newPassword = 'Password must not contain spaces';
-        }
-
-        if (!form.confirmPassword) {
-            newErrors.confirmPassword = 'Please confirm your new password';
-        } else if (form.newPassword !== form.confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
 
     useEffect(() => {
         axios.get('http://localhost:9999/users/user-profile', {
@@ -52,30 +28,86 @@ const ChangePassword = () => {
             .catch(() => message.error("Failed to load user data"));
     }, []);
 
+    const validateInput = (name, value) => {
+        let error = '';
+
+        if (name === "newPassword") {
+            if (value.length < 8) error = "New password must be at least 8 characters";
+            else if (/\s/.test(value)) error = "New password must not contain spaces";
+            else if (value === form.oldPassword) error = "New password must not be the same as the old password";
+        }
+
+        if (name === "confirmPassword" && value !== form.newPassword) {
+            error = "New password and confirmation do not match";
+        }
+
+        setErrors(prev => ({ ...prev, [name]: error }));
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+        validateInput(name, value); 
+    };
+
+    const validateForm = () => {
+        let newErrors = {};
+
+        if (!form.oldPassword) newErrors.oldPassword = 'Old password is required';
+        if (!form.newPassword) newErrors.newPassword = 'New password is required';
+        if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your new password';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSave = async () => {
         if (!validateForm()) return;
         setLoading(true);
-        await axios.put('http://localhost:9999/users/change-password',
-            {
-                oldPassword: form.oldPassword,
-                newPassword: form.newPassword,
-                confirmPassword: form.confirmPassword,
-            },
-            {
-                headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-            })
-            .then(() => {
-                message.success("Password changed successfully");
-                setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
-                setErrors({});
-            })
-            .catch(error => setErrors({ oldPassword: error.response?.data?.message }))
-            .finally(() => setLoading(false));
+        setTimeout(async () => {
+            await axios.put('http://localhost:9999/users/change-password',
+                {
+                    oldPassword: form.oldPassword,
+                    newPassword: form.newPassword,
+                    confirmPassword: form.confirmPassword,
+                },
+                {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+                })
+                .then(() => {
+                    message.success("Password changed successfully");
+                    setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                    setErrors({});
+                })
+                .catch(error => {
+                    const errorMessage = error.response?.data?.message;
+                    if (errorMessage === "New password must not be the same as the old password") {
+                        setErrors({ newPassword: errorMessage });
+                    } else {
+                        setErrors({ oldPassword: errorMessage });
+                    }
+                })
+                .finally(() => setLoading(false));
+        }, 1000);
     };
 
     const handleDiscard = () => {
         setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
         setErrors({});
+    };
+
+    // Xử lý mở Modal xóa tài khoản
+    const openDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(true);
+    };
+
+    // Xử lý đóng Modal xóa tài khoản
+    const closeDeleteModal = () => {
+        setEmail('');
+        setEmailError('');
+        setIsDeleteModalVisible(false);
     };
 
     const handleDeleteRequest = async () => {
@@ -84,7 +116,7 @@ const ChangePassword = () => {
             return;
         }
 
-        setLoading(true);
+        setDeleteLoading(true);
         axios.post('http://localhost:9999/users/send-delete-email', { email }, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
         })
@@ -97,12 +129,12 @@ const ChangePassword = () => {
             .catch(error => {
                 setEmailError(error.response?.data?.message);
             })
-            .finally(() => setLoading(false));
+            .finally(() => setDeleteLoading(false));
     };
 
     const handleMenuClick = (e) => {
         if (e.key === '4') {
-            setIsDeleteModalVisible(true);
+            openDeleteModal();
         } else {
             setSelectedKey(e.key);
         }
@@ -168,10 +200,10 @@ const ChangePassword = () => {
             <Modal
                 title="Confirm Account Deletion"
                 open={isDeleteModalVisible}
-                onCancel={() => setIsDeleteModalVisible(false)}
+                onCancel={closeDeleteModal}
                 footer={[
-                    <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="delete" type="primary" danger loading={loading} onClick={handleDeleteRequest}>Delete Account</Button>
+                    <Button key="cancel" onClick={closeDeleteModal}>Cancel</Button>,
+                    <Button key="delete" type="primary" danger loading={deleteLoading} onClick={handleDeleteRequest}>Delete Account</Button>
                 ]}
             >
                 <p>Please enter your email to proceed with account deletion.</p>

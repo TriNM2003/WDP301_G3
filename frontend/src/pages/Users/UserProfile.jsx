@@ -1,24 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, Avatar, Row, Col } from 'antd';
 import { Outlet } from 'react-router-dom';
+import { AppContext } from '../../context/AppContext';
 import axios from 'axios';
 
 const UserProfile = () => {
-  const [user, setUser] = useState({});
-
-  useEffect(() => {
-    axios.get('http://localhost:9999/users/user-profile', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    })
-      .then(res => {
-        setUser(res.data);
-      })
-      .catch(error => {
-        console.error(error.response?.data?.message);
-      });
-  }, []);
+  const { user } = useContext(AppContext);
 
   return (
     <div style={{ minHeight: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

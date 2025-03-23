@@ -8,7 +8,7 @@ import axios from "axios";
 const { Title } = Typography;
 
 const EditSite = () => {
-    const { showNotification, siteAPI, site, accessToken, user } = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, setSite } = useContext(AppContext);
     const [loading, setLoading] = useState(true);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeactivateModalVisible, setIsDeactivateModalVisible] = useState(false);
@@ -23,10 +23,10 @@ const EditSite = () => {
         siteAvatar: '',
         siteOwner: '',
         siteDescription: '',
-        siteSlug:''
+        siteSlug: ''
     });
     const [isSiteMember, setIsSiteMember] = useState(true);
-
+    const [errors, setErrors] = useState({});
     useEffect(() => {
         if (site._id && accessToken) {
             fetchSiteData();
@@ -34,101 +34,125 @@ const EditSite = () => {
     }, [site, accessToken]);
 
     const fetchSiteData = async () => {
-    try {
-        //  Bước 1: Fetch dữ liệu user
-        const userResponse = await axios.get(`http://localhost:9999/users/user-profile`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-        });
+        try {
+            //  Bước 1: Fetch dữ liệu user
+            const userResponse = await axios.get(`http://localhost:9999/users/user-profile`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+            });
 
-        if (!userResponse.data) {
-            message.error("Failed to load user data.");
-            return;
-        }
+            if (!userResponse.data) {
+                message.error("Failed to load user data.");
+                return;
+            }
 
-        const fetchedUser = userResponse.data;
-        const isAdmin = fetchedUser?.roles?.some(role => role?.roleName === "admin");
+            const fetchedUser = userResponse.data;
+            const isAdmin = fetchedUser?.roles?.some(role => role?.roleName === "admin");
 
-        //  Bước 2: Fetch dữ liệu của site
-        const siteResponse = await axios.get(`${siteAPI}/${site._id}/get-by-id`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-        });
+            //  Bước 2: Fetch dữ liệu của site
+            const siteResponse = await axios.get(`${siteAPI}/${site._id}/get-by-id`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+            });
 
-        if (!siteResponse.data) {
+            if (!siteResponse.data) {
+                message.error("Failed to load site data.");
+                return;
+            }
+
+            const { siteName, siteAvatar, siteMember, siteDescription, siteSlug, siteStatus } = siteResponse.data;
+            if (siteStatus === "deactivated") {
+                setIsDeactivated(true);
+                setLoading(false);
+                setSiteData([])
+                return;
+            }
+
+            //  Bước 3: Kiểm tra role trong site
+            const userInSite = siteMember?.find(member => member?._id?._id.toString() === fetchedUser?._id.toString());
+            const isSiteOwner = userInSite ? userInSite?.roles.includes("siteOwner") : false;
+
+            //  Nếu user không phải admin và không phải siteOwner → Chặn truy cập
+            if (!isAdmin && !isSiteOwner) {
+                // message.error("Access Denied! You don't have permission to edit this site.");
+                // navigate("/site");
+                // return;
+            } else {
+                setIsSiteMember(false);
+            }
+            const siteOwnerName = siteResponse?.data?.siteMember.find(member => member?.roles?.includes("siteOwner"))._id.username;
+            //  Nếu là admin hoặc siteOwner, cho phép truy cập
+            setHasPermission(true);
+            setSiteData({
+                siteName,
+                siteAvatar,
+                siteOwner: siteOwnerName || "Unkhown",
+                siteDescription,
+                siteSlug
+            });
+
+            setImagePreview(siteAvatar);
+            setShowDeactivate(isAdmin || isSiteOwner);
+        } catch (error) {
+            console.error("Error fetching site data:", error);
             message.error("Failed to load site data.");
-            return;
-        }
-
-        const { siteName, siteAvatar, siteMember, siteDescription, siteSlug, siteStatus } = siteResponse.data;
-        if (siteStatus === "deactivated") {
-            setIsDeactivated(true);
+        } finally {
             setLoading(false);
-            setSiteData([])
-            return;
         }
-
-        //  Bước 3: Kiểm tra role trong site
-        const userInSite = siteMember?.find(member => member?._id?._id.toString() === fetchedUser?._id.toString());
-        const isSiteOwner = userInSite ? userInSite?.roles.includes("siteOwner") : false;
-
-        //  Nếu user không phải admin và không phải siteOwner → Chặn truy cập
-        if (!isAdmin && !isSiteOwner) {
-            // message.error("Access Denied! You don't have permission to edit this site.");
-            // navigate("/site");
-            // return;
-        }else{
-            setIsSiteMember(false);
-        }
-        const siteOwnerName = siteResponse.data.siteMember.find(member => member.roles.includes("siteOwner"))._id.username;
-        //  Nếu là admin hoặc siteOwner, cho phép truy cập
-        setHasPermission(true);
-        setSiteData({
-            siteName,
-            siteAvatar,
-            siteOwner: siteOwnerName || "Unkhown",
-            siteDescription,
-            siteSlug
-        });
-
-        setImagePreview(siteAvatar);
-        setShowDeactivate(isAdmin || isSiteOwner);
-    } catch (error) {
-        console.error("Error fetching site data:", error);
-        message.error("Failed to load site data.");
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     const handleFileChange = (file) => {
         setSelectedFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
 
-    const handleSubmit = async () => {
-        setLoading(true);
-        try {
-            const formData = new FormData();
-            formData.append("siteName", siteData?.siteName);
-            formData.append("siteDescription", siteData?.siteDescription);
-            formData.append("siteSlug", siteData?.siteSlug);
-            if (selectedFile) formData.append("siteAvatar", selectedFile);
-
-            await axios.put(`${siteAPI}/${site._id}/edit`, formData, {
-                headers: { 
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                    "Content-Type": "multipart/form-data"
-                }
-            });
-
-            message.success("Site updated successfully!");
-            showNotification("Site Updated", `The site "${siteData.siteName}" has been updated successfully.`);
-            fetchSiteData();
-        } catch (error) {
-            console.error("Error updating site:", error);
-            message.error("Failed to update site.");
-        } finally {
-            setLoading(false);
+    const validateForm = () => {
+        let newErrors = {};
+    
+        if (!siteData?.siteName || siteData?.siteName.trim().length === 0) {
+            newErrors.siteName = "Site name is required";
+        } else if (siteData?.siteName.length < 3) {
+            newErrors.siteName = "Site name must be at least 3 characters long";
         }
+    
+        if (!siteData?.siteSlug || siteData?.siteSlug.trim().length === 0) {
+            newErrors.siteSlug = "Site slug is required";
+        }
+    
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async () => {
+        if (!validateForm()) return;
+        setLoading(true);
+        setTimeout(async () => {
+            try {
+                const formData = new FormData();
+                formData.append("siteName", siteData?.siteName);
+                formData.append("siteDescription", siteData?.siteDescription);
+                formData.append("siteSlug", siteData?.siteSlug);
+                if (selectedFile) formData.append("siteAvatar", selectedFile);
+
+                const response = await axios.put(`${siteAPI}/${site._id}/edit`, formData, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                        "Content-Type": "multipart/form-data"
+                    }
+                });
+
+                message.success("Site updated successfully!");
+                showNotification("Site Updated", `The site "${siteData.siteName}" has been updated successfully.`);
+                setSite(response.data);
+                fetchSiteData();
+            } catch (error) {
+                if (error.response?.data?.message) {
+                    setErrors({ siteName: error.response.data.message });
+                } else {
+                    message.error("Failed to update site.");
+                }
+            } finally {
+                setLoading(false);
+            }
+        }, 1000);
     };
 
     const handleDeactivateSite = () => {
@@ -136,7 +160,7 @@ const EditSite = () => {
     };
 
     const handleDeactivateReqest = async () => {
-        if(confirmSiteName !== siteData.siteName) {
+        if (confirmSiteName !== siteData.siteName) {
             message.error("Site name does not match!");
             return;
         }
@@ -145,17 +169,17 @@ const EditSite = () => {
         axios.post(`${siteAPI}/${site._id}/send-deactivate-email`, {}, {
             headers: { Authorization: `Bearer ${accessToken}` }
         })
-        .then(() => {
-            message.success("Deactivation request sent!");
-            showNotification("Deactivation Request", "The deactivation request has been sent to the site owner.");
-            setIsDeactivateModalVisible(false);
-            setLoading(false);
-        })
-        .catch((error) => {
-            console.error("Error sending deactivation email:", error);
-            message.error("Failed to send deactivation email.");
-            setLoading(false);
-        });
+            .then(() => {
+                message.success("Deactivation request sent!");
+                showNotification("Deactivation Request", "The deactivation request has been sent to the site owner.");
+                setIsDeactivateModalVisible(false);
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Error sending deactivation email:", error);
+                message.error("Failed to send deactivation email.");
+                setLoading(false);
+            });
 
 
     };
@@ -220,22 +244,22 @@ const EditSite = () => {
                         <Row justify="center" style={{ marginBottom: '20px' }}>
                             <Avatar size={100} style={{ borderRadius: '0' }} src={imagePreview || "https://via.placeholder.com/100"} />
                         </Row>
-                        {!isSiteMember && 
-                        <Form.Item>
-                            <Upload showUploadList={false} beforeUpload={handleFileChange}>
-                                <Button icon={<UploadOutlined />}>Upload Image</Button>
-                            </Upload>
-                        </Form.Item>
+                        {!isSiteMember &&
+                            <Form.Item>
+                                <Upload showUploadList={false} beforeUpload={handleFileChange}>
+                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                </Upload>
+                            </Form.Item>
                         }
-                        
+
                         <Form layout="vertical" onFinish={handleSubmit}>
                             <Form.Item label="Site Owner">
-                                <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", padding: '5px', textAlign: "left" }}>
+                                <p style={{ border: "1px solid #d9d9d9", borderRadius: "8px", backgroundColor: "#f3f3f3", color: "rgba(0, 0, 0, 0.25)", padding: '5px', textAlign: "left" }}>
                                     {siteData.siteOwner}
                                 </p>
                             </Form.Item>
 
-                            <Form.Item label="Site Name">
+                            <Form.Item label="Site Name" validateStatus={errors.siteName ? "error" : ""} help={errors.siteName}>
                                 <Input disabled={isSiteMember} value={siteData.siteName} onChange={(e) => setSiteData({ ...siteData, siteName: e.target.value })} />
                             </Form.Item>
 
@@ -243,24 +267,24 @@ const EditSite = () => {
                                 <Input.TextArea disabled={isSiteMember} value={siteData.siteDescription} onChange={(e) => setSiteData({ ...siteData, siteDescription: e.target.value })} />
                             </Form.Item>
 
-                            <Form.Item label="Site Slug">
+                            <Form.Item label="Site Slug" validateStatus={errors.siteSlug ? "error" : ""} help={errors.siteSlug}>
                                 <Input disabled={isSiteMember} value={siteData.siteSlug} onChange={(e) => setSiteData({ ...siteData, siteSlug: e.target.value })} />
                             </Form.Item>
 
                             {!isSiteMember &&
-                            <Form.Item>
-                                <Button type="primary" htmlType="submit" loading={loading} style={{ width: "100%" }}>
-                                    Save Changes
-                                </Button>
-                            </Form.Item>
+                                <Form.Item>
+                                    <Button type="primary" htmlType="submit" loading={loading} style={{ width: "100%" }}>
+                                        Save Changes
+                                    </Button>
+                                </Form.Item>
                             }
-                            
+
                         </Form>
                     </Card>
                 </Col>
             </Row>
-             {/* Deactivate Confirmation Modal */}
-             <Modal
+            {/* Deactivate Confirmation Modal */}
+            <Modal
                 title={
                     <span>
                         <ExclamationCircleOutlined style={{ color: "red", fontSize: "24px", marginRight: "10px" }} />

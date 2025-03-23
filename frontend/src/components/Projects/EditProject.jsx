@@ -9,11 +9,12 @@ const { Title, Text } = Typography;
 const EditProject = () => {
     const { projectSlug } = useParams();
     const navigate = useNavigate();
-    const { showNotification, siteAPI, site, accessToken, setProjects, user } = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, setProjects, user, projects } = useContext(AppContext);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [confirmProjectName, setConfirmProjectName] = useState("");
     const [loading, setLoading] = useState(false);
+    const [removing, setRemoving] = useState(false);
     const [projectData, setProjectData] = useState({
         projectName: '',
         projectAvatar: '',
@@ -23,6 +24,7 @@ const EditProject = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [isProjectMember, setIsProjectMember] = useState(true);
+    const [errors, setErrors] = useState({})
 
     useEffect(() => {
         if (site._id && accessToken) {
@@ -33,7 +35,7 @@ const EditProject = () => {
 
     const fetchProjectData = async () => {
         try {
-            // 🔹 Bước 1: Fetch danh sách dự án để tìm ID từ slug
+            //Fetch danh sách dự án để tìm ID từ slug
             const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/get-all`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
             });
@@ -45,7 +47,7 @@ const EditProject = () => {
                 return;
             }
 
-            // 🔹 Bước 2: Tìm project theo slug để lấy ID
+            // Tìm project theo slug để lấy ID
             const project = projects.find(p => p.projectSlug == projectSlug);
             if (!project) {
                 message.error("Project not found!");
@@ -55,32 +57,32 @@ const EditProject = () => {
 
             const projectId = project._id;
 
-            // 🔹 Bước 3: Fetch chi tiết project từ ID
+            //  Fetch chi tiết project từ ID
             const projectResponse = await axios.get(`http://localhost:9999/sites/${site._id}/projects/${projectId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
             });
 
             const { projectName, projectAvatar, projectMember, projectStatus } = projectResponse.data;
 
-            // 🔹 Nếu project bị archived, chặn truy cập
+            // Nếu project bị archived, chặn truy cập
             if (projectStatus === "archived") {
                 message.error("This project has been moved to trash!");
                 navigate(`/sites/${site._id}`);
                 return;
             }
 
-            // 🔹 Bước 4: Kiểm tra quyền truy cập (chỉ projectManager mới có quyền)
+            //  Kiểm tra quyền truy cập (chỉ projectManager mới có quyền)
             const manager = projectMember.find(member => member.roles.includes("projectManager"));
 
             if (!manager || manager._id._id !== user._id) {
                 // message.error("Access Denied! You don't have permission to access this project.");
                 // navigate(`/sites/${site._id}`);
                 // return;
-            }else{
+            } else {
                 setIsProjectMember(false);
             }
 
-            // 🔹 Lưu dữ liệu nếu người dùng có quyền
+            // Lưu dữ liệu nếu người dùng có quyền
             setProjectData({
                 projectId,
                 projectName,
@@ -100,6 +102,26 @@ const EditProject = () => {
 
     const handleChange = (e) => {
         setProjectData({ ...projectData, [e.target.name]: e.target.value });
+        setErrors({ ...errors, [e.target.name]: "" }); // Xóa lỗi khi user nhập lại
+    };
+    
+    const validateForm = () => {
+        let newErrors = {};
+        
+        if (!projectData.projectName || projectData.projectName.trim().length === 0) {
+            newErrors.projectName = "Project name is required";
+        } else if (projectData.projectName.length < 3) {
+            newErrors.projectName = "Project name must be at least 3 characters long";
+        }
+    
+        if (!projectData.projectSlug || projectData.projectSlug.trim().length === 0) {
+            newErrors.projectSlug = "Project slug is required";
+        } else if (projectData.projectSlug.length < 3) {
+            newErrors.projectSlug = "Project slug must be at least 3 characters long";
+        }
+    
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleFileChange = ({ file }) => {
@@ -110,6 +132,8 @@ const EditProject = () => {
     };
 
     const handleSave = async () => {
+        if (!validateForm()) return;
+
         const formData = new FormData();
         formData.append("projectName", projectData.projectName);
         formData.append("projectSlug", projectData.projectSlug);
@@ -117,46 +141,56 @@ const EditProject = () => {
             formData.append("projectAvatar", selectedFile);
         }
         setLoading(true);
-        try {
-            const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                    'Content-Type': 'multipart/form-data'
+        setTimeout(async () => {
+            try {
+                const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                message.success("Project updated successfully!");
+                setImagePreview(response.data.projectAvatar);
+                const newProjectSlug = response.data.projectSlug;
+                const updatedProjects = projects.map(p =>
+                    p._id === projectData.projectId ? { ...p, projectName: projectData.projectName, projectSlug: newProjectSlug } : p
+                );
+                setProjects(updatedProjects);
+                if (newProjectSlug !== projectSlug) {
+                    navigate(`/site/list/projects/${newProjectSlug}/project-setting`, { replace: true });
                 }
-            });
-            message.success("Project updated successfully!");
-            setImagePreview(response.data.projectAvatar);
-            const newProjectSlug = response.data.projectSlug;
-            console.log(newProjectSlug, projectSlug);
-            if (newProjectSlug !== projectSlug) {
-                navigate(`/site/list/projects/${newProjectSlug}/project-setting`, { replace: true });
+            } catch (error) {
+                console.error("Error updating project:", error);
+                message.error("Failed to update project.");
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error("Error updating project:", error);
-            message.error("Failed to update project.");
-        } finally {
-            setLoading(false);
-        }
+        }, 1000);
     };
     const handleRemoveToTrash = async () => {
         if (confirmProjectName !== projectData.projectName) {
             message.error("Project name does not match.");
             return;
         }
-        try {
-            await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {}, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-                }
-            });
-            message.success("Project moved to trash!");
-            navigate("/site");
-        } catch (error) {
-            console.error("Error moving project to trash:", error);
-            message.error("Failed to move project to trash.");
-        } finally {
-            setLoading(false);
-        }
+        setRemoving(true);
+        setTimeout(async () => {
+            try {
+                await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {}, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+                    }
+                });
+                message.success("Project moved to trash!");
+                const updatedProjects = projects.filter(p => p._id !== projectData.projectId);
+                setProjects(updatedProjects);
+                navigate("/site");
+            } catch (error) {
+                console.error("Error moving project to trash:", error);
+                message.error("Failed to move project to trash.");
+            } finally {
+                setRemoving(false);
+            }
+        }, 1000);
     };
 
 
@@ -168,35 +202,35 @@ const EditProject = () => {
                     <Title level={3}>Project Setting</Title>
                 </Col>
 
-                 {/* More Options Button */}
-                 <Col>
-                 {!isProjectMember && 
-                 <Dropdown
+                {/* More Options Button */}
+                <Col>
+                    {!isProjectMember &&
+                        <Dropdown
 
-                        overlay={
-                            <Button
-                                type="primary"
-                                danger
-                                style={{
-                                    width: "100%",
-                                    maxWidth: "180px",
-                                    height: "45px",
-                                    fontSize: "16px",
-                                    borderRadius: "6px",
-                                    display: showDeactivate ? "block" : "none",
-                                }}
-                                onClick={() => setIsDeleteModalVisible(true)}
-                            >
-                                Move to trash
-                            </Button>
-                        }
-                        trigger={["click"]}
-                        onOpenChange={(visible) => setShowDeactivate(visible)}
-                    >
-                        <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
-                    </Dropdown>
-                 }
-                    
+                            overlay={
+                                <Button
+                                    type="primary"
+                                    danger
+                                    style={{
+                                        width: "100%",
+                                        maxWidth: "180px",
+                                        height: "45px",
+                                        fontSize: "16px",
+                                        borderRadius: "6px",
+                                        display: showDeactivate ? "block" : "none",
+                                    }}
+                                    onClick={() => setIsDeleteModalVisible(true)}
+                                >
+                                    Move to trash
+                                </Button>
+                            }
+                            trigger={["click"]}
+                            onOpenChange={(visible) => setShowDeactivate(visible)}
+                        >
+                            <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
+                        </Dropdown>
+                    }
+
                 </Col>
             </Row>
 
@@ -207,16 +241,16 @@ const EditProject = () => {
                             <Avatar size={100} src={imagePreview || "default.jpg"} />
                         </Row>
                         {!isProjectMember &&
-                        <Form.Item >
-                            <Upload showUploadList={false} beforeUpload={() => false} onChange={handleFileChange}>
-                                <Button icon={<UploadOutlined />}>Upload Image</Button>
-                            </Upload>
-                        </Form.Item>
+                            <Form.Item >
+                                <Upload showUploadList={false} beforeUpload={() => false} onChange={handleFileChange}>
+                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                </Upload>
+                            </Form.Item>
                         }
-                        
+
 
                         <Form layout="vertical">
-                            <Form.Item label="Project Name">
+                            <Form.Item label="Project Name" validateStatus={errors.projectName ? "error" : ""} help={errors.projectName}>
                                 <Input name="projectName" value={projectData.projectName} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
 
@@ -227,18 +261,18 @@ const EditProject = () => {
 
                             </Form.Item>
 
-                            <Form.Item label="Project Slug">
-                                <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} disabled={isProjectMember}/>
+                            <Form.Item label="Project Slug" validateStatus={errors.projectSlug ? "error" : ""} help={errors.projectSlug}>
+                                <Input name="projectSlug" value={projectData.projectSlug} onChange={handleChange} disabled={isProjectMember} />
                             </Form.Item>
 
                             {!isProjectMember &&
-                            <Form.Item>
-                                <Button type="primary" onClick={handleSave} loading={loading} style={{ width: "100%" }}>
-                                    Save Changes
-                                </Button>
-                            </Form.Item>
+                                <Form.Item>
+                                    <Button type="primary" onClick={handleSave} loading={loading} style={{ width: "100%" }}>
+                                        Save Changes
+                                    </Button>
+                                </Form.Item>
                             }
-                            
+
                         </Form>
                     </Card>
                 </Col>
@@ -255,7 +289,7 @@ const EditProject = () => {
                 onCancel={() => setIsDeleteModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>Cancel</Button>,
-                    <Button key="confirm" type="primary" loading={loading} danger onClick={handleRemoveToTrash}>
+                    <Button key="confirm" type="primary" loading={removing} danger onClick={handleRemoveToTrash}>
                         Confirm
                     </Button>
                 ]}

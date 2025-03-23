@@ -20,6 +20,17 @@ const getUserById = async (req, res) => {
     }
 };
 
+const getUserByIdInfomation = async (req, res) => {
+    try {
+        const user = await userService.getUserByIdInfomation(req.payload.id);
+        if (!user) return res.status(400).json({ message: "User not found" });
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword, confirmPassword } = req.body;
@@ -72,8 +83,8 @@ const confirmDeleteAccount = async (req, res) => {
 const getUserActivities = async (req, res, next) => {
     try {
         const userId = req.payload.id;
-        const activities = await userService.getActivitiesByUserId(userId);      
-        if (!activities|| activities.length === 0) {
+        const activities = await userService.getActivitiesByUserId(userId);
+        if (!activities || activities.length === 0) {
             return res.status(404).json({ error: { status: 404, message: "Activities not found" } });
         }
         return res.status(200).json({ status: 200, activities });
@@ -83,18 +94,18 @@ const getUserActivities = async (req, res, next) => {
 };
 
 //  getUserInfoByUserIdFromParams
-const getUserInfoByUserIdFromParams = async (req, res, next) =>{
-    try{
-        const {userId} = req.params;
+const getUserInfoByUserIdFromParams = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
         const user = await userService.getUserInfoByUserIdFromParams(userId);
         if (!user) return res.status(400).json({ message: "User not found" });
 
         res.status(200).json(user);
-    }catch(error){
+    } catch (error) {
         next(error);
     }
 }
-const getOtherUserById = async (req, res , next) => {
+const getOtherUserById = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         const user = await userService.getUserById(userId);
@@ -112,10 +123,10 @@ const UserControllers = {
     editProfile,
     sendDeleteAccountEmail,
     confirmDeleteAccount,
-     getUserActivities,
-     getUserInfoByUserIdFromParams,
-
-     getOtherUserById,
+    getUserActivities,
+    getUserInfoByUserIdFromParams,
+    getUserByIdInfomation,
+    getOtherUserById,
 };
 
 module.exports = UserControllers;

@@ -6,6 +6,7 @@ const cloudinary = require("../configs/cloudinary");
 const db = require("../models/index");
 const { siteController } = require("../controllers");
 const authMiddleware = require("../middlewares/auth.middleware");
+const accountMiddleware = require("../middlewares/account.middleware");
 const adminMiddleware = require("../middlewares/admin.middleware");
 const siteMiddleware = require("../middlewares/site.middleware");
 const {isActive} = require("../middlewares/account.middleware")
