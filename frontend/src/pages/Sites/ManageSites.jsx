@@ -154,6 +154,7 @@ const formatDate = (isoString) => {
 
 const handleCreateSite = async () => {
   try {
+      setLoading(true);
       await form.validateFields();
       const values = form.getFieldsValue();
       const formData = new FormData();
@@ -175,6 +176,8 @@ const handleCreateSite = async () => {
   } catch (error) {
     console.log(error)
       message.error(String(error.response?.data?.error?.message),2)
+  } finally{
+    setLoading(false);
   }
 };
 

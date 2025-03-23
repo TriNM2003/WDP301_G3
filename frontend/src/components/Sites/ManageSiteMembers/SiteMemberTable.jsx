@@ -1,14 +1,15 @@
 import { red } from '@ant-design/colors';
 import { CloseCircleOutlined, DownOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
-import { Avatar, Button, Checkbox, Dropdown, Menu, Popconfirm, Radio, Space, Table } from 'antd'
+import { Avatar, Button, Checkbox, Dropdown, Menu, Popconfirm, Radio, Space, Spin, Table } from 'antd'
 import React from 'react'
 
-const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRevokeAccess}) => {
+const SiteMemberTable = ({loading,handleRoleChange, formatRole, site, members, handleRevokeAccess, revokeAccessLoading}) => {
     // Hiển thị menu chọn vai trò
   const roleMenu = (record) => (
     <Menu>
       <Menu.ItemGroup title="Select role">
-        <Checkbox.Group
+        <Spin spinning={loading}>
+          <Checkbox.Group
           value={record.siteMemberRole}
           onChange={(values) => handleRoleChange(record.siteMemberId, record.siteMemberRole, values, record.siteMemberEmail)}
           style={{ display: "flex", flexDirection: "column", padding: "10px", gap: "5px" }}
@@ -21,6 +22,8 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
             );
           }) || <Checkbox key={1} value="not found">Not found</Checkbox>}
         </Checkbox.Group>
+        </Spin>
+        
       </Menu.ItemGroup>
     </Menu>
   );
@@ -72,7 +75,8 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
           overlay={
             <Menu>
               <Menu.Item key="kick">
-                <Popconfirm
+                <Spin spinning={revokeAccessLoading}>
+                  <Popconfirm
                   title="Confirm revoke access?"
                   icon={<ExclamationCircleOutlined style={{ color: "gold" }} />}
                   onConfirm={() => {
@@ -83,6 +87,8 @@ const SiteMemberTable = ({handleRoleChange, formatRole, site, members, handleRev
                 >
                   <span style={{color: red[6]}}><CloseCircleOutlined /> Revoke access</span>
                 </Popconfirm>
+                </Spin>
+                
               </Menu.Item>
             </Menu>
           }

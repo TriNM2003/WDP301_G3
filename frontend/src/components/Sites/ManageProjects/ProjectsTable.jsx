@@ -3,7 +3,14 @@ import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MoreOutlined }
 import { Avatar, Button, Dropdown, Image, Menu, Popconfirm, Space, Table } from 'antd';
 import React from 'react'
 
-const ProjectsTable = ({parseDate, handleMoveToTrash, filteredProjects, setEditProjectModalVisible, setCurrentProjectSettings}) => {
+const formatDate = (mongoDate) => {
+  if (!mongoDate) return "";
+
+  const date = new Date(mongoDate);
+  return date.toLocaleDateString("vi-VN"); // "dd/mm/yyyy"
+};
+
+const ProjectsTable = ({handleMoveToTrash, filteredProjects, setEditProjectModalVisible, setCurrentProjectSettings}) => {
     // table column configs
   const columns = [
     {
@@ -48,12 +55,15 @@ const ProjectsTable = ({parseDate, handleMoveToTrash, filteredProjects, setEditP
     { title: "Created date",
       dataIndex: "createDate",
        key: "createDate" ,
-      sorter: (a, b) => parseDate(a.createDate) - parseDate(b.createDate),
+      sorter: (a, b) => new Date(a.createDate) - new Date(b.createDate),
+      defaultSortOrder: "descend",
+      render: (text) => formatDate(text)
     },
     { title: "Last updated",
       dataIndex: "updateDate",
        key: "updateDate" ,
-      sorter: (a, b) => parseDate(a.updateDate) - parseDate(b.updateDate),
+      sorter: (a, b) => new Date(a.updateDate) - new Date(b.updateDate),
+      render: (text) => formatDate(text)
     },
     {
       title: <div style={{textAlign: "center"}}><span>Action</span></div>,
@@ -76,7 +86,7 @@ const ProjectsTable = ({parseDate, handleMoveToTrash, filteredProjects, setEditP
               </Menu.Item>
               <Menu.Item key="editProject" onClick={() => {
                     setEditProjectModalVisible(true);
-                    setCurrentProjectSettings({projectId: record.projectId, projectName: record.projectName, projectAvatar: record.projectAvatar, projectDescription: record.projectDescription})
+                    setCurrentProjectSettings({projectId: record.projectId, projectName: record.projectName, projectAvatar: record.projectAvatar, projectSlug: record.projectSlug})
                 }}>
               <span style={{color: blue[6]}}><EditOutlined /> Edit project</span>
               </Menu.Item>
