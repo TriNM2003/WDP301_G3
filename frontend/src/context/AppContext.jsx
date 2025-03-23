@@ -44,6 +44,8 @@ const AppProvider = ({ children }) => {
   const [activityModal, setActivityModal] = useState(false);
   const [createActivityModal, setCreateActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
+  const [activeDragActivity, setActiveDragActivity] = useState(null);
+
   const [isActivityTitle, setIsActivityTitle] = useState(false)
   const [activityLoading, setActivityLoading] = useState(false)
   const [userActivities, setUserActivities] = useState([]);
@@ -319,7 +321,6 @@ const AppProvider = ({ children }) => {
   }
   // moveActivity
   const handleMoveActivity = async (field, selectedActivity, data) => {
-    console.log(field, selectedActivity, data);
     axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${selectedActivity?._id}/move`,
       {
         [field]: data
@@ -488,7 +489,8 @@ const AppProvider = ({ children }) => {
       createSubActivity, setCreateSubActivity, isActivityTitle, setIsActivityTitle,
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
       handleMoveActivity, searchActivity, setSearchActivity, activityTypes,
-      isCompletedSprint, setIsCompletedSprint, selectedSprint, setSelectedSprint
+      isCompletedSprint, setIsCompletedSprint, selectedSprint, setSelectedSprint,
+      activeDragActivity, setActiveDragActivity
 
 
     }}>

@@ -42,7 +42,7 @@ const SprintBoard = () => {
 
   const sensors = useSensors(mouseSensor);
   const handleDragEnd = (e) => {
-    console.log(e);
+    // console.log(e);
     const { over, active } = e;
 
     if (!over || !activeDragActivity) {
@@ -70,12 +70,12 @@ const SprintBoard = () => {
 
 
   const handleDragStart = (e) => {
-    console.log(e);
+    // console.log(e);
 
     const { active } = e;
     const activityId = active?.id;
 
-    const foundActivity = activities.find(act => act._id === activityId);
+    const foundActivity = activities.find(act => act?._id === activityId);
     if (foundActivity) {
       setActiveDragActivity(foundActivity);
     }
@@ -84,8 +84,8 @@ const SprintBoard = () => {
 
   useEffect(() => {
     const nonCompletedSprintIds = sprints
-      .filter(s => s.sprintStatus != "completed")
-      .map(s => s._id.toString());
+      .filter(s => s?.sprintStatus != "completed")
+      .map(s => s?._id.toString());
 
     setExpandedPanels(["0", ...nonCompletedSprintIds]);
   }, [sprints]);
@@ -224,11 +224,10 @@ const SprintBoard = () => {
 
       if (hasActivities?.length > 0) {
         setIsDeleteSprint(true);
-        console.log("delte");
 
       } else {
         handleDeleteSprint();
-        console.log("delte");
+
       }
     }
   };
@@ -415,17 +414,17 @@ const SprintBoard = () => {
 
                   </Space>
                 </Flex>
-              } key={sprint._id}>
+              } key={sprint?._id}>
               <SortableContext
                 id={sprint?._id}
-                items={filteredActivitites?.filter(activity => activity?.sprint?._id == sprint?._id)
-                  .map(activity => activity._id)}
+                items={filteredActivitites?.filter((activity) => (activity && activity?.sprint && activity?.sprint?._id )&& activity?.sprint?._id == sprint?._id)
+                  ?.map(activity => activity?._id)}
                 strategy={verticalListSortingStrategy} >
-                <DropContainer id={sprint._id} style={{
+                <DropContainer id={sprint?._id} style={{
 
-                  border: filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0 ? "" : "2px dashed lightgray",
+                  border: filteredActivitites?.filter(activity => activity?.sprint?._id == sprint?._id)?.length > 0 ? "" : "2px dashed lightgray",
                 }} >
-                  {!filteredActivitites?.filter(activity => activity?.sprint?._id === sprint?._id).length > 0
+                  {!filteredActivitites?.filter(activity => activity?.sprint?._id == sprint?._id).length > 0
                     &&
                     (<p style={{ color: "gray", fontStyle: "italic" }}><DownloadOutlined /> Drop activities here</p>)
                   }
