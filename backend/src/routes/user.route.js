@@ -11,7 +11,7 @@ const { isActive } = require("../middlewares/account.middleware");
 
 
 userRouter.use(bodyParser.json());
-userRouter.use([isActive,authMiddleware.verifyAccessToken ]);
+userRouter.use([authMiddleware.verifyAccessToken, isActive]);
 
 userRouter.get("/all",
     UserController.getAllUsers
