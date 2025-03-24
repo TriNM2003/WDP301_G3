@@ -5,6 +5,7 @@ const authService = require("../services/auth.service");
 const passport = require("passport");
 const { bcryptUtils, jwtUtils, redisUtils } = require("../utils");
 const { mailer } = require("../configs");
+const redisClient = require("../configs/redisClient");
 
 
 async function forgotPassword(req, res) {
@@ -149,6 +150,13 @@ const verifyAccount = async (req, res) => {
         }
         await db.User.updateOne({ _id: decoded.id }, { $set: { status: "active" } });
         const accessToken = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+            // refresh token
+        const refreshToken = jwtUtils.generateRefreshToken(user._id);
+        // luu vao trong redis
+        await redisUtils.setRefreshToken(user._id, refreshToken, jwtUtils.refreshTokenExp);
+
+
         res.json({
             message: "Account activated successfully!",
             accessToken,

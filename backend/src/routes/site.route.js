@@ -15,9 +15,6 @@ const siteRouter = express.Router({mergeParams: true});
 
 siteRouter.use(bodyParser.json());
 
-// ko can middleware
-siteRouter.post("/processing-invitation", siteController.processingInvitation) //hung
-
 // middleware dung chung cho tat ca cac site route
 siteRouter.use([verifyAccessToken,isActive]);
 
@@ -62,6 +59,6 @@ siteRouter.put("/:siteId/adminEdit", adminMiddleware.isAdmin, siteController.adm
 
 siteRouter.put("/:siteId/change-site-member-roles", [ siteMiddleware.isInSite, siteMiddleware.isSiteOwner], siteController.changeSiteMemberRoles)
 siteRouter.post("/request-site", siteController.requestSite);
-
+siteRouter.post("/processing-invitation", siteController.processingInvitation) //hung
 
 module.exports = siteRouter;

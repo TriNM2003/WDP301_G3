@@ -151,6 +151,7 @@ const getUserByAccessToken = async (accessToken) => {
     throw error;
 
     }
+
     return {
         _id: user._id,
         username: user.username,

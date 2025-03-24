@@ -12,7 +12,7 @@ const ManageProjects = () => {
   const [loading, setLoading] = useState(false);
   const [createProjectModalVisible, setCreateProjectModalVisible] = useState(false);
   const [editProjectModalVisisble, setEditProjectModalVisible] = useState(false);
-  const {showNotification, showMessage, messageHolder, projects, setProjects, projectAPI, site, siteAPI} = useContext(AppContext);
+  const {showNotification, showMessage, messageHolder, projects, setProjects, projectAPI, site, siteAPI, setRefreshNoti} = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [tableData, setTableData] = useState([]);
   const [currentProjectSettings, setCurrentProjectSettings] = useState({
@@ -106,6 +106,7 @@ const ManageProjects = () => {
       setEditProjectModalVisible(false);
       showMessage("success", "Edit project successfully", 2);
       showNotification(`Project ${currentProjectSettings.projectName} settings has been changed`);
+      setRefreshNoti(prev => !prev);
     } catch (error) {
       console.log(error)
     }finally{
@@ -123,6 +124,7 @@ const ManageProjects = () => {
       fetchProjectData();
       showMessage("success", `Project ${projectName} moved to trashcan successfully`, 2);
       showNotification(`📑 Project ${projectName} has been moved to trashcan 🗑 by John Smith 👋`)
+      setRefreshNoti(prev => !prev);
     } catch (error) {
       console.log(error)
     }

@@ -308,7 +308,7 @@ const inviteMemberByEmail = async (senderId, receiverId, siteId) => {
     return updatedSite.invitations;
 }
 
-const processingInvitation = async (invitationId, decision) => {
+const processingInvitation = async (requesterId, invitationId, decision) => {
     const invitationSite = await Site.findOne({ "invitations._id": invitationId });
     if (!invitationSite) {
         throw new Error("Invitation does not exist!");
@@ -316,9 +316,10 @@ const processingInvitation = async (invitationId, decision) => {
     const siteOwnerId = invitationSite.siteMember.find(member => member.roles.includes("siteOwner"))._id;
     const siteOwner = await User.findById(siteOwnerId);
     const invitation = invitationSite.invitations.find(item => item._id.toString() === invitationId);
-    //    if(invitation.receiver !== user._id){
-    //     throw new Error("User are not receiver!");
-    //    }
+    const isReceiver = requesterId?.toString() === invitation.receiver?.toString();
+    if(!isReceiver){
+        throw new Error("Please login the correct account to process request!");
+    }
     //check status == pending
     if (invitation.status !== "pending") {
         throw new Error("Invitation has been processed or expired!");
@@ -407,6 +408,7 @@ const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
         { _id: siteMemberId }, // Tìm user theo _id
         { $unset: { site: "" } } // Xóa trường site
     );
+
     const siteOwnerEmail = updateSiteMember?.siteMember.find(member => member.roles.includes("siteOwner"))?._id.email;
     const to = member.email;
     const subject = `You have been revoked access`;
@@ -414,6 +416,12 @@ const revokeSiteMemberAccess = async (siteId, siteMemberId) => {
                     <p>If this a mistake, please contact your site owner</p>
     `;
     await mailer.sendEmail(to, subject, body)
+    await notificationService.createNotification(updateSiteMember?.siteMember.find(member => member.roles.includes("siteOwner"))?._id._id,
+    [member._id],
+    `You have been revoked access from site ${site.siteName} by site owner ${siteOwnerEmail}`,
+    "site"
+    )
+    
     return {
         message: `Revoke site member ${siteMemberId} from site ${siteId} successfully!`,
         siteMember: updateSiteMember

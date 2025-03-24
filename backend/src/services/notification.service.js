@@ -63,7 +63,7 @@ const getAllNotifications = async (userId) => {
         });
 
         let notifications = user.notifications?.map((noti) => ({
-            ...noti._id.toObject(),
+            ...noti?._id?.toObject(),
             isSeen: noti.isSeen
         }));
 
@@ -87,7 +87,7 @@ const isSeen = async (userId, notificationId) => {
 
         const notifications = user.notifications
             ?.map(noti => ({
-                ...noti._id.toObject(),
+                ...noti?._id?.toObject(),
                 isSeen: noti.isSeen
             }))
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

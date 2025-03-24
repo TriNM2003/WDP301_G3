@@ -4,13 +4,12 @@ import { Table, Input, Button, Dropdown, Modal, Typography, Avatar, Breadcrumb, 
 import { MoreOutlined, SearchOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { AppContext } from '../../context/AppContext'
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-
+import authAxios from '../../utils/authAxios';
 const { Title } = Typography;
 
 const ProjectTrash = () => {
     const [projects, setProjects] = useState([]);
-    const { showNotification, siteAPI, site, accessToken, user } = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, user, refreshNoti, setRefreshNoti } = useContext(AppContext);
     const [selectedProject, setSelectedProject] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [modalType, setModalType] = useState("");
@@ -25,13 +24,11 @@ const ProjectTrash = () => {
             fetchProjects();
         }
 
-    }, [site, accessToken]);
+    }, [site, accessToken, refreshNoti]);
 
     const fetchProjects = async () => {
         try {
-            const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/trash`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
+            const response = await authAxios.get(`http://localhost:9999/sites/${site._id}/projects/trash`);
 
             const processedProjects = response.data.map(project => {
                 const manager = project.projectMember?.find(member => member.roles.includes("projectManager")) || null;
@@ -81,9 +78,8 @@ const ProjectTrash = () => {
         setTimeout(async () => {
             try {
                 if (modalType === "Restore") {
-                    await axios.put(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/restore`, {}, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-                    });
+                    await authAxios.put(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/restore`, {});
+                    setRefreshNoti(prev => !prev);
                     message.success(`Project "${selectedProject.projectName}" has been restored successfully.`);
                     showNotification("success", "Project Restored", `Project "${selectedProject.projectName}" has been restored successfully.`);
                 } else if (modalType === "Delete") {
@@ -91,15 +87,14 @@ const ProjectTrash = () => {
                         alert("Project name does not match!");
                         return;
                     }
-                    await axios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-                    });
+                    await authAxios.delete(`http://localhost:9999/sites/${site._id}/projects/${selectedProject._id}/destroy`);
+                    setRefreshNoti(prev => !prev);
                     message.success(`Project "${selectedProject.projectName}" has been deleted permanently.`);
                     showNotification("success", "Project Deleted", `Project "${selectedProject.projectName}" has been deleted permanently.`);
                 }
                 setIsModalVisible(false);
                 setTimeout(fetchProjects, 1000);
-                setTimeout(() => window.location.reload(), 1000); 
+                setTimeout(() => window.location.reload(), 1000);
             } catch (error) {
                 console.error(`Error performing ${modalType.toLowerCase()} project:`, error);
             } finally {

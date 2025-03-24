@@ -2,9 +2,8 @@ import React, { useState, useEffect, useContext } from "react";
 import { Layout, Input, Button, Table, Row, Col, Typography, Dropdown, Avatar, Tag, Modal, Select, Breadcrumb, message, Spin, AutoComplete } from "antd";
 import { SearchOutlined, FilterOutlined, PlusOutlined, MoreOutlined, ExclamationCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import { AppContext } from '../../context/AppContext'
-
+import authAxios from '../../utils/authAxios'
 
 const { Column } = Table;
 const { Title } = Typography;
@@ -12,7 +11,7 @@ const { Option } = Select;
 
 
 const TeamMemberManagement = () => {
-    const { showNotification, siteAPI, site, accessToken, user } = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, user, refreshNoti, setRefreshNoti } = useContext(AppContext);
     const [searchText, setSearchText] = useState("");
     const [teamId, setTeamId] = useState(null);
     const [isAddMemberModalVisible, setIsAddMemberModalVisible] = useState(false);
@@ -35,14 +34,12 @@ const TeamMemberManagement = () => {
             fetchTeamIdBySlug();
             fetchSiteMembers();
         }
-    }, [site, accessToken, teamSlug]);
+    }, [site, accessToken, teamSlug, refreshNoti]);
 
     // 🔹 Fetch team ID bằng slug
     const fetchTeamIdBySlug = async () => {
         try {
-            const response = await axios.get(`${siteAPI}/${site?._id}/teams/get-teams-in-site`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const response = await authAxios.get(`${siteAPI}/${site?._id}/teams/get-teams-in-site`);
 
             const teams = response.data;
             if (!teams || teams.length === 0) {
@@ -67,9 +64,7 @@ const TeamMemberManagement = () => {
 
     const fetchSiteMembers = async () => {
         try {
-            const response = await axios.get(`${siteAPI}/${site._id}/get-site-members`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const response = await authAxios.get(`${siteAPI}/${site._id}/get-site-members`);
             setSiteMembers(response?.data || []);
         } catch (error) {
             console.error("Error fetching site members:", error);
@@ -105,9 +100,7 @@ const TeamMemberManagement = () => {
     const fetchTeamMembers = async (teamId) => {
         try {
             setLoading(true);
-            const response = await axios.get(`${siteAPI}/${site._id}/teams/${teamId}/team-members`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const response = await authAxios.get(`${siteAPI}/${site._id}/teams/${teamId}/team-members`);
 
 
             if (Array.isArray(response.data)) {
@@ -172,11 +165,9 @@ const TeamMemberManagement = () => {
         setLoadingKick(true);
         setTimeout(async () => {
             try {
-                const response = await axios.post(
-                    `http://localhost:9999/sites/${site._id}/teams/${teamId}/kick-team-member`,
-                    { userId },
-                    { headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` } }
-                );
+                await authAxios.post(
+                    `http://localhost:9999/sites/${site._id}/teams/${teamId}/kick-team-member`, { userId });
+                setRefreshNoti(prev => !prev);
                 message.success(`Successfully removed ${selectedUser.username} from the team`);
                 showNotification(`Team update`, `Team Leader just kicked a team member out of the project.`);
                 setIsKickMemberModalVisible(false);
@@ -208,12 +199,11 @@ const TeamMemberManagement = () => {
         setLoadingAdd(true);
         setTimeout(async () => {
             try {
-                await axios.post(
+                await authAxios.post(
                     `${siteAPI}/${site._id}/teams/${teamId}/add-team-member`,
-                    { username: searchUser, role: selectedRole },
-                    { headers: { Authorization: `Bearer ${accessToken}` } }
-                );
+                    { username: searchUser, role: selectedRole });
 
+                setRefreshNoti(prev => !prev);
                 message.success(`Successfully added ${searchUser} to the team`);
                 showNotification(`Team update`, `Team Leader just added a new team member to the project.`);
 

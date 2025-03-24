@@ -74,6 +74,7 @@ const ManageSites = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editSiteModalVisible, setEditSiteModalVisible] = useState(false);
   const [siteMemberOption, setSiteMemberOption] = useState([]);
+  const [systemRoles, setSystemRoles] = useState([]);
 
 useEffect(() => {
   // get all sites
@@ -120,13 +121,19 @@ const fetchSites = () => {
 }
 
 const fetchUserEmails = () => {
-  // get user emails
+
+  authAxios.get("http://localhost:9999/systemRoles/get-all")
+  .then(res => {
+    const adminRole = res.data.find(role => role.roleName === "admin")
+    setSystemRoles(res.data)
+      // get user emails
   authAxios.get(`${userApi}/all`)
   .then(res => {
     const emails = res.data.reduce((acc, currUser) => {
+      const isAdmin = currUser.roles.includes(adminRole._id);
       const isInSite = currUser.site !== undefined;
       const isActive = currUser.status === "active";
-      if(!isInSite && isActive){
+      if(!isInSite && isActive && !isAdmin){
         acc.push({
           value: currUser.email,
           label: currUser.email,
@@ -142,6 +149,10 @@ const fetchUserEmails = () => {
     setUserEmails(emails);
   })
   .catch(err => console.log(err))
+  })
+  .catch(err => {
+    console.log(err)
+  })
 }
 
 

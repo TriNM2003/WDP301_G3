@@ -19,7 +19,7 @@ import FilterProjectMember from "./FilterProjectMember";
 const ManageProjectMember = () => {
   // state
   const {projectSlug} = useParams();
-  const {user, project, userApi, showNotification, projectAPI, showMessage, messageHolder} = useContext(AppContext)
+  const {user, project, userApi, showNotification, projectAPI, showMessage, messageHolder, setRefreshNoti} = useContext(AppContext)
   const [userEmails, setUserEmails] = useState([]);
   const [projectRoles, setProjectRoles] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
@@ -137,6 +137,7 @@ const ManageProjectMember = () => {
       const newProjectMemberList = formattedProjectMembers(newProjectMemberListRaw.data);
       setProjectMembers(newProjectMemberList);
       setSelectedMemberRole();
+      setRefreshNoti(prev => !prev);
     } catch (error) {
       console.log(error)
     } finally{
@@ -171,7 +172,7 @@ const handleRoleChange = async (oldRoles, updatedRoleList, projectMemberId, proj
     showMessage("success", "Change project member role successfully", 2);
 
     await fetchData();
-  
+    setRefreshNoti(prev => !prev);
     // const rawProjectMembers = await authAxios.get(`${projectAPI}/${project._id || "notFound"}/get-project-members`);
     // const projectMember = formattedProjectMembers(rawProjectMembers.data || []) || [];
     // setProjectMembers(projectMember || []);
@@ -204,6 +205,7 @@ const handleRoleChange = async (oldRoles, updatedRoleList, projectMemberId, proj
     setUserEmails(newEmailList);
     setSelectedEmail();
     setProjectMembers(formattedProjectMembers(updateProjectMember));
+    setRefreshNoti(prev => !prev);
     } catch (error) {
       console.log(error)
     }

@@ -17,7 +17,7 @@ function formatRole(text) {
 }
 
 const ManageSiteMembers = () => {
-  const {user, site, setSite, siteAPI, userApi, showNotification, showMessage, messageHolder} = useContext(AppContext);
+  const {user, site, setSite, siteAPI, userApi, showNotification, showMessage, messageHolder, setRefreshNoti} = useContext(AppContext);
 
   const [tableData, setTableData] = useState([]);
   const [invitaionEmails, setInvitationEmails] = useState([]);
@@ -74,19 +74,20 @@ const fetchData = async () => {
     try {
       setInviteLoading(true)
       const invitedUserId = invitaionEmails.find(item => item.value === selectedEmail).userId;
-    // console.log(selectedEmail)
-    await authAxios.post(`${siteAPI}/${site._id}/invite-member`, {receiverId: invitedUserId})
-    showMessage("success", `Send invitation to ${selectedEmail.toString()} successfully !`, 2)
-    showNotification(`👋 Invitation have been sent to ${selectedEmail.toString()} ✉`);
-    setSelectedEmail();
-    setInviteModalVisible(false);
-    await fetchData();
+      // console.log(selectedEmail)
+      await authAxios.post(`${siteAPI}/${site._id}/invite-member`, { receiverId: invitedUserId })
+      showMessage("success", `Send invitation to ${selectedEmail.toString()} successfully !`, 2)
+      showNotification(`👋 Invitation have been sent to ${selectedEmail.toString()} ✉`);
+      setSelectedEmail();
+      setInviteModalVisible(false);
+      setRefreshNoti(prev => !prev);
+      await fetchData();
     } catch (error) {
       console.log(error)
-    } finally{
+    } finally {
       setInviteLoading(false);
     }
-    
+
   }
 
   // Xử lý tìm kiếm
@@ -141,6 +142,7 @@ const fetchData = async () => {
       setInvitationEmails(emails);
       showMessage("success", `Revoke access 🔒 member ${name} successfully!`, 2);
       showNotification(`Member ${name} has been revoke access 🔒 from site ${site.siteName}`);
+      setRefreshNoti(prev => !prev);
     } catch (error) {
       console.log(error)
     } finally{
@@ -169,6 +171,7 @@ const fetchData = async () => {
       await authAxios.put(`${siteAPI}/${site._id}/change-site-member-roles`, {siteMemberId: siteMemberId, roles: newRole});
       message.success("Change site member role successfully");
       showNotification("Site",`Site member ${siteMemberEmail} role has been changed`);
+      setRefreshNoti(prev => !prev);
       await fetchData();
     } catch (error) {
       console.log(error)
