@@ -368,6 +368,14 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
                 roles: member.roles
             }
         })
+
+        const projectManagerId = updatedProjectMember.find(member => member.roles.includes("projectManager")).projectMember;
+        // thong bao cho member moi
+        await notificationService.createNotification(projectManagerId,
+            [projectMember._id, projectManagerId],
+            `${projectMember.username} have been added to project ${project.projectName} as ${projectMemberRole?.toString()}`,
+            "project"
+        );
         
         const to = projectMember.email;
         const subject = `You have been added to project ${project.projectName}`;
@@ -473,16 +481,6 @@ const removeProjectMember = async (removerId, projectId, projectMemberId) => {
             throw new Error("Cannot remove project manager!");
         }
 
-        // Kiểm tra xem user có activity nào chưa hoàn thành trong project không
-        const pendingActivities = await db.Activity.find({
-            project: projectId,
-            assignee: projectMemberId,
-            stageStatus: { $ne: "done" } // Không lấy những task đã hoàn thành
-        });
-        // console.log(pendingActivities.length);
-        if (pendingActivities.length > 0) {
-            throw new Error(`User has ${pendingActivities.length} pending activities and cannot be removed.`);
-        }
 
         //remove project member from project
         let updatedProject = await db.Project.findOneAndUpdate(
@@ -506,8 +504,8 @@ const removeProjectMember = async (removerId, projectId, projectMemberId) => {
         })
 
         await notificationService.createNotification(removerId,
-            [projectMember._id],
-            `You have been removed from project ${project.projectName}`,
+            [projectMember._id, removerId],
+            `Project member ${projectMember.username} have been removed from project ${project.projectName}`,
             "project"
         )
         

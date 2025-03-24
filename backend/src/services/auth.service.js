@@ -151,6 +151,12 @@ const getUserByAccessToken = async (accessToken) => {
     throw error;
 
     }
+
+    // refresh token
+    const refreshToken = jwtUtils.generateRefreshToken(user._id);
+    // luu vao trong redis
+    await redisClient.setRefreshToken(user._id, refreshToken, jwtUtils.refreshTokenExp);
+
     return {
         _id: user._id,
         username: user.username,

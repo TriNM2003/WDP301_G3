@@ -7,29 +7,42 @@ authAxios.defaults.timeout = 1000*60*10;
 
 
 const getRefreshToken = async () => {
-    // lay user id
-    const userId = localStorage.getItem("userId");
-    // lay refresh token
-    const refreshToken = await axios.post("http://localhost:9999/auth/getRefreshToken", {id: userId});
+    try {
+        // lay user id
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            console.log(`User id not found`);
+            return null;
+        }
+        // lay refresh token
+        const refreshToken = await axios.post("http://localhost:9999/auth/getRefreshToken", { id: userId });
 
-    if(!refreshToken){
-        console.log(`Refresh token with user id: ${userId} not found`);
-        return null;
+        if (!refreshToken) {
+            console.log(`Refresh token with user id: ${userId} not found`);
+            return null;
+        }
+
+        return {
+            refreshToken: refreshToken.data,
+            userId: userId
+        };
+    } catch (error) {
+        console.log(error)
     }
-
-    return {
-        refreshToken: refreshToken.data,
-        userId: userId
-    };
+    
 }
 
 const getNewAccessToken = async ({refreshToken, userId}) => {
-    // lay access token sau khi refresh va dat vao localStorage roi gui request
-    const result = await axios.post("http://localhost:9999/auth/refresh", {
-     refreshToken: refreshToken,
-     id: userId
-    });
-    return result.data;
+    try {
+        // lay access token sau khi refresh va dat vao localStorage roi gui request
+        const result = await axios.post("http://localhost:9999/auth/refresh", {
+            refreshToken: refreshToken,
+            id: userId
+        });
+        return result.data;
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 
@@ -50,24 +63,20 @@ authAxios.interceptors.request.use(async (config) => {
         console.log("ref token data: ", refreshTokenData);
 
         if (!refreshTokenData || !refreshTokenData.refreshToken) {
-            console.log("User refresh token does not exist!");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("accessTokenExp");
-            localStorage.removeItem("userId");
-            window.location.href = "http://localhost:3000/auth/login";
-            return Promise.reject("User refresh token does not exist!");
+            return Promise.reject({
+                isAuthError: true,
+                message: "User refresh token does not exist!"
+              });
         }
 
         // Yêu cầu access token mới
         newAccessToken = await getNewAccessToken(refreshTokenData);
 
         if (!newAccessToken || !newAccessToken.accessToken) {
-            console.log("Error getting new access token");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("accessTokenExp");
-            localStorage.removeItem("userId");
-            window.location.href = "http://localhost:3000/auth/login";
-            return Promise.reject("Error getting new access token");
+            return Promise.reject({
+                isAuthError: true,
+                message: "Error getting new access token!"
+              });
         }
 
         // Lưu token mới vào localStorage
@@ -94,7 +103,13 @@ authAxios.interceptors.request.use(async (config) => {
 authAxios.interceptors.response.use((response) => {
     return response;
 }, (error) => {
-    console.log("Error response:", error.response);
+    if (error.isAuthError) {
+        console.log("Reject request: ", error.message)
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("accessTokenExp");
+        localStorage.removeItem("userId");
+        window.location.href = "http://localhost:3000/auth/login";
+    }
     return Promise.reject(error);
 });
 

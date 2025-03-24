@@ -299,7 +299,7 @@ const AppProvider = ({ children }) => {
     const stageId = stages?.find(t => t.stageName.trim().toUpperCase() == stage.trim().toUpperCase())?._id
     const typeId = activityTypes?.find(t => t.typeName.trim().toUpperCase() == type.trim().toUpperCase())?._id
     const sprintId = sprints?.find((s) => s.sprintName?.trim().toUpperCase() == sprint?.trim().toUpperCase())?._id
-    axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
+    authAxios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
       {
         activityTitle: activityName,
         sprint: sprintId ? sprintId : null,
