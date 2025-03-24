@@ -43,7 +43,7 @@ function Home() {
       </p>
     </div>
     `;
-    const result = await authAxios.post(${siteAPI}/request-site, {emailSubject, emailBody});
+    const result = await authAxios.post(`${siteAPI}/request-site`, {emailSubject, emailBody});
     handleCancel();
     message.success(result.data, 2);
     } catch (error) {
