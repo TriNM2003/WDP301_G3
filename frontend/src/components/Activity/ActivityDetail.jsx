@@ -12,10 +12,11 @@ import SubActivity from './SubActivity'
 import axios from 'axios'
 import SubMenu from 'antd/es/menu/SubMenu'
 import ImgCrop from 'antd-img-crop';
+import authAxios from '../../utils/authAxios'
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI, stages, sprints, user, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI, stages, sprints, user,setRefreshNoti, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([]);
 
   const [newComment, setNewComment] = useState("");
@@ -35,7 +36,7 @@ function ActivityDetail() {
 
   // fetch site members
   useEffect(() => {
-    axios.get(
+    authAxios.get(
       `${siteAPI}/${site?._id}/projects/${project?._id}/get-project-members`,
       {
         headers: {
@@ -63,7 +64,7 @@ function ActivityDetail() {
   // fetch comment
   useEffect(() => {
     if (activity && activityModal) {
-      axios.get(
+      authAxios.get(
         `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/get-all`,
         {
           headers: {
@@ -91,7 +92,7 @@ function ActivityDetail() {
   const handleEditActivity = async (field, updateData) => {
 
     try {
-      const res = await axios.put(
+      const res = await authAxios.put(
         `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/edit`,
         { [field]: updateData },
         {
@@ -102,6 +103,7 @@ function ActivityDetail() {
       );
 
       activityModalLoading();
+      setRefreshNoti(prev => !prev);
       setActivity(res?.data?.activity);
       const updateActivities = activities?.map((a) =>
         a._id === res?.data?.activity?._id ? res?.data?.activity : a
@@ -125,7 +127,7 @@ function ActivityDetail() {
     setAttachmentUploading(true); 
     console.log(file);
     try {
-      const res = await axios.put(
+      const res = await authAxios.put(
         `${siteAPI}/${site._id}/projects/${project._id}/activities/${activity._id}/upload`,
         formData,
         {
@@ -137,6 +139,7 @@ function ActivityDetail() {
       );
       setAttachmentUploading(false);
       activityModalLoading();
+      setRefreshNoti(prev => !prev);
       setActivity(res.data.activity);
       const updateActivities = activities.map((a) =>
         a._id == res.data.activity._id ? res.data.activity : a
@@ -152,7 +155,7 @@ function ActivityDetail() {
   //Asign member
   const assignMember = async (memberId) => {
 
-    await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
+    await authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
       { member: memberId },
       {
         headers: {
@@ -165,6 +168,7 @@ function ActivityDetail() {
         const updateActivities = activities.map((a) =>
           a._id === res?.data?.activity?._id ? res?.data?.activity : a
         );
+        setRefreshNoti(prev => !prev);
         setActivities(updateActivities)
         setIsActivityTitle(false);
         setIsDescription(false);
@@ -180,7 +184,7 @@ function ActivityDetail() {
   }
   const removeAssign = async (memberId) => {
     if (memberId) {
-      await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/removeAssignee`,
+      await authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/removeAssignee`,
         { member: memberId },
         {
           headers: {
@@ -195,6 +199,7 @@ function ActivityDetail() {
           );
           setActivities(updateActivities)
           setIsActivityTitle(false);
+          setRefreshNoti(prev => !prev);
           setIsDescription(false);
           setNewDescription("")
           message.success("Remove assignee successfully");
@@ -244,7 +249,7 @@ function ActivityDetail() {
       message.warning("Comment cannot be empty!");
       return;
     }
-    axios.post(
+    authAxios.post(
       `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/post`,
       { content: newComment },
       {
@@ -274,7 +279,7 @@ function ActivityDetail() {
   };
 
   const deleteComment = (commentId) => {
-    axios.delete(
+    authAxios.delete(
       `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/${commentId}/delete`,
       {
         headers: {
@@ -311,7 +316,7 @@ function ActivityDetail() {
       message.warning("No comment selected or empty content!");
       return;
     }
-    axios.put(
+    authAxios.put(
       `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/${selectedComment.id}/edit`,
       { content: editedComment },
       {

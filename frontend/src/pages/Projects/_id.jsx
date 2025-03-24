@@ -11,18 +11,19 @@ import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
+import authAxios from '../../utils/authAxios'
 
 
 
 function _id() {
-    const {activity, project, setProject,activityLoading,isActivityTitle,stages, setStages, setIsActivityTitle, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
+    const { activity, project, setProject, activityLoading, isActivityTitle, stages, setStages, setIsActivityTitle, createActivityModal, projects, setProjects, siteAPI, createSubActivity, site, activties, setActivities, accessToken, sprints, setSprints } = useContext(AppContext);
     const { projectSlug } = useParams();
     useEffect(() => {
         const selectedProject = projects?.find((p) => p.projectSlug == projectSlug)
         setProject(selectedProject);
         // console.log('Selected project:', projectSlug);
         if (selectedProject && site) {
-            axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/activities/get-by-project-id`, {
+            authAxios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/activities/get-by-project-id`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
@@ -34,19 +35,19 @@ function _id() {
                     console.error("Error fetching projects in site:", err);
                 });
 
-                axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/stages/get-all`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
+            authAxios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/stages/get-all`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+                .then((res) => {
+                    setStages(res.data?.stages);
                 })
-                    .then((res) => {
-                        setStages(res.data?.stages);
-                    })
-                    .catch((err) => {
-                        console.error("Error fetching projects in site:", err);
-                    });    
+                .catch((err) => {
+                    console.error("Error fetching projects in site:", err);
+                });
 
-            axios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/sprints/get-by-project`, {
+            authAxios.get(`${siteAPI}/${site._id}/projects/${selectedProject?._id}/sprints/get-by-project`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
@@ -60,11 +61,11 @@ function _id() {
 
         }
         // console.log("da chay lai");
-    }, [projectSlug, site, projects, createActivityModal, createSubActivity,activityLoading]);
+    }, [projectSlug, site, projects, createActivityModal, createSubActivity, activityLoading]);
     return (
         <Flex vertical style={{ height: "100%" }}>
             <Outlet />
-       
+
         </Flex>
     )
 }

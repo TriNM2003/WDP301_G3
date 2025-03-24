@@ -13,7 +13,7 @@ const getActivityByProjectId = async (req, res, next) => {
     try {
         const { projectId } = req.params;
         const activities = await activityService.getActivitiesByProjectId(projectId)
-         res.status(200).json({  status: 200, activities:activities  })
+        res.status(200).json({ status: 200, activities: activities })
 
     } catch (error) {
         next(error);
@@ -24,7 +24,7 @@ const getById = async (req, res, next) => {
     try {
         const { activityId } = req.params;
         const activity = await activityService.getById(activityId)
-         res.status(200).json({  status: 200, activity:activity  })
+        res.status(200).json({ status: 200, activity: activity })
 
     } catch (error) {
         next(error);
@@ -33,53 +33,53 @@ const getById = async (req, res, next) => {
 
 const createActivity = async (req, res, next) => {
     try {
-        const{id} = req.payload;
-        const { activityTitle, stage, type,sprint, createBy, parent } = req.body;
-        const {projectId} = req.params;
+        const { id } = req.payload;
+        const { activityTitle, stage, type, sprint, createBy, parent } = req.body;
+        const { projectId } = req.params;
 
         if (!activityTitle) {
 
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: activityTitle"  }})
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: activityTitle" } })
 
         }
         if (!projectId) {
 
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: project"  }})
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: project" } })
 
         }
-        const checkProject =await db.Project.findById(projectId)
-        if(!checkProject){
-            return res.status(400).json({ error: { status: 400, message: "Project not found!"  }})
+        const checkProject = await db.Project.findById(projectId)
+        if (!checkProject) {
+            return res.status(400).json({ error: { status: 400, message: "Project not found!" } })
 
         }
         if (!stage) {
 
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: stage"  }})
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: stage" } })
 
         }
         if (!type) {
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: type"  }})
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: type" } })
 
         }
         if (!createBy) {
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: createBy"  }})
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: createBy" } })
 
         }
 
-        const newActivity = await activityService.create(req.body,projectId);
+        const newActivity = await activityService.create(req.body, projectId);
         if (!newActivity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity created fail" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity created fail" } })
 
         }
         const user = await db.User.findById(id)
-        const receivers = checkProject?.projectMember?.map(m=>m._id)
-        const updatedSprint = await db.Sprint.findByIdAndUpdate(sprint,{$addToSet:{activities: newActivity._id}});
-        const updatedStage = await db.Stage.findByIdAndUpdate(stage,{$addToSet:{activities: newActivity._id}});
-        const updatedParent = await db.Activity.findByIdAndUpdate(parent,{$addToSet:{child: newActivity._id}});
-        await notificationService.createNotification(id,receivers,`${user?.username} just created a new activity in project ${checkProject?.projectName}`,"project");
-
-
-        res.status(201).json({  status: 201,  message: "Activity created successfully", activity: newActivity  })
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        const updatedSprint = await db.Sprint.findByIdAndUpdate(sprint, { $addToSet: { activities: newActivity._id } });
+        const updatedStage = await db.Stage.findByIdAndUpdate(stage, { $addToSet: { activities: newActivity._id } });
+        const updatedParent = await db.Activity.findByIdAndUpdate(parent, { $addToSet: { child: newActivity._id } });
+        await notificationService.createNotification(id, receivers, `${user?.username} just created a new activity in project ${checkProject?.projectName}`, "project");
+     
+        res.status(201).json({ status: 201, message: "Activity created successfully", activity: newActivity })
+        
     } catch (error) {
         next(error);
     }
@@ -87,24 +87,36 @@ const createActivity = async (req, res, next) => {
 
 const editActivity = async (req, res, next) => {
     try {
-        const {activityId} = req.params;
+        const { id } = req.payload;
+        const { activityId } = req.params;
+        const { projectId } = req.params;
         const { activityTitle } = req.body;
         const activity = await db.Activity.findById(activityId).populate("project");
 
         if (!activity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity not found" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity not found" } })
 
         }
-        if (new Date(req.body.dueDate) < new Date(activity?.startDate)||new Date(activity?.dueDate) < new Date(req.body.startDate)) {
+
+
+        if (new Date(req.body.dueDate) < new Date(activity?.startDate) || new Date(activity?.dueDate) < new Date(req.body.startDate)) {
             return res.status(400).json({ error: { status: 400, message: "Due date must be later than start date!" } })
-            
-        }
-        const updatedActivity = await activityService.edit(req.body,activityId)
-        if (!updatedActivity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
 
         }
-         res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity  })
+        const updatedActivity = await activityService.edit(req.body, activityId)
+        if (!updatedActivity) {
+            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" } })
+
+        }
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just edited activity "${activity?.activityTitle}" `, "activity");
+        }
+
+        res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity })
     } catch (error) {
         next(error);
     }
@@ -112,21 +124,29 @@ const editActivity = async (req, res, next) => {
 
 const uploadAttachment = async (req, res, next) => {
     try {
-        const {id} = req.payload;
-        const {activityId} = req.params;
+        const { id } = req.payload;
+        const { activityId } = req.params;
+        const { projectId } = req.params;
+
         console.log("Req file:", req.file);
         const activity = await db.Activity.findById(activityId).populate("project");
 
         if (!activity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity not found" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity not found" } })
 
         }
-        const updatedActivity = await activityService.uploadAttachment(id,activityId,req.file)
+        const updatedActivity = await activityService.uploadAttachment(id, activityId, req.file)
         if (!updatedActivity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" } })
 
         }
-         res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity  })
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just upload a file in activity "${activity?.activityTitle}" `, "activity");
+        }
+        res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity })
     } catch (error) {
         next(error);
     }
@@ -134,51 +154,66 @@ const uploadAttachment = async (req, res, next) => {
 
 const moveActivity = async (req, res, next) => {
     try {
-        const {activityId} = req.params;
+        const { id } = req.payload;
+        const { projectId } = req.params;
+        const { activityId } = req.params;
         const activity = await db.Activity.findById(activityId).populate("project");
 
         if (!activity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity not found" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity not found" } })
 
         }
 
-        const updatedActivity = await activityService.moveActivity(req.body,activityId)
+        const updatedActivity = await activityService.moveActivity(req.body, activityId)
         if (!updatedActivity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" } })
 
         }
-         res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity  })
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just moved in activity "${activity?.activityTitle}" `, "activity");
+        }
+        res.status(201).json({ status: 201, message: "Activity updated successfully", activity: updatedActivity })
     } catch (error) {
         next(error);
     }
 }
 const assignMember = async (req, res, next) => {
     try {
-        const {activityId, projectId} = req.params;
+        const { id } = req.payload; 
+        const { activityId, projectId } = req.params;
         const { member } = req.body;
         const activity = await db.Activity.findById(activityId).populate("project");
 
         if (!activity) {
             return res.status(400).json({ error: { status: 400, message: "Activity not found" } })
-            
+
         }
-        
+
         const checkMember = await db.User.findById(member)
-        if(checkMember?.status !="active" || !checkMember?.projects.find((p)=>p == projectId)){
-            return res.status(400).json({ error: { status: 400, message: "Member does not valid"} })
+        if (checkMember?.status != "active" || !checkMember?.projects.find((p) => p == projectId)) {
+            return res.status(400).json({ error: { status: 400, message: "Member does not valid" } })
 
         }
         if (!member) {
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: member"} })
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: member" } })
 
         }
-        const updatedActivity = await activityService.assignMember(member,activityId)
+        const updatedActivity = await activityService.assignMember(member, activityId)
         if (!updatedActivity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" } })
 
 
         }
-         res.status(200).json({status: 200, message: "Assign member successfully", activity: updatedActivity  })
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just assigned a member in activity "${activity?.activityTitle}" `, "activity");
+        }
+        res.status(200).json({ status: 200, message: "Assign member successfully", activity: updatedActivity })
 
     } catch (error) {
         next(error);
@@ -187,27 +222,35 @@ const assignMember = async (req, res, next) => {
 
 const removeAssignMember = async (req, res, next) => {
     try {
-        const {activityId, projectId} = req.params;
+        const { id } = req.payload; 
+        const { activityId, projectId } = req.params;
         const { member } = req.body;
         const activity = await db.Activity.findById(activityId).populate("project");
 
         if (!activity) {
             return res.status(400).json({ error: { status: 400, message: "Activity not found" } })
-            
+
         }
-        
+
         const checkMember = await db.User.findById(member)
         if (!member) {
-            return res.status(400).json({ error: { status: 400, message: "Missing required field: member"} })
+            return res.status(400).json({ error: { status: 400, message: "Missing required field: member" } })
 
         }
-        const updatedActivity = await activityService.removeAssignMember(member,activityId)
+        const updatedActivity = await activityService.removeAssignMember(member, activityId)
         if (!updatedActivity) {
-            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" }})
+            return res.status(400).json({ error: { status: 400, message: "Activity updated fail" } })
 
 
         }
-         res.status(200).json({status: 200, message: "Remove assignee successfully", activity: updatedActivity  })
+
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just removed assignee in activity "${activity?.activityTitle}" `, "activity");
+        }
+        res.status(200).json({ status: 200, message: "Remove assignee successfully", activity: updatedActivity })
 
     } catch (error) {
         next(error);
@@ -216,8 +259,9 @@ const removeAssignMember = async (req, res, next) => {
 
 const removeActivity = async (req, res, next) => {
     try {
-        const {activityId} = req.params;
-        const activity = await db.Activity.findOne({_id:activityId, isDestroyed: { $ne: true }}).populate("project");
+        const { id } = req.payload; 
+        const { activityId, projectId } = req.params;
+        const activity = await db.Activity.findOne({ _id: activityId, isDestroyed: { $ne: true } }).populate("project");
 
         if (!activity) {
             return res.status(400).json({ error: { status: 400, message: "Activity not found." } })
@@ -225,81 +269,86 @@ const removeActivity = async (req, res, next) => {
         }
         const deletedActivity = await activityService.remove(activityId)
 
-        res.status(200).json({ status: 200, message: "Activity deleted successfully", deletedActivity  })
-
+        res.status(200).json({ status: 200, message: "Activity deleted successfully", deletedActivity })
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just removed activity "${activity?.activityTitle}" `, "activity");
+        }
     } catch (error) {
         next(error);
     }
 }
 
-const getAllComment = async(req, res, next) => {
+const getAllComment = async (req, res, next) => {
     try {
-        const {id}=req.payload;
-        const {activityId}=req.params;
+        const { id } = req.payload;
+        const { activityId } = req.params;
         const comments = await activityService.getAllComments(activityId)
 
-        res.status(200).json({ status: 200, message: "Get comment successfully", comments:comments  })
-        
+        res.status(200).json({ status: 200, message: "Get comment successfully", comments: comments })
+
     } catch (error) {
         next(error);
-        
+
     }
 }
 
-const createComment = async(req, res, next) => {
+const createComment = async (req, res, next) => {
     try {
-        const {id}=req.payload;
-        const {activityId}=req.params;
-        const {content} = req.body;
-        if(!content){
+        const { id } = req.payload;
+        const { activityId } = req.params;
+        const { content } = req.body;
+        if (!content) {
             return res.status(400).json({ error: { status: 400, message: "Missing required field: content ." } })
         }
-        const updatedActivity = await activityService.createComment(activityId,id,content)
-        if(!content){
+        const updatedActivity = await activityService.createComment(activityId, id, content)
+        if (!content) {
             return res.status(400).json({ error: { status: 400, message: "Fail to post comment!" } })
         }
-        res.status(200).json({ status: 200, message: "Post comment successfully", activity:updatedActivity  })
-        
+        res.status(200).json({ status: 200, message: "Post comment successfully", activity: updatedActivity })
+
     } catch (error) {
         next(error);
-        
+
     }
 }
 
-const editComment = async(req, res, next) => {
+const editComment = async (req, res, next) => {
     try {
-        const {id}=req.payload;
-        const {activityId,commentId}=req.params;
-        const {content} = req.body;
-        if(!content){
+        const { id } = req.payload;
+        const { activityId, commentId } = req.params;
+        const { content } = req.body;
+        if (!content) {
             return res.status(400).json({ error: { status: 400, message: "Missing required field: content ." } })
         }
-        const updatedActivity = await activityService.editComment(activityId,commentId,content)
-        if(!content){
+        const updatedActivity = await activityService.editComment(activityId, commentId, content)
+        if (!content) {
             return res.status(400).json({ error: { status: 400, message: "Fail to post comment!" } })
         }
-        res.status(200).json({ status: 200, message: "Edit comment successfully", activity:updatedActivity  })
-        
+        res.status(200).json({ status: 200, message: "Edit comment successfully", activity: updatedActivity })
+
     } catch (error) {
         next(error);
-        
+
     }
 }
 
-const deleteComment = async(req, res, next) => {
+const deleteComment = async (req, res, next) => {
     try {
-        const {id}=req.payload;
-        const {activityId,commentId}=req.params;
+        const { id } = req.payload;
+        const { activityId, commentId } = req.params;
 
-        const updatedActivity = await activityService.deleteComment(activityId,commentId)
-        if(!updatedActivity){
+        const updatedActivity = await activityService.deleteComment(activityId, commentId)
+        if (!updatedActivity) {
             return res.status(400).json({ error: { status: 400, message: "Fail to delete comment!" } })
         }
         res.status(204).json({ status: 204, message: "Delete comment successfully" })
-        
+
     } catch (error) {
         next(error);
-        
+
     }
 }
 

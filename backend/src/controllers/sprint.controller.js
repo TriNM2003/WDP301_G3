@@ -3,7 +3,7 @@ const JWT = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
-const { sprintService, activityService } = require('../services');
+const { sprintService, activityService, notificationService } = require('../services');
 
 const getByProjectId = async (req, res, next) => {
     try {
@@ -12,6 +12,7 @@ const getByProjectId = async (req, res, next) => {
 
         const sprints = await sprintService.getByProjectId(projectId);
         return res.status(200).json({ status: 200, sprints: sprints })
+
     } catch (error) {
         next(error)
     }
@@ -24,6 +25,13 @@ const createSprint = async (req, res, next) => {
         const { projectId } = req.params;
 
         const createdSprint = await sprintService.create(req.body, projectId);
+
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just create a new sprint "${createdSprint?.sprintName}" `, "project");
+        }
         return res.status(200).json({ status: 200, createdSprint: createdSprint })
 
     } catch (error) {
@@ -33,6 +41,8 @@ const createSprint = async (req, res, next) => {
 
 const editSprint = async (req, res, next) => {
     try {
+        const { id } = req.payload;
+
         const { sprintId, projectId } = req.params;
         const { sprintName, sprintGoal, startDate, dueDate, sprintStatus } = req.body;
 
@@ -41,7 +51,7 @@ const editSprint = async (req, res, next) => {
             return res.status(404).json({ status: 404, message: "Sprint does not exist" });
         }
 
-   
+
         if (sprintStatus == "active") {
             // Kiểm tra đủ thông tin
             if (!sprint?.sprintGoal || !sprint?.startDate || !sprint?.dueDate) {
@@ -71,6 +81,13 @@ const editSprint = async (req, res, next) => {
         }
         // Tiến hành cập nhật
         const updatedSprint = await sprintService.edit(req.body, projectId, sprintId);
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just edit a sprint "${updatedSprint?.sprintName}" `, "project");
+        }
+
         return res.status(200).json({
             status: 200,
             message: "Sprint updated successfully",
@@ -86,7 +103,8 @@ const editSprint = async (req, res, next) => {
 
 const deleteSprint = async (req, res, next) => {
     try {
-        const { sprintId } = req.params;
+        const { id } = req.payload;
+        const { sprintId, projectId } = req.params;
         const { newSprint } = req.body;
 
 
@@ -118,7 +136,12 @@ const deleteSprint = async (req, res, next) => {
         if (deletedSprint.deletedCount === 0) {
             return res.status(500).json({ status: 500, message: "Sprint could not be deleted. Please try again." });
         }
-
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just deleted a sprint`, "project");
+        }
         return res.status(204).json({ status: 204, message: "Sprint deleted successfully" });
 
     } catch (error) {
@@ -129,7 +152,8 @@ const deleteSprint = async (req, res, next) => {
 
 const completeSprint = async (req, res, next) => {
     try {
-        const { sprintId } = req.params;
+        const { id } = req.payload;
+        const { sprintId, projectId } = req.params;
         const { newSprintId } = req.body;
 
 
@@ -144,7 +168,7 @@ const completeSprint = async (req, res, next) => {
         }
 
 
-        const activities = await db.Activity.find({ sprint: sprintId }).populate("stage");
+        const activities = await db.Activity.find({ sprint: sprintId, isDestroyed: { $ne: true } }).populate("stage");
 
 
         const incompleteActivities = activities?.filter(activity => activity.stage?.stageStatus != "done");
@@ -171,7 +195,14 @@ const completeSprint = async (req, res, next) => {
             { new: true, runValidators: true }
         );
 
-        return res.status(200).json({ status: 200, message: "Sprint completed successfully", sprint: incompleteActivities });
+        const user = await db.User.findById(id)
+        const checkProject = await db.Project.findById(projectId)
+        const receivers = checkProject?.projectMember?.map(m => m._id)
+        if (receivers?.length > 0) {
+            await notificationService.createNotification(id, receivers, `${user?.username} just completed a sprint`, "project");
+        }
+
+        return res.status(200).json({ status: 200, message: "Sprint completed successfully", sprint: updatedSprint });
 
     } catch (error) {
         next(error);

@@ -119,7 +119,7 @@ const AppProvider = ({ children }) => {
   useEffect(() => {
 
     if (accessToken) {
-      axios.get(`http://localhost:9999/notifications/get-all`, {
+      authAxios.get(`http://localhost:9999/notifications/get-all`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -197,7 +197,7 @@ const AppProvider = ({ children }) => {
   useEffect(() => {
 
     if (accessToken) {
-      axios.get(`${activityTypeAPI}/get-all`, {
+      authAxios.get(`${activityTypeAPI}/get-all`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -215,7 +215,7 @@ const AppProvider = ({ children }) => {
   useEffect(() => {
     if (accessToken) {
       if (site._id) {
-        axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+        authAxios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`
           }
@@ -299,7 +299,7 @@ const AppProvider = ({ children }) => {
     const stageId = stages?.find(t => t.stageName.trim().toUpperCase() == stage.trim().toUpperCase())?._id
     const typeId = activityTypes?.find(t => t.typeName.trim().toUpperCase() == type.trim().toUpperCase())?._id
     const sprintId = sprints?.find((s) => s.sprintName?.trim().toUpperCase() == sprint?.trim().toUpperCase())?._id
-    axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
+    authAxios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/create`,
       {
         activityTitle: activityName,
         sprint: sprintId ? sprintId : null,
@@ -320,7 +320,7 @@ const AppProvider = ({ children }) => {
         message.success(`Activity "${res.data?.activity.activityTitle}" created successfully!`);
         showNotification(`Project update`, `User1 just created activity "${res.data.activity?.activityTitle}".`);
         setActivityName("");
-
+        activityModalLoading();
         setCreateActivityModal(false);
       })
       .catch((err) => {
@@ -340,7 +340,7 @@ const AppProvider = ({ children }) => {
   }
   // moveActivity
   const handleMoveActivity = async (field, selectedActivity, data) => {
-    axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${selectedActivity?._id}/move`,
+    authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${selectedActivity?._id}/move`,
       {
         [field]: data
       },
@@ -354,6 +354,8 @@ const AppProvider = ({ children }) => {
       .then((res) => {
         activityModalLoading();
         setActivity(res?.data?.activity);
+        setRefreshNoti(prev => !prev);
+
         const updateActivities = activities.map((a) =>
           a._id === res?.data?.activity?._id ? res?.data?.activity : a
         );
@@ -398,7 +400,7 @@ const AppProvider = ({ children }) => {
   const handleDeleteActivity = async () => {
     if (confirmActivity == activityToDelete?.activityTitle) {
       try {
-        axios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
+        authAxios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
           {
             headers: {
               'Authorization': `Bearer ${accessToken}`
@@ -408,7 +410,7 @@ const AppProvider = ({ children }) => {
           a._id != activityToDelete?._id
         );
         setActivities(updateActivities)
-
+        setRefreshNoti(prev => !prev);
         message.success(`Activity "${activityToDelete?.activityTitle}" has been deleted successfully!`);
         showNotification(`Project update`, `User1 just deleted activity ${activityToDelete?.activityTitle}.`);
         handleCloseDeleteActivityModal();
@@ -450,7 +452,7 @@ const AppProvider = ({ children }) => {
 
   const handleCompletedSprint = () => {
     if (completedSprint) {
-      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
+      authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
         { newSprintId: selectedSprint != "Backlog" ? selectedSprint : null },
         {
           headers: {
@@ -462,6 +464,7 @@ const AppProvider = ({ children }) => {
           const updatedSprints = sprints.map(s => s._id == res?.data?.sprint?._id ? res?.data?.sprint : s);
           setSprints(updatedSprints);
           activityModalLoading();
+          setRefreshNoti(prev => !prev);
           message.success({
             content: `🎯 (${completedSprint?.sprintName}) has been completed successfully!`,
             duration: 4,

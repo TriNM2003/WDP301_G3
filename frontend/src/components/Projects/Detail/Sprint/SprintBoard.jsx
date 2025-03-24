@@ -15,11 +15,12 @@ import { useDroppable } from "@dnd-kit/core";
 
 import axios from "axios";
 import DropContainer from "./DropContainer";
+import authAxios from "../../../../utils/authAxios";
 
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, selectedSprint, setSelectedSprint, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading,setRefreshNoti, selectedSprint, setSelectedSprint, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   const [activeDragActivity, setActiveDragActivity] = useState(null);
 
@@ -99,7 +100,7 @@ const SprintBoard = () => {
   //   }
   // };
   const handleCreateSprint = async () => {
-    axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/create`,
+    authAxios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/create`,
       {
         sprintName: `Sprint ${Number(sprints?.length) + 1}`
       },
@@ -113,6 +114,7 @@ const SprintBoard = () => {
       .then((res) => {
         setSprints([...sprints, res?.data?.sprint]);
         activityModalLoading();
+        setRefreshNoti(prev => !prev);
         message.success("Create new sprint successfully");
         showNotification(`Project update`, `${user?.username} just create a new sprint in project "${project?.projectName}".`);
       })
@@ -140,7 +142,7 @@ const SprintBoard = () => {
     }
 
     if (sprint) {
-      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`, updateData, {
+      authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`, updateData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -149,6 +151,8 @@ const SprintBoard = () => {
           setSelectedSprint(res.data.sprint)
           const updatedSprints = sprints.map(s => s?._id == res.data.sprint?._id ? res.data.sprint : s);
           setSprints(updatedSprints);
+          setRefreshNoti(prev => !prev);
+
           activityModalLoading();
           message.success("Edit sprint successfully");
           showNotification(`Project update`, `${user?.username} just edited sprint "${sprint?.sprintName}".`);
@@ -232,7 +236,7 @@ const SprintBoard = () => {
     }
   };
   const handleDeleteSprint = () => {
-    axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${deleteSprint?._id}/delete`,
+    authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${deleteSprint?._id}/delete`,
       { newSprint: selectedSprint },
       {
         headers: {
@@ -244,6 +248,7 @@ const SprintBoard = () => {
         setSprints(sprints.filter((sprint) => sprint?._id != deleteSprint?._id));
         activityModalLoading();
         setSelectedSprint();
+        setRefreshNoti(prev => !prev);
         setDeleteSprint();
         setIsDeleteSprint(false);
         message.success("Delete sprint successfully");
