@@ -15,6 +15,7 @@ import { useDroppable } from "@dnd-kit/core";
 
 import axios from "axios";
 import DropContainer from "./DropContainer";
+import authAxios from "../../../../utils/authAxios";
 
 const { Panel } = Collapse;
 
@@ -99,7 +100,7 @@ const SprintBoard = () => {
   //   }
   // };
   const handleCreateSprint = async () => {
-    axios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/create`,
+    authAxios.post(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/create`,
       {
         sprintName: `Sprint ${Number(sprints?.length) + 1}`
       },
@@ -141,7 +142,7 @@ const SprintBoard = () => {
     }
 
     if (sprint) {
-      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`, updateData, {
+      authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${sprint?._id}/edit`, updateData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -235,7 +236,7 @@ const SprintBoard = () => {
     }
   };
   const handleDeleteSprint = () => {
-    axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${deleteSprint?._id}/delete`,
+    authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${deleteSprint?._id}/delete`,
       { newSprint: selectedSprint },
       {
         headers: {

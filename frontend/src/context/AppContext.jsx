@@ -119,7 +119,7 @@ const AppProvider = ({ children }) => {
   useEffect(() => {
 
     if (accessToken) {
-      axios.get(`http://localhost:9999/notifications/get-all`, {
+      authAxios.get(`http://localhost:9999/notifications/get-all`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -197,7 +197,7 @@ const AppProvider = ({ children }) => {
   useEffect(() => {
 
     if (accessToken) {
-      axios.get(`${activityTypeAPI}/get-all`, {
+      authAxios.get(`${activityTypeAPI}/get-all`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -215,7 +215,7 @@ const AppProvider = ({ children }) => {
   useEffect(() => {
     if (accessToken) {
       if (site._id) {
-        axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+        authAxios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`
           }
@@ -400,7 +400,7 @@ const AppProvider = ({ children }) => {
   const handleDeleteActivity = async () => {
     if (confirmActivity == activityToDelete?.activityTitle) {
       try {
-        axios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
+        authAxios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
           {
             headers: {
               'Authorization': `Bearer ${accessToken}`
@@ -452,7 +452,7 @@ const AppProvider = ({ children }) => {
 
   const handleCompletedSprint = () => {
     if (completedSprint) {
-      axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
+      authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
         { newSprintId: selectedSprint != "Backlog" ? selectedSprint : null },
         {
           headers: {

@@ -12,6 +12,7 @@ import SubActivity from './SubActivity'
 import axios from 'axios'
 import SubMenu from 'antd/es/menu/SubMenu'
 import ImgCrop from 'antd-img-crop';
+import authAxios from '../../utils/authAxios'
 
 
 function ActivityDetail() {
@@ -35,7 +36,7 @@ function ActivityDetail() {
 
   // fetch site members
   useEffect(() => {
-    axios.get(
+    authAxios.get(
       `${siteAPI}/${site?._id}/projects/${project?._id}/get-project-members`,
       {
         headers: {
@@ -63,7 +64,7 @@ function ActivityDetail() {
   // fetch comment
   useEffect(() => {
     if (activity && activityModal) {
-      axios.get(
+      authAxios.get(
         `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/get-all`,
         {
           headers: {
@@ -91,7 +92,7 @@ function ActivityDetail() {
   const handleEditActivity = async (field, updateData) => {
 
     try {
-      const res = await axios.put(
+      const res = await authAxios.put(
         `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/edit`,
         { [field]: updateData },
         {
@@ -126,7 +127,7 @@ function ActivityDetail() {
     setAttachmentUploading(true); 
     console.log(file);
     try {
-      const res = await axios.put(
+      const res = await authAxios.put(
         `${siteAPI}/${site._id}/projects/${project._id}/activities/${activity._id}/upload`,
         formData,
         {
@@ -154,7 +155,7 @@ function ActivityDetail() {
   //Asign member
   const assignMember = async (memberId) => {
 
-    await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
+    await authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/assignMember`,
       { member: memberId },
       {
         headers: {
@@ -183,7 +184,7 @@ function ActivityDetail() {
   }
   const removeAssign = async (memberId) => {
     if (memberId) {
-      await axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/removeAssignee`,
+      await authAxios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/removeAssignee`,
         { member: memberId },
         {
           headers: {
@@ -248,7 +249,7 @@ function ActivityDetail() {
       message.warning("Comment cannot be empty!");
       return;
     }
-    axios.post(
+    authAxios.post(
       `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/post`,
       { content: newComment },
       {
@@ -278,7 +279,7 @@ function ActivityDetail() {
   };
 
   const deleteComment = (commentId) => {
-    axios.delete(
+    authAxios.delete(
       `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/${commentId}/delete`,
       {
         headers: {
@@ -315,7 +316,7 @@ function ActivityDetail() {
       message.warning("No comment selected or empty content!");
       return;
     }
-    axios.put(
+    authAxios.put(
       `${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activity?._id}/comments/${selectedComment.id}/edit`,
       { content: editedComment },
       {
