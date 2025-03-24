@@ -27,17 +27,17 @@ const getTeamMembers = async (teamId) => {
         const team = await getTeamById(teamId);
 
         return team.teamMembers
-        .filter(member => member._id.status === "active") // Lọc chỉ lấy thành viên active
-        .map(member => ({
-            _id: member._id._id,
-            username: member._id.username,
-            email: member._id.email,
-            fullName: member._id.fullName,
-            userAvatar: member._id.userAvatar || "default.jpg",
-            //role la 1 mang
-            roles: member.roles || [],
-            dateAdded: team.createdAt
-        }));
+            .filter(member => member._id.status === "active") // Lọc chỉ lấy thành viên active
+            .map(member => ({
+                _id: member._id._id,
+                username: member._id.username,
+                email: member._id.email,
+                fullName: member._id.fullName,
+                userAvatar: member._id.userAvatar || "default.jpg",
+                //role la 1 mang
+                roles: member.roles || [],
+                dateAdded: team.createdAt
+            }));
     } catch (error) {
         throw error;
     }
@@ -125,9 +125,9 @@ const kickTeamMember = async (teamId, userId) => {
     }
 };
 
-const getTeamsInSite = async(siteId)=>{
+const getTeamsInSite = async (siteId) => {
     try {
-        const team = await db.Team.find({site:siteId})
+        const team = await db.Team.find({ site: siteId })
         return team;
     } catch (error) {
         throw error;
@@ -151,7 +151,7 @@ const createTeam = async (teamData, creatorId, siteId) => {
         const siteMemberIds = site.siteMember.map(member => member._id?._id.toString());
 
         // Kiểm tra xem tất cả teamMembers có thuộc site không
-        const isValidMembers = teamData.teamMembers.every(memberId => 
+        const isValidMembers = teamData.teamMembers.every(memberId =>
             siteMemberIds.includes(memberId.toString())
         );
         if (!isValidMembers) {
@@ -161,7 +161,7 @@ const createTeam = async (teamData, creatorId, siteId) => {
 
         // Định dạng danh sách teamMembers
         const teamMembers = [
-            { _id: creatorId, roles: ["teamLeader", "teamMember"] }, 
+            { _id: creatorId, roles: ["teamLeader", "teamMember"] },
             ...(teamData.teamMembers?.map(memberId => ({
                 _id: memberId,
                 roles: ["teamMember"]
@@ -187,6 +187,20 @@ const createTeam = async (teamData, creatorId, siteId) => {
             { _id: { $in: memberIds } },
             { $push: { teams: savedTeam._id } }
         );
+
+        // Notification
+        const creator = await db.User.findById(creatorId);
+        const notificationContent = `${creator?.username} just created a new team: ${savedTeam.teamName}`;
+        const receiverIds = memberIds.filter(id => id.toString() !== creatorId.toString());
+
+        if (receiverIds.length > 0) {
+            await notificationService.createNotification(
+                creatorId,
+                receiverIds,
+                notificationContent,
+                "team" 
+            );
+        }
 
         return savedTeam;
     } catch (error) {
@@ -214,34 +228,34 @@ const getTeamActivities = async (teamSlug) => {
         // Gộp tất cả activities lại thành một danh sách duy nhất
         const allActivities = activitiesResults.flat();
 
-           // Dùng Map để loại bỏ các activities trùng nhau dựa trên `_id`
+        // Dùng Map để loại bỏ các activities trùng nhau dựa trên `_id`
         const uniqueActivities = new Map();
-           allActivities.forEach(activity => {
-               uniqueActivities.set(activity._id.toString(), activity);
-           });
+        allActivities.forEach(activity => {
+            uniqueActivities.set(activity._id.toString(), activity);
+        });
 
-        const filterActivities = Array.from(uniqueActivities.values());   
-            // **Populate stage để lấy stageName và stageStatus**
+        const filterActivities = Array.from(uniqueActivities.values());
+        // **Populate stage để lấy stageName và stageStatus**
         const populatedActivities = await db.Activity.populate(filterActivities, [
             {
-            path: "stage",
-            select: "stageName stageStatus"
-            } ,
-            { 
-            path: "assignee",
-            select: "username" 
+                path: "stage",
+                select: "stageName stageStatus"
+            },
+            {
+                path: "assignee",
+                select: "username"
             }
-    ]);
-           return populatedActivities;
+        ]);
+        return populatedActivities;
     } catch (error) {
         throw error;
     }
 };
 
-async function removeTeam(siteOwnerId, teamId){
+async function removeTeam(siteOwnerId, teamId) {
     const siteOwner = await db.User.findById(siteOwnerId);
     const team = await db.Team.findById(teamId).populate("teamMembers._id");
-    if(!team){
+    if (!team) {
         throw new Error("Team does not exist")
     }
     const teamMemberList = team.teamMembers.map(member => {

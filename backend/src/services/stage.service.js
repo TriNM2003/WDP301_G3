@@ -3,6 +3,7 @@ const JWT = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
+const notificationService = require('./notification.service');
 
 const COLOR_LIST = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FFD700", "#8A2BE2", "#00CED1", "#DC143C"];
 
@@ -50,7 +51,7 @@ const getAllByProject = async (projectId) => {
         throw error;
     }
 };
-const updateStageParents = async (updates) => {
+const updateStageParents = async (updates, userId, projectId) => {
     try {
         const bulkOps = updates.map(({ stageId, parentId }) => ({
             updateOne: {
@@ -60,6 +61,22 @@ const updateStageParents = async (updates) => {
         }));
 
         await db.Stage.bulkWrite(bulkOps);
+        const project = await db.Project.findById(projectId);
+        const creator = await db.User.findById(userId);
+
+        const receivers = project.projectMember
+            .filter(m => m?._id?.toString() !== userId?.toString())
+            .map(m => m._id);
+
+        if (receivers.length > 0) {
+            await notificationService.createNotification(
+                userId,
+                receivers,
+                `${creator.username} just updated stage order in project "${project.projectName}"`,
+                "project"
+            );
+        }
+
         return { message: "Stage parent relationships updated successfully." };
     } catch (error) {
         throw error;
@@ -72,7 +89,7 @@ const getRandomColor = (existingColors) => {
     return availableColors[Math.floor(Math.random() * availableColors.length)];
 };
 
-const addStage = async ({ stageName, stageStatus, parent, child, projectId }) => {
+const addStage = async ({ stageName, stageStatus, parent, child, projectId, userId }) => {
     try {
         //  Lấy danh sách stages đã sắp xếp
         const existingStages = await getAllByProject(projectId);
@@ -83,8 +100,6 @@ const addStage = async ({ stageName, stageStatus, parent, child, projectId }) =>
         if (!parent && existingStages.length > 0) {
             parent = existingStages[existingStages.length - 1]._id;
         }
-
-        console.log("Parent before creating new stage:", parent);
 
 
         const newStage = new db.Stage({
@@ -97,7 +112,22 @@ const addStage = async ({ stageName, stageStatus, parent, child, projectId }) =>
 
         await newStage.save();
 
-        console.log("New Stage created with ID:", newStage._id, "Parent:", newStage.parent);
+        const project = await db.Project.findById(projectId);
+        const creator = await db.User.findById(userId);
+
+        const receivers = project.projectMember
+            .filter(m => m._id?.toString() !== userId.toString() )
+            .map(m => m._id);
+
+        if (receivers.length > 0) {
+            await notificationService.createNotification(
+                userId,
+                receivers,
+                `${creator.username} just created a new stage: "${stageName}" in project ${project.projectName}`,
+                "project"
+            );
+        }
+
 
         //  Nếu có child, cập nhật parent của child về stage mới
         if (child) {
@@ -111,7 +141,7 @@ const addStage = async ({ stageName, stageStatus, parent, child, projectId }) =>
 
             // Kiểm tra nếu `nextStage` tồn tại thì cập nhật, nếu không thì bỏ qua
             if (nextStage) {
-                console.log("Updating next stage:", nextStage._id, "with new parent:", newStage._id);
+
                 await db.Stage.findByIdAndUpdate(nextStage._id, { parent: newStage._id });
             }
         }
@@ -124,9 +154,24 @@ const addStage = async ({ stageName, stageStatus, parent, child, projectId }) =>
 };
 
 // edit stage
-const editStage = async (stageId, updateData) => {
+const editStage = async (stageId, updateData, userId) => {
     try {
         const updatedStage = await db.Stage.findByIdAndUpdate(stageId, updateData, { new: true });
+        const stage = await db.Stage.findById(stageId);
+        const project = await db.Project.findById(stage.project);
+        const creator = await db.User.findById(userId);
+        const receivers = project.projectMember
+            .filter(m => m._id?.toString() !== userId.toString())
+            .map(m => m._id);
+
+        if (receivers.length > 0) {
+            await notificationService.createNotification(
+                userId,
+                receivers,
+                `${creator.username} just edited stage "${stage.stageName}" in project ${project.projectName}`,
+                "project"
+            );
+        }
 
         return updatedStage;
     } catch (error) {
@@ -134,7 +179,7 @@ const editStage = async (stageId, updateData) => {
     }
 };
 
-const deleteStage = async ({ stageId, projectId, targetStageId }) => {
+const deleteStage = async ({ stageId, projectId, targetStageId, userId }) => {
     try {
         const stages = await getAllByProject(projectId);
 
@@ -162,6 +207,21 @@ const deleteStage = async ({ stageId, projectId, targetStageId }) => {
             { parent: stageId },
             { parent: previousStage ? previousStage._id : null }
         );
+
+        const project = await db.Project.findById(projectId);
+        const creator = await db.User.findById(userId);
+        const receivers = project.projectMember
+            .filter(m => m._id?.toString() !== userId.toString())
+            .map(m => m._id);
+
+        if (receivers.length > 0) {
+            await notificationService.createNotification(
+                userId,
+                receivers,
+                `${creator.username} just deleted stage "${stageToDelete.stageName}" in project ${project.projectName}`,
+                "project"
+            );
+        }
 
 
         // Nếu có activities, chuyển sang stage khác

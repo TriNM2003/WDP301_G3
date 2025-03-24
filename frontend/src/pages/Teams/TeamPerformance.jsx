@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { AppContext } from "../../context/AppContext";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import authAxios from './../../utils/authAxios';
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -39,6 +40,7 @@ const TeamPerformance = () => {
   const { teamSlug } = useParams();
   const navigate = useNavigate();
 
+
   const team = Array.isArray(teams)
     ? teams.find(team => team?.teamSlug === teamSlug)
     : null;
@@ -46,7 +48,7 @@ const TeamPerformance = () => {
 
   useEffect(() => {
     if (site._id && accessToken) {
-      axios
+      authAxios
         .get(`${siteAPI}/${site._id}/teams/${teamSlug}`, {
           headers: { Authorization: `Bearer ${accessToken} ` },
         })
@@ -333,30 +335,60 @@ const TeamPerformance = () => {
               </Row>
               <Row gutter={[16, 16]}>
                 <Col span={9}>
-                  <Card
-                    title="Activity Distribution"
-                    style={{ marginBottom: "10px" }}
-                    extra={
-                      <Select value={selectedStatus} onChange={(value) => setSelectedStatus(value)} style={{ width: "100px" }}>
-                        <Option value="All">All</Option>
-                        {uniqueStages?.map((stage) => (
-                          <Option key={stage} value={stage}>{stage}</Option>
-                        ))}
-                      </Select>
-                    }
-                  >
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie data={filterStageData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
-                          {filterStageData?.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Card>
+                <Card
+  title="Activity Distribution"
+  style={{ marginBottom: "10px" }}
+  extra={
+    <Select value={selectedStatus} onChange={(value) => setSelectedStatus(value)} style={{ width: "100px" }}>
+      <Option value="All">All</Option>
+      {uniqueStages?.map((stage) => (
+        <Option key={stage} value={stage}>{stage}</Option>
+      ))}
+    </Select>
+  }
+>
+  <ResponsiveContainer width="100%" height={250}>
+    <PieChart>
+      <Pie data={filterStageData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
+        {filterStageData?.map((entry, index) => (
+          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+        ))}
+      </Pie>
+
+      <RechartsTooltip />
+
+      {/* 👉 Custom Legend: chỉ hiển thị top 5 stage */}
+      <Legend
+        content={() => {
+          const top5 = [...filterStageData]
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5);
+
+          return (
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexWrap: "wrap" }}>
+              {top5.map((entry, index) => (
+                <li key={`legend-${index}`} style={{ marginRight: 16, fontSize: 13 }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 10,
+                      height: 10,
+                      backgroundColor: COLORS[index % COLORS.length],
+                      borderRadius: "50%",
+                      marginRight: 8,
+                    }}
+                  />
+                  {entry.name}
+                </li>
+              ))}
+            </ul>
+          );
+        }}
+      />
+    </PieChart>
+  </ResponsiveContainer>
+</Card>
+
                 </Col>
 
                 {/* Biểu đồ đường - Hiệu suất công việc theo thời gian của thành viên */}
@@ -525,17 +557,25 @@ const TeamPerformance = () => {
                     dataSource={filteredMembers}
                     renderItem={(member) => (
                       <List.Item
-                        onClick={() => navigate(`/site/teams/${teamSlug}/member-performance/${member._id._id}`)}>
+                        onClick={() => navigate(`/site/teams/${teamSlug}/member-performance/${member._id._id}`)}
+                        style={{
+                          cursor: "pointer",
+                          borderRadius: "6px",
+                          transition: "background-color 0.3s",
+                          padding: "10px",
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f5f5f5"}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                      >
                         <List.Item.Meta
                           avatar={
-
-                            <Tooltip title={member._id.username}>
-                              <Avatar src={member._id.userAvatar} style={{ marginRight: "80px" }} />
+                            <Tooltip title={member._id?.username}>
+                              <Avatar src={member._id?.userAvatar} style={{ marginRight: "80px" }} />
                             </Tooltip>
                           }
                           title={
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span>{member._id.username}</span>
+                              <span>{member._id?.username}</span>
                               {member.roles.includes("teamLeader") && (
                                 <Tag color="gold">Leader</Tag>
                               )}
@@ -545,6 +585,7 @@ const TeamPerformance = () => {
                       </List.Item>
                     )}
                   />
+
 
                 </div>
               </Card>

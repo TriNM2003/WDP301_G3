@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, List, Avatar, Tag, Select , message} from "
 import { UserOutlined } from "@ant-design/icons";
 import { AppContext } from "../../context/AppContext";
 import axios from "axios";
+import authAxios from './../../utils/authAxios';
 
 const { Option } = Select;
 
@@ -15,13 +16,13 @@ const CreateTeam = ({ visible, onCreate, onCancel }) => {
   const [siteMembers, setSiteMembers] = useState([]);
   const [showList, setShowList] = useState(false);
   const [inputError, setInputError] = useState(""); // Thêm state lưu lỗi
-  const { teams, user, site, accessToken , setTeams ,siteAPI} = useContext(AppContext);
+  const { teams, user, site, accessToken , setTeams ,siteAPI,showNotification ,setRefreshNoti} = useContext(AppContext);
 
 
   // Lấy danh sách thành viên trong site (bỏ qua user đang tạo project)
   useEffect(() => {
     if (site._id && accessToken) {
-      axios
+      authAxios
         .get(`http://localhost:9999/sites/${site._id}/members`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
@@ -99,7 +100,7 @@ const handleCreateTeam = async (values) => {
   
 
   try {
-    const response = await axios.post(
+    const response = await authAxios.post(
       `http://localhost:9999/sites/${site._id}/teams/create-team`,
       {
         teamName: values.teamName,
@@ -110,7 +111,7 @@ const handleCreateTeam = async (values) => {
       }
     );
 
-    axios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
+    authAxios.get(`${siteAPI}/${site._id}/teams/get-teams-in-site`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
@@ -124,6 +125,8 @@ const handleCreateTeam = async (values) => {
     console.log("Response từ server:", response.data);
 
     message.success("Team created successfully!");
+    showNotification("Team created", `${user?.username} just created a new team: "${values.teamName}"`);
+    setRefreshNoti(prev => !prev);
     form.resetFields();
     setSelectedUsers([]);
     setSearchTerm("");
