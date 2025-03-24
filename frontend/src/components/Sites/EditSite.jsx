@@ -4,14 +4,15 @@ import { EllipsisOutlined, ExclamationCircleOutlined, UploadOutlined } from "@an
 import { Link, useNavigate } from "react-router-dom";
 import { AppContext } from '../../context/AppContext';
 import axios from "axios";
-
+import authAxios from '../../utils/authAxios'
 const { Title } = Typography;
 
 const EditSite = () => {
-    const { showNotification, siteAPI, site, accessToken, setSite } = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, setSite, refreshNoti, setRefreshNoti } = useContext(AppContext);
     const [loading, setLoading] = useState(true);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeactivateModalVisible, setIsDeactivateModalVisible] = useState(false);
+    const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [confirmSiteName, setConfirmSiteName] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -31,14 +32,12 @@ const EditSite = () => {
         if (site._id && accessToken) {
             fetchSiteData();
         }
-    }, [site, accessToken]);
+    }, [site, accessToken, refreshNoti]);
 
     const fetchSiteData = async () => {
         try {
             //  Bước 1: Fetch dữ liệu user
-            const userResponse = await axios.get(`http://localhost:9999/users/user-profile`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
+            const userResponse = await authAxios.get(`http://localhost:9999/users/user-profile`);
 
             if (!userResponse.data) {
                 message.error("Failed to load user data.");
@@ -49,9 +48,7 @@ const EditSite = () => {
             const isAdmin = fetchedUser?.roles?.some(role => role?.roleName === "admin");
 
             //  Bước 2: Fetch dữ liệu của site
-            const siteResponse = await axios.get(`${siteAPI}/${site._id}/get-by-id`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
+            const siteResponse = await authAxios.get(`${siteAPI}/${site._id}/get-by-id`);
 
             if (!siteResponse.data) {
                 message.error("Failed to load site data.");
@@ -132,15 +129,11 @@ const EditSite = () => {
                 formData.append("siteSlug", siteData?.siteSlug);
                 if (selectedFile) formData.append("siteAvatar", selectedFile);
 
-                const response = await axios.put(`${siteAPI}/${site._id}/edit`, formData, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                        "Content-Type": "multipart/form-data"
-                    }
-                });
+                const response = await authAxios.put(`${siteAPI}/${site._id}/edit`, formData);
 
+                setRefreshNoti(prev => !prev);
                 message.success("Site updated successfully!");
-                showNotification("Site Updated", `The site "${siteData.siteName}" has been updated successfully.`);
+                showNotification(`Site Updated`, `The site ${siteData.siteName} has been updated.`);
                 setSite(response.data);
                 fetchSiteData();
             } catch (error) {
@@ -166,10 +159,9 @@ const EditSite = () => {
         }
 
         setLoading(true);
-        axios.post(`${siteAPI}/${site._id}/send-deactivate-email`, {}, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        })
+        authAxios.post(`${siteAPI}/${site._id}/send-deactivate-email`, {})
             .then(() => {
+                setRefreshNoti(prev => !prev);
                 message.success("Deactivation request sent!");
                 showNotification("Deactivation Request", "The deactivation request has been sent to the site owner.");
                 setIsDeactivateModalVisible(false);
@@ -230,7 +222,8 @@ const EditSite = () => {
                                 </Button>
                             }
                             trigger={["click"]}
-                            onOpenChange={(visible) => setShowDeactivate(visible)}
+                            open={isDropdownVisible}
+                            onOpenChange={(visible) => setIsDropdownVisible(visible)}
                         >
                             <Button shape="rectangle" icon={<EllipsisOutlined />} style={{ marginBottom: "10px" }} />
                         </Dropdown>

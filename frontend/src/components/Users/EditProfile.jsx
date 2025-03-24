@@ -5,6 +5,7 @@ import { green, red, gray } from "@ant-design/colors";
 import { Link, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext'
 import axios from 'axios';
+import authAxios from '../../utils/authAxios'
 const EditProfile = () => {
     const { accessToken, user, setUser } = useContext(AppContext);
     const [selectedKey, setSelectedKey] = useState('1');
@@ -30,9 +31,7 @@ const EditProfile = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        axios.get('http://localhost:9999/users/user-profile', {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-        })
+        authAxios.get('http://localhost:9999/users/user-profile')
             .then(response => {
                 setForm(response.data);
                 setInitialForm(response.data); 
@@ -118,12 +117,7 @@ const EditProfile = () => {
         }
         setLoading(true)
         setTimeout(async () => {
-            axios.put('http://localhost:9999/users/edit-profile', formData, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
+            authAxios.put('http://localhost:9999/users/edit-profile', formData)
                 .then(response => {
                     message.success("Profile updated successfully");
                     setImagePreview(response.data.userAvatar);
@@ -174,9 +168,7 @@ const EditProfile = () => {
         }
 
         setDeleteLoading(true);
-        axios.post('http://localhost:9999/users/send-delete-email', { email }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-        })
+        authAxios.post('http://localhost:9999/users/send-delete-email', { email })
             .then(() => {
                 message.success("A confirmation email has been sent to your email address.");
                 setIsDeleteModalVisible(false);
