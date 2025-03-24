@@ -31,7 +31,7 @@ function Home() {
       <div>
       <p style="text-align: left, ; margin-left: 2%"> <b>Dear Admin,</b> </p>
       <p style="text-align: left, ; margin-left: 7%">
-        I am <b style="color:red">${user?.username}</b>, I hope this email finds you well. <br />
+        I am <b style="color:red">${user?.username}</b>, email: ${user?.email} I hope this email finds you well. <br />
         I would like to request the creation of a new site called <b style="color:blue">${values?.siteName}</b> on SkrumIO to manage issues on future projects.
       </p>
       <p style="text-align: right; margin-right: 10%">
@@ -43,7 +43,7 @@ function Home() {
       </p>
     </div>
     `;
-    const result = await authAxios.post(`${siteAPI}/request-site`, {emailSubject, emailBody});
+    const result = await authAxios.post(${siteAPI}/request-site, {emailSubject, emailBody});
     handleCancel();
     message.success(result.data, 2);
     } catch (error) {
