@@ -8,6 +8,7 @@ import { AppContext } from "../../context/AppContext";
 import axios from 'axios';
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import authAxios from './../../utils/authAxios';
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -44,7 +45,7 @@ const TeamMemberPerformance = () => {
 
   useEffect(() => {
     if (userId && site._id && accessToken) {
-      axios
+      authAxios
         .get(`${userApi}/user/${userId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
@@ -67,7 +68,8 @@ const TeamMemberPerformance = () => {
 
 
   // Lấy danh sách project từ userInfo.projects
-  const projects = userInfo?.projects || [];
+  const projects = (userInfo?.projects || []).filter(project => !project?.isDestroyed);
+
 
 
   // Lọc dự án theo từ khóa tìm kiếm
@@ -84,8 +86,13 @@ const TeamMemberPerformance = () => {
 
   // **Lấy danh sách project**
   const uniqueProjects = [
-    ...new Set((userInfo?.activities || []).map((act) => act.project?.projectName)),
+    ...new Set(
+      (userInfo?.activities || [])
+        .filter(act => !act.project?.isDestroyed)
+        .map((act) => act.project?.projectName)
+    ),
   ];
+  
   const uniqueStages = [
     ...new Set((userInfo?.activities || []).map((act) => act.stage?.stageName)),
   ];
@@ -102,7 +109,8 @@ const TeamMemberPerformance = () => {
   }));
 
   const tasksByProjectData = uniqueProjects?.map((project) => {
-    const projectActivities = (userInfo.activities || []).filter((activity) => activity.project?.projectName === project);
+    const projectActivities = (userInfo.activities || [])
+      .filter((activity) => activity.project?.projectName === project && !activity.project?.isDestroyed);  
     return {
       name: project,
       ...Object.fromEntries(uniqueStages?.map((stage) => [stage, projectActivities.filter((a) => a.stage?.stageName === stage).length])),
@@ -142,21 +150,24 @@ const TeamMemberPerformance = () => {
 
 
 
-  const filteredActivities = sortedActivities.filter((activity) => {
-    const matchSearch = activity?.activityTitle?.toLowerCase()?.includes(searchTerm.toLowerCase());
-
-    // Nếu "All Projects" được chọn, bỏ qua filter theo project
-    const matchProject = projectFilter === "All Projects" || activity?.project?.projectName === projectFilter;
-
-    // Nếu "All Stages" được chọn, bỏ qua filter theo stage
-    const matchStage = stageFilter === "All" || activity?.stage?.stageName === stageFilter;
-
-    const matchDate =
-      (!dateRange[0] && !dateRange[1]) ||
-      (dayjs(activity?.startDate).isAfter(dateRange[0]) && dayjs(activity?.startDate).isBefore(dateRange[1]));
-
-    return matchSearch && matchProject && matchStage && matchDate;
-  });
+    const filteredActivities = sortedActivities.filter((activity) => {
+      const matchSearch = activity?.activityTitle?.toLowerCase()?.includes(searchTerm.toLowerCase());
+    
+      const matchProject =
+        projectFilter === "All Projects" || activity?.project?.projectName === projectFilter;
+    
+      const matchStage =
+        stageFilter === "All" || activity?.stage?.stageName === stageFilter;
+    
+      const matchDate =
+        (!dateRange[0] && !dateRange[1]) ||
+        (dayjs(activity?.startDate).isAfter(dateRange[0]) && dayjs(activity?.startDate).isBefore(dateRange[1]));
+    
+      const isValidProject = !activity?.project?.isDestroyed;
+    
+      return matchSearch && matchProject && matchStage && matchDate && isValidProject;
+    });
+    
 
 
 

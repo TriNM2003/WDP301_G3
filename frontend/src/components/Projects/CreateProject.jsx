@@ -3,10 +3,11 @@ import { Modal, Form, Input, Button, List, Avatar, Tag, message } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { AppContext } from "../../context/AppContext";
+import authAxios from './../../utils/authAxios';
 
 const CreateProject = ({ visible, onCreate, onCancel }) => {
   const [form] = Form.useForm();
-  const { siteAPI,site, accessToken, setProjects, user} = useContext(AppContext); 
+  const { siteAPI,site, accessToken, setProjects, user,showNotification ,setRefreshNoti} = useContext(AppContext); 
   const [searchTerm, setSearchTerm] = useState("");
   const [siteMembers, setSiteMembers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -16,7 +17,7 @@ const CreateProject = ({ visible, onCreate, onCancel }) => {
   // Lấy danh sách thành viên trong site (bỏ qua user đang tạo project)
   useEffect(() => {
     if (site._id && accessToken) {
-      axios
+      authAxios
         .get(`http://localhost:9999/sites/${site._id}/members`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
@@ -81,7 +82,7 @@ const handleCreateProject = async (values) => {
   }
 
   try {
-    const response = await axios.post(
+    const response = await authAxios.post(
       `http://localhost:9999/sites/${site._id}/projects/create`,
       {
         projectName: values.projectName,
@@ -92,7 +93,7 @@ const handleCreateProject = async (values) => {
       }
     );
 
-    axios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
+    authAxios.get(`${siteAPI}/${site._id}/projects/get-by-site`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
@@ -105,6 +106,9 @@ const handleCreateProject = async (values) => {
     });
 
     message.success("Project created successfully!");
+    showNotification("Project created", `${user?.username} just created a new project: "${values.projectName}"`);
+    setRefreshNoti(prev => !prev);
+
     form.resetFields();
     setSelectedUsers([]);
     setSearchTerm("");

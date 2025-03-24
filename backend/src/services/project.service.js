@@ -90,30 +90,29 @@ const createProject = async (projectData, creatorId, siteId) => {
         const savedProject = await newProject.save();
 
 
-  // 🟢 Tạo 3 stage mặc định với parent
-  let prevStageId = null;
-  const stages = [];
+        let prevStageId = null;
+        const stages = [];
 
-  const stageData = [
-      { stageName: "To Do", stageStatus: "todo", stageColor: "#89CFF0" },
-      { stageName: "Doing", stageStatus: "doing", stageColor: "#FFD700" },
-      { stageName: "Done", stageStatus: "done", stageColor: "#90EE90" }
-  ];
+        const stageData = [
+            { stageName: "To Do", stageStatus: "todo", stageColor: "#89CFF0" },
+            { stageName: "Doing", stageStatus: "doing", stageColor: "#FFD700" },
+            { stageName: "Done", stageStatus: "done", stageColor: "#90EE90" }
+        ];
 
-  for (const data of stageData) {
-      const newStage = new db.Stage({
-          ...data,
-          project: savedProject._id,
-          parent: prevStageId // Gán parent là stage trước đó
-      });
+        for (const data of stageData) {
+            const newStage = new db.Stage({
+                ...data,
+                project: savedProject._id,
+                parent: prevStageId // Gán parent là stage trước đó
+            });
 
-      const savedStage = await newStage.save();
-      stages.push(savedStage._id);
-      prevStageId = savedStage._id; // Cập nhật parent cho stage tiếp theo
-  }
+            const savedStage = await newStage.save();
+            stages.push(savedStage._id);
+            prevStageId = savedStage._id; // Cập nhật parent cho stage tiếp theo
+        }
 
-  savedProject.stages = stages;
-  await savedProject.save();
+        savedProject.stages = stages;
+        await savedProject.save();
 
         // Cập nhật danh sách project của các user trong model User
         const memberIds = projectMembers.map(member => member._id);
@@ -121,6 +120,22 @@ const createProject = async (projectData, creatorId, siteId) => {
             { _id: { $in: memberIds } },
             { $push: { projects: savedProject._id } }
         );
+
+        // notification 
+        
+        const creator = await db.User.findById(creatorId);
+        const notificationContent = `${creator?.username} just created a new project: ${savedProject.projectName}`;
+        const receiverIds = memberIds.filter(id => id.toString() !== creatorId.toString());
+        
+        if (receiverIds.length > 0) {
+            await notificationService.createNotification(
+                creatorId,
+                receiverIds,
+                notificationContent,
+                "project"
+            );
+        }        
+
 
         return savedProject;
     } catch (error) {
@@ -369,6 +384,7 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
             }
         })
 
+
         const projectManagerId = updatedProjectMember.find(member => member.roles.includes("projectManager")).projectMember;
         // thong bao cho member moi
         await notificationService.createNotification(projectManagerId,
@@ -377,6 +393,7 @@ const addProjectMember = async (siteId, projectId, projectMemberId, projectMembe
             "project"
         );
         
+
         const to = projectMember.email;
         const subject = `You have been added to project ${project.projectName}`;
         const body = `
@@ -395,9 +412,9 @@ const editProjectMemberRole = async (projectManagerId, projectId, projectMemberI
     try {
         // console.log(projectManagerId, projectId, projectMemberId, updatedRoleList); return;
         function camelCaseArrayToString(arr) {
-            return arr.map(str => 
+            return arr.map(str =>
                 str.replace(/([a-z])([A-Z])/g, '$1 $2') // Thêm khoảng trắng trước chữ in hoa
-                   .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
+                    .replace(/\b\w/g, char => char.toUpperCase()) // Viết hoa chữ cái đầu
             ).join(', '); // Nối các phần tử bằng dấu ", "
         }
         // console.log(projectId, projectMemberId, newRole); return "ok"
@@ -415,8 +432,8 @@ const editProjectMemberRole = async (projectManagerId, projectId, projectMemberI
         if (!isInProject) {
             throw new Error("User is not in project");
         }
-        if(isInProject.roles.includes("projectManager")) throw new Error("Cannot change role of Project manager")
-        if(updatedRoleList.includes("projectManager")) throw new Error("Cannot assign role Project manager to project member")
+        if (isInProject.roles.includes("projectManager")) throw new Error("Cannot change role of Project manager")
+        if (updatedRoleList.includes("projectManager")) throw new Error("Cannot assign role Project manager to project member")
         let isValidRole = true;
         for (let i = 0; i < updatedRoleList.length; i++) {
             if (!project.projectRoles.includes(updatedRoleList[i])) {
@@ -438,11 +455,11 @@ const editProjectMemberRole = async (projectManagerId, projectId, projectMemberI
         const projectManager = await db.User.findById(projectManagerId);
         // tao notification
         await notificationService.createNotification(projectManager._id,
-                project.projectMember.map(member => {
-                    return member._id
-                }),
-                `Project ${project.projectName}: Member ${projectMember.email} role has been changed to ${camelCaseArrayToString(updatedRoleList)} by Project manager ${projectManager.email}`,
-                "project"
+            project.projectMember.map(member => {
+                return member._id
+            }),
+            `Project ${project.projectName}: Member ${projectMember.email} role has been changed to ${camelCaseArrayToString(updatedRoleList)} by Project manager ${projectManager.email}`,
+            "project"
         );
 
         const to = projectMember.email;
@@ -508,7 +525,7 @@ const removeProjectMember = async (removerId, projectId, projectMemberId) => {
             `Project member ${projectMember.username} have been removed from project ${project.projectName}`,
             "project"
         )
-        
+
         const to = projectMember.email;
         const subject = `You have been removed from project ${project.projectName}`;
         const body = `
