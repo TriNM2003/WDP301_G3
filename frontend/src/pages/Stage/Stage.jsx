@@ -106,7 +106,7 @@ const StageManagement = () => {
   const [editStageStatus, setEditStageStatus] = useState("")
   const [insertPosition, setInsertPosition] = useState(null)
   const [loading, setLoading] = useState(false)
-  const { accessToken, siteAPI, site, project, stages, setStages, activities, showNotification, setRefreshNoti, user } = useContext(AppContext)
+  const { accessToken, siteAPI, site, project, stages, setStages, activities, showNotification, setRefreshNoti, user, activityModalLoading } = useContext(AppContext)
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
 
@@ -639,6 +639,7 @@ const StageManagement = () => {
       );
 
       setRefreshNoti((prev) => !prev);
+      activityModalLoading();
     } catch (error) {
       console.error("Error deleting stage:", error);
       message.error("Failed to delete stage");
