@@ -60,7 +60,7 @@ const breadCrumbItems = [
 
 
 const ManageTeams = () => {
-    const {teams, setTeams, site, siteAPI, showNotification, user} = useContext(AppContext);
+    const {teams, setTeams, site, siteAPI, showNotification, user, setRefreshNoti} = useContext(AppContext);
     const [tableData, setTableData] = useState([]);
     const nav = useNavigate();
     const teamApi = `http://localhost:9999/sites/${site?._id}/teams`;
@@ -126,14 +126,16 @@ const ManageTeams = () => {
 
   const handleCreateTeam = () => {
     console.log("create team");
+    setRefreshNoti(prev => !prev);
   }
 
   async function handleRemoveTeam(teamId, teamName){
     try {
       const response =  await authAxios.delete(`${teamApi}/${teamId}/remove-team`);
-      await fetchTeams();
-      message.success(response.data.result, 2);
-      showNotification("Team", `Team ${teamName} has been removed by site owner ${user?.email}`);
+      // await fetchTeams();
+      await message.success(response.data.result, 2);
+      await showNotification("Team", `Team ${teamName} has been removed by site owner ${user?.email}`);
+      window.location.reload();
     } catch (error) {
        console.log(error)
        setTeams([]);

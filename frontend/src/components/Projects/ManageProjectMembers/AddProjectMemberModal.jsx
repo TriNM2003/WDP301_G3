@@ -19,16 +19,22 @@ const AddProjectMemberModal = ({addMemberModalVisible, setAddMemberModalVisible,
     }
   };
 
+  function handleCancel() {
+    setAddMemberModalVisible(false);
+    setSelectedEmail();
+    setSelectedMemberRole();
+  }
+
   return (
     <Modal
         title="Add member"
         visible={addMemberModalVisible}
-        onCancel={() => setAddMemberModalVisible(false)}
+        onCancel={handleCancel}
         footer={[
           <Button key="add" color={green[6]} variant="solid" onClick={() => handleAddMember()} loading={loading}>
             Add
           </Button>,
-          <Button key="cancel" color="danger" variant="solid" onClick={() => setAddMemberModalVisible(false)} danger>
+          <Button key="cancel" color="danger" variant="solid" onClick={handleCancel} danger>
             Cancel
           </Button>,
         ]}

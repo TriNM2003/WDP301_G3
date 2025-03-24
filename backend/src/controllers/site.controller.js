@@ -155,9 +155,9 @@ const inviteMemberByEmail = async (req, res, next) => {
 
 const processingInvitation = async (req, res, next) => {
     try {
+        const {id} = req.payload;
         const {invitationId, decision} = req.body;
-        // console.log(id, invitationId);
-        const result = await siteService.processingInvitation(invitationId, decision)
+        const result = await siteService.processingInvitation(id, invitationId, decision)
         res.status(200).json({
             message: "Processing invitation successfully!",
             decision: result.decision,
