@@ -3,6 +3,7 @@ import { Card, Avatar, Button, Row, Col, Typography, Modal } from 'antd';
 import { MailOutlined, PhoneOutlined, RocketOutlined, CalendarOutlined, UserOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import authAxios from '../../utils/authAxios'
 
 const { Text } = Typography;
 
@@ -11,12 +12,11 @@ const ViewProfile = () => {
   const [projects, setProjects] = useState([]);
   const navigate = useNavigate();
   useEffect(() => {
-    axios.get('http://localhost:9999/users/user-information', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-    })
+    authAxios.get('http://localhost:9999/users/user-information')
       .then(res => {
         setUser(res.data);
-        setProjects(res.data.projects || []);
+        const activeProjects = (res.data.projects || []).filter(project => project.projectStatus === "active");
+        setProjects(activeProjects);
       })
       .catch(error => console.log(error.response?.data?.message));
   }, []);

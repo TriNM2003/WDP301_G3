@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { message, Spin } from "antd";
 import { AppContext } from '../../context/AppContext';
 import axios from "axios";
-
+import authAxios from '../../utils/authAxios'
 const ConfirmDelete = () => {
     const navigate = useNavigate();
     const { setUser } = useContext(AppContext);
@@ -28,9 +28,7 @@ const ConfirmDelete = () => {
             hasFetched.current = true; // Đánh dấu đã gọi API
             setIsDeleting(true);
 
-            axios.delete("http://localhost:9999/users/confirm-delete", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            authAxios.delete("http://localhost:9999/users/confirm-delete")
                 .then(response => {
                     message.success(response.data.message, 2);
                     setTimeout(() => {

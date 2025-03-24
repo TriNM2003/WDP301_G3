@@ -4,7 +4,7 @@ import { ExclamationCircleOutlined, LockOutlined, UserOutlined, LogoutOutlined, 
 import { green, red } from "@ant-design/colors";
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-
+import authAxios from '../../utils/authAxios'
 const ChangePassword = () => {
     const [form, setForm] = useState({
         oldPassword: '',
@@ -21,9 +21,7 @@ const ChangePassword = () => {
     const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
-        axios.get('http://localhost:9999/users/user-profile', {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-        })
+        authAxios.get('http://localhost:9999/users/user-profile')
             .then(response => setForm(response.data))
             .catch(() => message.error("Failed to load user data"));
     }, []);
@@ -65,14 +63,11 @@ const ChangePassword = () => {
         if (!validateForm()) return;
         setLoading(true);
         setTimeout(async () => {
-            await axios.put('http://localhost:9999/users/change-password',
+            await authAxios.put('http://localhost:9999/users/change-password',
                 {
                     oldPassword: form.oldPassword,
                     newPassword: form.newPassword,
                     confirmPassword: form.confirmPassword,
-                },
-                {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
                 })
                 .then(() => {
                     message.success("Password changed successfully");
@@ -117,9 +112,7 @@ const ChangePassword = () => {
         }
 
         setDeleteLoading(true);
-        axios.post('http://localhost:9999/users/send-delete-email', { email }, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-        })
+        authAxios.post('http://localhost:9999/users/send-delete-email', { email })
             .then(() => {
                 message.success("A confirmation email has been sent to your email address.");
                 setIsDeleteModalVisible(false);

@@ -2,14 +2,14 @@ import React, { useState, useEffect, useContext } from "react";
 import { Form, Input, Button, Card, Row, Col, Typography, Avatar, Upload, Modal, message, Dropdown } from "antd";
 import { UploadOutlined, ExclamationCircleOutlined, EllipsisOutlined } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import axios from 'axios';
+import authAxios from '../../utils/authAxios';
 import { AppContext } from '../../context/AppContext'
 const { Title, Text } = Typography;
 
 const EditProject = () => {
     const { projectSlug } = useParams();
     const navigate = useNavigate();
-    const { showNotification, siteAPI, site, accessToken, setProjects, user, projects } = useContext(AppContext);
+    const { showNotification, siteAPI, site, accessToken, setProjects, user, projects, refreshNoti, setRefreshNoti } = useContext(AppContext);
     const [showDeactivate, setShowDeactivate] = useState(false);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [confirmProjectName, setConfirmProjectName] = useState("");
@@ -31,14 +31,12 @@ const EditProject = () => {
             fetchProjectData();
         }
 
-    }, [site, accessToken, projectSlug]);
+    }, [site, accessToken, projectSlug, refreshNoti]);
 
     const fetchProjectData = async () => {
         try {
             //Fetch danh sách dự án để tìm ID từ slug
-            const response = await axios.get(`http://localhost:9999/sites/${site._id}/projects/get-all`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
+            const response = await authAxios.get(`http://localhost:9999/sites/${site._id}/projects/get-all`);
 
             const projects = Array.isArray(response.data) ? response.data : response.data.projects;
             if (!projects || projects.length == 0) {
@@ -58,9 +56,7 @@ const EditProject = () => {
             const projectId = project._id;
 
             //  Fetch chi tiết project từ ID
-            const projectResponse = await axios.get(`http://localhost:9999/sites/${site._id}/projects/${projectId}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-            });
+            const projectResponse = await authAxios.get(`http://localhost:9999/sites/${site._id}/projects/${projectId}`);
 
             const { projectName, projectAvatar, projectMember, projectStatus } = projectResponse.data;
 
@@ -143,13 +139,10 @@ const EditProject = () => {
         setLoading(true);
         setTimeout(async () => {
             try {
-                const response = await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+                const response = await authAxios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/project-setting`, formData);
+                setRefreshNoti(prev => !prev);
                 message.success("Project updated successfully!");
+                showNotification("Project updated successfully!", `Project - ${projectData.projectName} has been updated`);
                 setImagePreview(response.data.projectAvatar);
                 const newProjectSlug = response.data.projectSlug;
                 const updatedProjects = projects.map(p =>
@@ -175,12 +168,10 @@ const EditProject = () => {
         setRemoving(true);
         setTimeout(async () => {
             try {
-                await axios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {}, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-                    }
-                });
+                await authAxios.put(`http://localhost:9999/sites/${site._id}/projects/${projectData.projectId}/remove-to-trash`, {});
+                setRefreshNoti(prev => !prev);
                 message.success("Project moved to trash!");
+                showNotification("Project moved to trash!", `Project - ${projectData.projectName} has been moved to trash`);
                 const updatedProjects = projects.filter(p => p._id !== projectData.projectId);
                 setProjects(updatedProjects);
                 navigate("/site");
