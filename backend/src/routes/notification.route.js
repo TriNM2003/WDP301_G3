@@ -12,6 +12,9 @@ notificationRouter.use([authMiddleware.verifyAccessToken, accountMiddleware.isAc
 notificationRouter.get("/get-all",
     notificationController.getAlls
 )
+notificationRouter.put("/:notificationId/is-seen",
+    notificationController.isSeen
+)
 
 notificationRouter.use(bodyParser.json());
 

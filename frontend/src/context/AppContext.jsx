@@ -27,8 +27,8 @@ const AppProvider = ({ children }) => {
 
   const [messageApi, messageHolder] = message.useMessage();
 
-
-
+  //Notification
+  const [notifications, setNotifications] = useState([]);
   //Project
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState({});
@@ -49,6 +49,7 @@ const AppProvider = ({ children }) => {
   const [isActivityTitle, setIsActivityTitle] = useState(false)
   const [activityLoading, setActivityLoading] = useState(false)
   const [userActivities, setUserActivities] = useState([]);
+  const [refreshNoti, setRefreshNoti] = useState(false);
 
   // Team
 
@@ -115,6 +116,23 @@ const AppProvider = ({ children }) => {
   }, []);
 
 
+  useEffect(() => {
+
+    if (accessToken) {
+      axios.get(`http://localhost:9999/notifications/get-all`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+        .then(res => {
+          // console.log(res?.data?.notifications);
+          setNotifications(res?.data?.notifications);
+        })
+        .catch(error => {
+          console.log(error.response?.data?.message || "Fetch notification fail!");
+        });
+    }
+  }, [accessToken,refreshNoti]);
 
 
   // get project in site
@@ -298,7 +316,7 @@ const AppProvider = ({ children }) => {
 
     )
       .then((res) => {
-
+        setRefreshNoti(prev => !prev);
         message.success(`Activity "${res.data?.activity.activityTitle}" created successfully!`);
         showNotification(`Project update`, `User1 just created activity "${res.data.activity?.activityTitle}".`);
         setActivityName("");
@@ -433,7 +451,7 @@ const AppProvider = ({ children }) => {
   const handleCompletedSprint = () => {
     if (completedSprint) {
       axios.put(`${siteAPI}/${site?._id}/projects/${project?._id}/sprints/${completedSprint?._id}/complete`,
-        { newSprintId: selectedSprint != "Backlog" ? selectedSprint: null },
+        { newSprintId: selectedSprint != "Backlog" ? selectedSprint : null },
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -491,11 +509,11 @@ const AppProvider = ({ children }) => {
       userActivities, setUserActivities, teams, setTeams, activityModalLoading,
       handleMoveActivity, searchActivity, setSearchActivity, activityTypes,
       isCompletedSprint, setIsCompletedSprint, selectedSprint, setSelectedSprint,
-      activeDragActivity, setActiveDragActivity
+      activeDragActivity, setActiveDragActivity,notifications, setNotifications,refreshNoti, setRefreshNoti
 
 
     }}>
-      {children} 
+      {children}
     </AppContext.Provider>
   );
 };

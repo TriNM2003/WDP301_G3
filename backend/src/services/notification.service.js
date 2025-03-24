@@ -5,7 +5,7 @@ const morgan = require("morgan")
 const createHttpErrors = require("http-errors");
 
 
-const createNotification = async (from,receivers, content, type) => {
+const createNotification = async (from, receivers, content, type) => {
     try {
         if (!Array.isArray(receivers) || receivers.length == 0) {
             throw new Error("Receivers must be a non-empty array");
@@ -29,7 +29,7 @@ const createNotification = async (from,receivers, content, type) => {
         const validReceiverIds = validReceivers.map(user => user._id);
 
         const newNotification = {
-            from:from,
+            from: from,
             receivers: validReceiverIds,
             content: content,
             type: type,
@@ -54,14 +54,44 @@ const createNotification = async (from,receivers, content, type) => {
 };
 
 const getAllNotifications = async (userId) => {
-    try {   
-        const user = await db.User.findOne(userId).populate("notifications._id")   
-        const notifications = user.notifications?.map((noti) => ({
-            ...noti._id.toObject(), // Chuyển document thành object
+    try {
+        const user = await db.User.findOne({_id:userId}).populate({
+            path: 'notifications._id',
+            populate: {
+                path: 'from'
+            }
+        });
+
+        let notifications = user.notifications?.map((noti) => ({
+            ...noti._id.toObject(),
             isSeen: noti.isSeen
         }));
 
-        
+        notifications = notifications?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        return notifications;
+    } catch (error) {
+        throw error;
+    }
+};
+const isSeen = async (userId, notificationId) => {
+    try {
+        const user = await db.User.findOneAndUpdate(
+            { _id: userId, "notifications._id": notificationId },
+            { $set: { "notifications.$.isSeen": true } },
+            { new: true }
+        ).populate({
+            path: 'notifications._id',
+            populate: { path: 'from' }
+        });
+
+        const notifications = user.notifications
+            ?.map(noti => ({
+                ...noti._id.toObject(),
+                isSeen: noti.isSeen
+            }))
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
         return notifications;
     } catch (error) {
         throw error;
@@ -69,9 +99,12 @@ const getAllNotifications = async (userId) => {
 };
 
 
+
+
 const notificationService = {
     createNotification,
-    getAllNotifications
+    getAllNotifications,
+    isSeen
 }
 
 module.exports = notificationService;   
