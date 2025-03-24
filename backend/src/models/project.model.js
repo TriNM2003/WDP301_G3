@@ -21,6 +21,7 @@ const projectSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 3,
+        unique: true
     },
     projectStatus: {
         type: String,

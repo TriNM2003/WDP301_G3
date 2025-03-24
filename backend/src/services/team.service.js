@@ -157,7 +157,7 @@ const createTeam = async (teamData, creatorId, siteId) => {
         if (!isValidMembers) {
             throw new Error("Some members are not part of the site");
         }
-        const teamSlug = slugify(teamData.teamName);
+        const teamSlug = slugify(`${teamData.teamName} ${Date.now().toString()}` );
 
         // Định dạng danh sách teamMembers
         const teamMembers = [

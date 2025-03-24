@@ -66,7 +66,7 @@ const createProject = async (projectData, creatorId, siteId) => {
         if (!isValidMembers) {
             throw new Error("Some members are not part of the site");
         }
-        const projectSlug = slugify(projectData.projectName);
+        const projectSlug = slugify(`${projectData.projectName } ${Date.now().toString()}` );
 
         // Định dạng danh sách projectMembers
         const projectMembers = [
