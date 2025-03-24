@@ -19,7 +19,7 @@ import DropContainer from "./DropContainer";
 const { Panel } = Collapse;
 
 const SprintBoard = () => {
-  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading, selectedSprint, setSelectedSprint, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
+  const { activities, activityTypes, setActivities, showNotification, stages, activityModalLoading,setRefreshNoti, selectedSprint, setSelectedSprint, handleMoveActivity, user, sprints, siteAPI, site, accessToken, project, setSprints, activityModal, setActivityModal, showActivity, closeActivity, handleActivityCreate, createActivityModal, setCreateActivityModal, activityName, setActivityName, completedSprint, setCompletedSprint, showCompletedSprint, handleCompletedSprint, handleCompletedCancel } = useContext(AppContext)
   const [expandedPanels, setExpandedPanels] = useState(["0"]); // Mở Backlog mặc định
   const [activeDragActivity, setActiveDragActivity] = useState(null);
 
@@ -113,6 +113,7 @@ const SprintBoard = () => {
       .then((res) => {
         setSprints([...sprints, res?.data?.sprint]);
         activityModalLoading();
+        setRefreshNoti(prev => !prev);
         message.success("Create new sprint successfully");
         showNotification(`Project update`, `${user?.username} just create a new sprint in project "${project?.projectName}".`);
       })
@@ -149,6 +150,8 @@ const SprintBoard = () => {
           setSelectedSprint(res.data.sprint)
           const updatedSprints = sprints.map(s => s?._id == res.data.sprint?._id ? res.data.sprint : s);
           setSprints(updatedSprints);
+          setRefreshNoti(prev => !prev);
+
           activityModalLoading();
           message.success("Edit sprint successfully");
           showNotification(`Project update`, `${user?.username} just edited sprint "${sprint?.sprintName}".`);
@@ -244,6 +247,7 @@ const SprintBoard = () => {
         setSprints(sprints.filter((sprint) => sprint?._id != deleteSprint?._id));
         activityModalLoading();
         setSelectedSprint();
+        setRefreshNoti(prev => !prev);
         setDeleteSprint();
         setIsDeleteSprint(false);
         message.success("Delete sprint successfully");

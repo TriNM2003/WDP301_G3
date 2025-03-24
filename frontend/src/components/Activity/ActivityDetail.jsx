@@ -15,7 +15,7 @@ import ImgCrop from 'antd-img-crop';
 
 
 function ActivityDetail() {
-  const { accessToken, siteAPI, stages, sprints, user, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
+  const { accessToken, siteAPI, stages, sprints, user,setRefreshNoti, setStages, site, handleMoveActivity, project, setActivities, activityLoading, setActivityLoading, activityModalLoading, isActivityTitle, setIsActivityTitle, createSubActivity, setCreateSubActivity, showNotification, activityModal, setActivityModal, handleActivityCreate, activityName, setActivityName, activities, activity, setActivity, showDeleteActivity, closeActivity, handleDelete, handleCloseDeleteActivityModal, deleteActivity, setDeleteActivity, activityToDelete, setActivityToDelete, confirmActivity, setConfirmActivity } = useContext(AppContext)
   const [comments, setComments] = useState([]);
 
   const [newComment, setNewComment] = useState("");
@@ -102,6 +102,7 @@ function ActivityDetail() {
       );
 
       activityModalLoading();
+      setRefreshNoti(prev => !prev);
       setActivity(res?.data?.activity);
       const updateActivities = activities?.map((a) =>
         a._id === res?.data?.activity?._id ? res?.data?.activity : a
@@ -137,6 +138,7 @@ function ActivityDetail() {
       );
       setAttachmentUploading(false);
       activityModalLoading();
+      setRefreshNoti(prev => !prev);
       setActivity(res.data.activity);
       const updateActivities = activities.map((a) =>
         a._id == res.data.activity._id ? res.data.activity : a
@@ -165,6 +167,7 @@ function ActivityDetail() {
         const updateActivities = activities.map((a) =>
           a._id === res?.data?.activity?._id ? res?.data?.activity : a
         );
+        setRefreshNoti(prev => !prev);
         setActivities(updateActivities)
         setIsActivityTitle(false);
         setIsDescription(false);
@@ -195,6 +198,7 @@ function ActivityDetail() {
           );
           setActivities(updateActivities)
           setIsActivityTitle(false);
+          setRefreshNoti(prev => !prev);
           setIsDescription(false);
           setNewDescription("")
           message.success("Remove assignee successfully");
