@@ -11,6 +11,7 @@ import { Button, Col, Dropdown, Flex, Menu, Row, Space, Tabs } from 'antd'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
+import authAxios from '../../utils/authAxios'
 
 
 
