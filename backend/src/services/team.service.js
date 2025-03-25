@@ -285,6 +285,11 @@ async function removeTeam(siteOwnerId, teamId) {
     return `Delete team ${team.teamName} successfully`
 }
 
+// async function editTeam(editorId, teamData){
+//     const {teamName, teamDescription, teamSlug, teamAvatar} = teamData;
+    
+// }
+
 
 
 const teamService = {

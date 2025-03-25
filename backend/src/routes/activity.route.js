@@ -51,7 +51,7 @@ activityRouter.delete("/:activityId/delete",
 
 //Comment 
 activityRouter.post("/:activityId/comments/post",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
     activityController.createComment
 )
 activityRouter.get("/:activityId/comments/get-all",
@@ -59,11 +59,11 @@ activityRouter.get("/:activityId/comments/get-all",
     activityController.getAllComment
 )
 activityRouter.put("/:activityId/comments/:commentId/edit",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
     activityController.editComment
 )
 activityRouter.delete("/:activityId/comments/:commentId/delete",
-    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject,activityMiddleware.isNotDone],
+    [authMiddleware.verifyAccessToken, accountMiddleware.isActive, siteMiddleware.isInSite, projectMiddleware.isInProject],
     activityController.deleteComment
 )
 
