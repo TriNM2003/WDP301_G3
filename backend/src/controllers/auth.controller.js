@@ -218,7 +218,6 @@ const loginByGoogle = passport.authenticate('google', { scope: ['email', 'profil
 const loginByGoogleCallback = async (req, res, next) => {
     try {
         const googleUser = req.user._json;
-
     // tao password random cho account dang ki bang Google
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
     let randomPassword = "";
@@ -237,7 +236,6 @@ const loginByGoogleCallback = async (req, res, next) => {
         userAvatar: googleUser.picture,
         googleId: googleUser.sub
     }
-    console.log(googleUser);
 
     // check user co ton tai trong database
     const isUserExist = await db.User.findOne({ email: user.email });
@@ -268,8 +266,9 @@ const loginByGoogleCallback = async (req, res, next) => {
         const refreshToken = jwtUtils.generateRefreshToken(newlyCreatedUser._id);
         await redisUtils.setRefreshToken(newlyCreatedUser._id, refreshToken, jwtUtils.refreshTokenExp);
     }else{
+        console.log("account exist");
          // user da ton tai va la tk dang ki bang google -> dang nhap
-        if(isUserExist.googleId !== null){
+        if(isUserExist.googleId){
             accessToken = jwtUtils.generateAccessToken(isUserExist._id);
             const refreshToken = jwtUtils.generateRefreshToken(isUserExist._id);
             await redisUtils.setRefreshToken(isUserExist._id, refreshToken, jwtUtils.refreshTokenExp);

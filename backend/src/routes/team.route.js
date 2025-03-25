@@ -50,5 +50,8 @@ teamRouter.delete("/:teamId/remove-team",
     teamController.removeTeam
 )
 
+//edit team
+
+
 
 module.exports = teamRouter
