@@ -37,6 +37,7 @@ function ProjectLayout() {
     const [selectMemberRole, setSelectedMemberRole] = useState();
     const [projectRoles, setProjectRoles] = useState();
     const [projectMembers, setProjectMembers] = useState([]);
+    const [loading, setLoading] = useState(false);
 
       let isProjectManager = false;
       if (project) {
@@ -120,9 +121,15 @@ function ProjectLayout() {
     }
 
     const handleAddMember = async () => {
+      try {
+        setLoading(true);
         console.clear();
         if(selectedEmail === "" || selectedEmail === undefined){
-          showMessage("error", "Please select site member email", 2);
+          showMessage("error", "Please select project member email", 2);
+          return;
+        }
+        if(selectMemberRole === "" || selectMemberRole === undefined){
+          showMessage("error", "Please select project member role", 2);
           return;
         }
         const currentUser = userEmails.find(user => user.value === selectedEmail)
@@ -141,6 +148,12 @@ function ProjectLayout() {
         const newProjectMemberList = formattedProjectMembers(newProjectMemberListRaw.data);
         setProjectMembers(newProjectMemberList);
         setSelectedMemberRole();
+      } catch (error) {
+        showMessage("error", error?.response?.data?.message, 2);
+        console.log(error)
+      } finally{
+         setLoading(false)
+      }
       }
 
    
@@ -287,6 +300,7 @@ function ProjectLayout() {
         selectMemberRole={selectMemberRole}
         setSelectedMemberRole={setSelectedMemberRole}
         projectRoles={projectRoles}
+        loading={loading}
         />
     
         </div>

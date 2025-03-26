@@ -29,7 +29,6 @@ const ManageSiteMembers = () => {
   const [changeRoleLoading, setChangeRoleLoading] = useState(false);
   const [revokeAccessLoading, setRevokeAccessLoading] = useState(false);
 
-
 useEffect(() => {
   console.clear();
   fetchData();
@@ -48,13 +47,17 @@ const fetchData = async () => {
   })
   setTableData(memberData)
 
+  const systemRoles =  await authAxios.get("http://localhost:9999/systemRoles/get-all");
+  const adminRoleId = systemRoles?.data.find(role => role.roleName === "admin")?._id;
+
   // get user emails
     const allEmailData = await authAxios.get(`${userApi}/all`);
     const emails = allEmailData.data.reduce((acc, currUser) => {
       const isActive = currUser.status === "active"
       const isSiteMember = currUser.site === user.site;
       const isNotInSite = currUser.site === undefined;
-      if (!isSiteMember && isActive && isNotInSite) {
+      const isAdmin = currUser?.roles.includes(adminRoleId);
+      if (!isSiteMember && isActive && isNotInSite && !isAdmin) {
         acc.push({
           value: currUser.email,
           label: currUser.email,
@@ -65,12 +68,17 @@ const fetchData = async () => {
       return acc;
     }, [])
     setInvitationEmails(emails);
+    console.log(emails)
   } catch (error) {
     console.log(error)
   }
  }
 
   const handleInviteMember = async () => {
+    if(selectedEmail === "" || selectedEmail === undefined){
+      showMessage("error", "Please select use email to invite", 2);
+      return;
+    }
     try {
       setInviteLoading(true)
       const invitedUserId = invitaionEmails.find(item => item.value === selectedEmail).userId;

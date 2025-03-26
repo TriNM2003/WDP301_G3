@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
-import { useParams, useNavigate } from 'react-router-dom';
-import { Layout, Menu, Card, Typography, Select, Table, Row, Col, Avatar, List, Button, DatePicker, Input, Tooltip, Modal, } from "antd";
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Layout, Menu, Card, Typography, Select, Table, Row, Col, Avatar, List, Button, DatePicker, Input, Tooltip, Modal, Breadcrumb, } from "antd";
 import { TeamOutlined, ProjectOutlined, CheckCircleOutlined, ClockCircleOutlined, SearchOutlined } from "@ant-design/icons";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, } from "recharts";
 import dayjs from "dayjs";
@@ -40,7 +40,7 @@ const TeamMemberPerformance = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [searchText, setSearchText] = useState("");
   const { teams, siteAPI, site, accessToken, userApi } = useContext(AppContext);
-  const { userId } = useParams();
+  const { userId, teamSlug } = useParams();
 
 
   useEffect(() => {
@@ -263,7 +263,14 @@ const TeamMemberPerformance = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-
+      <Breadcrumb
+      style={{ marginLeft: "24px", marginTop: "24px" }}
+      >
+        <Breadcrumb.Item>
+          <Link to={`/site/teams/${teamSlug}`}>Team</Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>Member Performance</Breadcrumb.Item>
+      </Breadcrumb>
 
       <Layout style={{ padding: "24px" }}>
         <Content>

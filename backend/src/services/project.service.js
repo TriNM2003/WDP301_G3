@@ -340,8 +340,12 @@ const getProjectMembersById = async (projectId) => {
     }
 }
 
-const addProjectMember = async (siteId, projectId, projectMemberId, projectMemberRole) => {
+const addProjectMember = async (siteId, projectId, projectMemberId, projectMemberRole = []) => {
     try {
+        if(projectMemberRole.length < 1){
+            throw new Error("No role selected!");
+        }
+
         const project = await db.Project.findById(projectId);
         const site = await db.Site.findById(siteId);
         if (!project) {

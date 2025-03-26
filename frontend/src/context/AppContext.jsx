@@ -400,17 +400,14 @@ const AppProvider = ({ children }) => {
   const handleDeleteActivity = async () => {
     if (confirmActivity == activityToDelete?.activityTitle) {
       try {
-        authAxios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`
-            }
-          })
+        await authAxios.delete(`${siteAPI}/${site?._id}/projects/${project?._id}/activities/${activityToDelete?._id}/delete`)
         const updateActivities = activities?.filter((a) =>
           a._id != activityToDelete?._id
         );
         setActivities(updateActivities)
         setRefreshNoti(prev => !prev);
+        setActivity(null);
+        setActivityModal(false);
         message.success(`Activity "${activityToDelete?.activityTitle}" has been deleted successfully!`);
         showNotification(`Project update`, `User1 just deleted activity ${activityToDelete?.activityTitle}.`);
         handleCloseDeleteActivityModal();
