@@ -45,7 +45,7 @@ import { Option } from "antd/es/mentions";
 import TextArea from "antd/es/input/TextArea";
 import ActivityDetail from "../../../Activity/ActivityDetail";
 import DeleteActivityModal from "../DeleteActivityModal";
-import { DndContext, DragOverlay } from "@dnd-kit/core"
+import { defaultDropAnimationSideEffects, DndContext, DragOverlay } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import KanbanActivity from "../../../Activity/KanbanActivity";
@@ -117,7 +117,16 @@ function KanbanBody({ sprint, stage }) {
             {/* Modal hiển thị chi tiết Activity */}
 
 
-            <DragOverlay>
+            <DragOverlay
+                dropAnimation={{
+                    sideEffects: defaultDropAnimationSideEffects({
+                        styles: {
+                            active: {
+                                opacity: '1',
+                            },
+                        },
+                    }),
+                }}>
                 {activeDragActivity && (
                     <KanbanActivity
                         key={activeDragActivity?._id}

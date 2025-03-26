@@ -117,7 +117,11 @@ const ManageProjectMember = () => {
       setLoading(true)
       console.clear();
       if (selectedEmail === "" || selectedEmail === undefined) {
-        showMessage("error", "Please select site member email", 2);
+        showMessage("error", "Please select project member email", 2);
+        return;
+      }
+      if(selectMemberRole === "" || selectMemberRole === undefined){
+        showMessage("error", "Please select project member role", 2);
         return;
       }
       const currentUser = userEmails.find(user => user.value === selectedEmail)
@@ -139,6 +143,7 @@ const ManageProjectMember = () => {
       setSelectedMemberRole();
       setRefreshNoti(prev => !prev);
     } catch (error) {
+      showMessage("error", error?.response?.data?.message, 2);
       console.log(error)
     } finally{
       setLoading(false)

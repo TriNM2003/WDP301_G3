@@ -82,6 +82,9 @@ function ActivityDetail() {
           }));
           setComments(formattedComments);
         })
+        .catch((error) => {
+          console.log(error)
+        })
     }
 
   }, [activities, site, project, activity, activityModal])
