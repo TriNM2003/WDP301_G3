@@ -238,7 +238,7 @@ function ActivityDetail() {
       return;
     }
     setCreateSubActivity(false);
-    handleActivityCreate(activity?.sprint?.sprintName, "to do", selectedType, activity?._id)
+    handleActivityCreate(activity?.sprint?.sprintName, stages[0]?.stageName , selectedType, activity?._id)
   };
 
   const handleCreateSubactivityCancel = () => {
