@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Layout, Card, Row, Col, Menu, Select, Tooltip, DatePicker, List, Typography, Avatar, Input, Table, Button, Modal, Tag } from "antd";
-import { TeamOutlined, ProjectOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, CalendarOutlined, SearchOutlined } from "@ant-design/icons";
+import { TeamOutlined, ProjectOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, CalendarOutlined, SearchOutlined,EditOutlined } from "@ant-design/icons";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import dayjs from "dayjs";
 import { AppContext } from "../../context/AppContext";
@@ -529,7 +529,12 @@ const TeamPerformance = () => {
               <Card
                 title={
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Members ({filteredMembers?.length})</span>
+                    <span>Members ({filteredMembers?.length})
+                    <EditOutlined
+                    style={{ fontSize: "18px", cursor: "pointer", color: "#1890ff" , marginLeft: "10px" }}
+                    onClick={() => navigate(`/site/teams/${team?.teamSlug}/manage-member`)}
+                  />
+                    </span>
                     <Input
                       placeholder="Search member..."
                       allowClear
