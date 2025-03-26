@@ -111,9 +111,12 @@ function KanbanActivity({ a, isDragging }) {
                     <Progress
                         percent={
                             (a?.child?.filter((childId) => {
-                                const childActivity = activities.find((activity) => activity?._id === childId);
-                                return childActivity?.stage?.stageStatus === "done";
-                            })?.length / a?.child?.length) * 100
+                                const childActivity = activities.find((activity) => activity?._id == childId && activity?.isDestroyed != true);
+                                return childActivity?.stage?.stageStatus == "done";
+                            })?.length / a?.child?.filter((childId) => {
+                                const childActivity = activities.find((activity) => activity?._id == childId && activity?.isDestroyed != true);
+                                return childActivity;
+                            })?.length).toFixed(2) * 100
                         }
                         strokeColor={green[6]}
                     /> </Col>}

@@ -540,11 +540,11 @@ function ActivityDetail() {
 
                   {child?.length > 0 && <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><PieChartOutlined /> Progress </small>
-                    <text ><Progress type="circle" percent={(child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100} size={15} showInfo={false} /> {parseFloat((child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100)?.toFixed(0) || 0}%</text>
+                    <text ><Progress type="circle" percent={(child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100} size={15} showInfo={false} /> {parseFloat((child?.filter((c) => c?.stage?.stageStatus == "done").length / child?.length) * 100)?.toFixed(2) || 0}%</text>
                   </Flex>}
 
 
-                  {/* Priority */}
+                  {/* Priority */}  
                   <Flex justify="space-between" align="center" style={{ width: "100%" }}>
                     <small style={{ fontWeight: "bolder", color: gray[4] }}><Tag />Priority </small>
                     {activityLoading ? (

@@ -72,7 +72,7 @@ const addTeamMember = async (teamId, username, email, role) => {
         );
 
         // const to = user.email;
-        // const subject = `You've been added to a team!`;
+        // const subject = You've been added to a team!;
         // const body = `
         //     <h2>Welcome to ${team.teamName} team!</h2>
         //     <p>You have been successfully added to the team: <strong>${team.teamName}</strong>. Welcome aboard!</p>
@@ -83,7 +83,18 @@ const addTeamMember = async (teamId, username, email, role) => {
         // `;
         // await mailer.sendEmail(to, subject, body);
 
-        return { message: "User added to the team and email sent", userId: user._id };
+        const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"))?._id;
+        if (teamLeader && user._id.toString() !== teamLeader._id.toString()) {
+            await notificationService.createNotification(
+                teamLeader._id,
+                [user._id],
+                `You have been added to the team "${team.teamName}"`,
+                "team"
+            );
+        }
+
+        return { message: "User added to the team", userId: user._id };
+
     } catch (error) {
         throw error;
     }
@@ -110,13 +121,24 @@ const kickTeamMember = async (teamId, userId) => {
                 { $set: { teams: user.teams } }
             );
             // const to = user.email;
-            // const subject = `Team Notification: You have been removed from ${team.teamName}`;
+            // const subject = Team Notification: You have been removed from ${team.teamName};
             // const body = `
             //     <h2>Team Notification</h2>
             //     <p>Dear user,</p>
             //     <p>You have been <strong>removed</strong> from the team: <strong>${team.teamName}</strong>.</p>
             // `;
             // await mailer.sendEmail(to, subject, body);
+
+            const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"))?._id;
+
+            if (teamLeader) {
+                await notificationService.createNotification(
+                    teamLeader._id,
+                    [user._id],
+                    `You have been removed from the team "${team.teamName}"`,
+                    "team"
+                );
+            }
         }
 
         return { message: "User kicked from the team" };
