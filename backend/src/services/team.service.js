@@ -83,7 +83,18 @@ const addTeamMember = async (teamId, username, email, role) => {
         // `;
         // await mailer.sendEmail(to, subject, body);
 
-        return { message: "User added to the team and email sent", userId: user._id };
+        const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"))?._id;
+        if (teamLeader && user._id.toString() !== teamLeader._id.toString()) {
+            await notificationService.createNotification(
+                teamLeader._id,
+                [user._id],
+                `You have been added to the team "${team.teamName}"`,
+                "team"
+            );
+        }
+
+        return { message: "User added to the team", userId: user._id };
+
     } catch (error) {
         throw error;
     }
@@ -117,6 +128,17 @@ const kickTeamMember = async (teamId, userId) => {
             //     <p>You have been <strong>removed</strong> from the team: <strong>${team.teamName}</strong>.</p>
             // `;
             // await mailer.sendEmail(to, subject, body);
+
+            const teamLeader = team.teamMembers.find(member => member.roles.includes("teamLeader"))?._id;
+
+            if (teamLeader) {
+                await notificationService.createNotification(
+                    teamLeader._id,
+                    [user._id],
+                    `You have been removed from the team "${team.teamName}"`,
+                    "team"
+                );
+            }
         }
 
         return { message: "User kicked from the team" };
