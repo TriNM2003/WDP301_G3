@@ -240,9 +240,10 @@ function ProjectLayout() {
                             overlay={
                                 <Menu>
                                     <Menu.Item key="1" icon={<SettingOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/project-setting`)}> Project settings</Menu.Item>
+                                    <Menu.Item key="4" icon={<BranchesOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/workflow`)}> Manage workflow</Menu.Item>
                                     {isProjectManager &&<>
                                         <Menu.Item key="2" icon={<GroupOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/manage/members`)}> Manage members</Menu.Item>
-                                        <Menu.Item key="4" icon={<BranchesOutlined />} onClick={() => nav(`/site/list/projects/${projectSlug}/workflow`)}> Manage workflow</Menu.Item>
+                                
                                     <Menu.Item key="3" icon={<DeleteOutlined style={{ color: red[6] }} />}>
                                         <Popconfirm
                                             title="Are you sure you want to move this project to trash?"

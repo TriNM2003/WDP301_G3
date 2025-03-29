@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react"
+import { useState, useEffect, useContext,useRef } from "react"
 import { DndContext, closestCenter } from "@dnd-kit/core"
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -8,6 +8,8 @@ import { AppContext } from "../../context/AppContext"
 import axios from "axios"
 import { Link } from 'react-router-dom';
 import authAxios from './../../utils/authAxios';
+import { useSensor, useSensors, MouseSensor } from "@dnd-kit/core";
+
 
 const { Content, Sider } = Layout
 const { Option } = Select
@@ -17,14 +19,14 @@ const { confirm } = Modal
 
 
 // Separate component for better organization
+
+
 const SortableItem = ({ stage, onSelect, sequenceLabel }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: stage?._id,
-    activationConstraint: {
-      delay: 250,
-      tolerance: 5,
-    },
-  })
+  });
+
+  const wasDragging = useRef(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -37,14 +39,31 @@ const SortableItem = ({ stage, onSelect, sequenceLabel }) => {
     border: "1px solid #ddd",
     borderRadius: "6px",
     position: "relative",
-  }
+  };
+
+  const handlePointerDown = () => {
+    wasDragging.current = false;
+  };
+
+  const handleDragStart = () => {
+    wasDragging.current = true;
+  };
 
   const handleClick = () => {
-    onSelect({ ...stage })
-  }
+    if (!wasDragging.current) {
+      onSelect({ ...stage });
+    }
+  };
 
   return (
-    <Card ref={setNodeRef} style={style} onClick={handleClick} {...attributes} {...listeners}>
+    <Card
+      ref={setNodeRef}
+      style={style}
+      onPointerDown={handlePointerDown}
+      onClick={handleClick}
+      {...attributes}
+      {...listeners}
+    >
       <div
         style={{
           position: "absolute",
@@ -62,8 +81,9 @@ const SortableItem = ({ stage, onSelect, sequenceLabel }) => {
       </div>
       {stage?.stageName}
     </Card>
-  )
-}
+  );
+};
+
 
 // Separate component for better organization
 const AddStageIcon = ({ onClick }) => {
@@ -126,7 +146,12 @@ const StageManagement = () => {
   ];
 
 
-
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5, // di chuyển ít nhất 5px mới tính là drag
+    },
+  });
+  const sensors = useSensors(mouseSensor);
 
   // Fetch stages data
   const fetchStages = () => {
@@ -273,13 +298,16 @@ const StageManagement = () => {
       );
       setRefreshNoti((prev) => !prev);
     } catch (error) {
-      console.error("Error updating stage order:", error)
-      message.error("Failed to update stage order")
-
-      // Optionally, you could fetch the stages again to ensure UI is in sync with database
-      // fetchStages()
+      if (error?.response?.data?.error?.message) {
+        message.error(error.response.data.error.message);
+      } else if (error?.errorFields) {
+        return;
+      } else {
+        console.error("Error update stage:", error);
+        message.error("Failed to update stage");
+      }
     }
-  }
+  };
 
   // Add stage at a specific position
   const handleAddStageAtPosition = (afterStageId) => {
@@ -296,12 +324,11 @@ const StageManagement = () => {
   const handleAddStage = async () => {
     try {
       const values = await form.validateFields();
-
       const { stageName, stageStatus } = values;
-
+  
       let parentId = null;
       let childId = null;
-
+  
       if (insertPosition === null) {
         const lastStage = stages.length > 0 ? stages[stages.length - 1] : null;
         parentId = lastStage ? lastStage._id : null;
@@ -312,7 +339,7 @@ const StageManagement = () => {
           childId = insertIndex + 1 < stages.length ? stages[insertIndex + 1]?._id : null;
         }
       }
-
+  
       const response = await authAxios.post(
         `${siteAPI}/${site._id}/projects/${project._id}/stages/add`,
         {
@@ -323,11 +350,11 @@ const StageManagement = () => {
         },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
+  
       if (response?.data?.stage) {
         const newStage = response.data.stage;
         let updatedStages = [...stages];
-
+  
         if (insertPosition !== null) {
           const insertIndex = updatedStages.findIndex(stage => stage._id === insertPosition);
           if (insertIndex !== -1) {
@@ -336,35 +363,37 @@ const StageManagement = () => {
         } else {
           updatedStages.push(newStage);
         }
-
+  
         if (childId) {
           updatedStages = updatedStages.map(stage =>
             stage._id === childId ? { ...stage, parent: { _id: newStage._id } } : stage
           );
         }
-
+  
         updatedStages = sortStagesByParent(updatedStages);
         setStages(updatedStages);
         setSelectedStage(newStage);
-
+  
         message.success("Stage added successfully");
         showNotification("Stage created", `You just created a new stage: "${stageName}"`);
         setRefreshNoti(prev => !prev);
-
+  
         setIsModalOpen(false);
         setInsertPosition(null);
         form.resetFields();
       }
     } catch (error) {
-      if (error?.errorFields) {
-
+      if (error?.response?.data?.error?.message) {
+        message.error(error.response.data.error.message);
+      } else if (error?.errorFields) {
         return;
+      } else {
+        console.error("Error adding stage:", error);
+        message.error("Failed to add stage");
       }
-      console.error("Error adding stage:", error);
-      message.error("Failed to add stage");
     }
   };
-
+  
 
 
   useEffect(() => {
@@ -499,11 +528,17 @@ const StageManagement = () => {
       editForm.resetFields();
       setRefreshNoti(prev => !prev);
     } catch (error) {
-      if (error?.errorFields) return;
-      console.error("Error updating stage:", error);
-      message.error("Failed to update stage");
+      if (error?.response?.data?.error?.message) {
+        message.error(error.response.data.error.message);
+      } else if (error?.errorFields) {
+        return;
+      } else {
+        console.error("Error update stage:", error);
+        message.error("Failed to update stage");
+      }
     }
   };
+
 
 
   // Hàm xử lý xóa stage
@@ -641,8 +676,14 @@ const StageManagement = () => {
       setRefreshNoti((prev) => !prev);
       activityModalLoading();
     } catch (error) {
-      console.error("Error deleting stage:", error);
-      message.error("Failed to delete stage");
+      if (error?.response?.data?.error?.message) {
+        message.error(error.response.data.error.message);
+      } else if (error?.errorFields) {
+        return;
+      } else {
+        console.error("Error delete stage:", error);
+        message.error("Failed to delete stage");
+      }
     }
   };
 
@@ -682,7 +723,7 @@ const StageManagement = () => {
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px" }}>Loading stages...</div>
         ) : (
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext  sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext
               items={stages?.map((s) => s?._id).filter(Boolean) || []}
               strategy={verticalListSortingStrategy}
