@@ -12,19 +12,19 @@ stageRouter.get("/get-all",
     stageController.getStagesByProjectId
 )
 stageRouter.post("/update-parents",
-    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     stageController.updateStageParents
 )
 stageRouter.post("/add",
-    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     stageController.addStage
 )
 stageRouter.post("/update",
-    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     stageController.updateStage
 )
 stageRouter.post("/delete",
-    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject],
+    [authMiddleware.verifyAccessToken,accountMiddleware.isActive,siteMiddleware.isInSite, projectMiddleware.isInProject, projectMiddleware.isProjectManager],
     stageController.deleteStage
 )
 
